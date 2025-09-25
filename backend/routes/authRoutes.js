@@ -18,4 +18,8 @@ router.get("/logout", authCtrl.logoutUser);
 router.get("/change-password", authCtrl.getChangePassword);
 router.post("/change-password", authCtrl.postChangePassword);
 
+// Forgot Password
+router.get("/forgot-password", authCtrl.showForgotPasswordForm);
+router.post("/forgot-password", authCtrl.processForgotPassword);
+
 module.exports = router;

@@ -1,0 +1,9 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<div class="text-center mt-5 mb-5">
+  <h2>Welcome, <%= user.fullName %>!</h2>
+  <p class="lead">You are logged in as <strong>Student</strong>.</p>
+  <a href="/logout" class="btn btn-danger">Logout</a>
+</div>
+
+<%- include('../partials/footer') %>

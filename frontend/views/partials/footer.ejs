@@ -1,0 +1,51 @@
+<footer class="mt-auto bg-dark text-light py-4">
+  <div class="container text-center">
+    <h4 class="fw-bold mb-2" style="color: var(--secondary-pink);">
+      Copperstone University
+    </h4>
+    <p class="mb-2 text-white-50">
+      Excellence in Education & Innovation
+    </p>
+    <p class="small text-white-50 mb-0">
+      &copy; <%= new Date().getFullYear() %> Copperstone University. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Flash Messages -->
+<script>
+  <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: "<%= success_msg %>",
+      confirmButtonColor: '#3085d6'
+    });
+  <% } %>
+
+  <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+    Swal.fire({
+      icon: 'error',
+      title: 'Oops!',
+      text: "<%= error_msg %>",
+      confirmButtonColor: '#d33'
+    });
+  <% } %>
+
+  <% if (typeof info !== 'undefined' && info.length > 0) { %>
+    Swal.fire({
+      icon: 'info',
+      title: 'Notice',
+      text: "<%= info %>",
+      confirmButtonColor: '#3085d6'
+    });
+  <% } %>
+</script>
+</body>
+</html>

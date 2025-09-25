@@ -1,3 +1,150 @@
+// const passport = require("passport");
+// const User = require("../models/User");
+
+// /**
+//  * ===============================
+//  * 1. Registration
+//  * ===============================
+//  */
+
+// // Show Student Registration Form
+// exports.showRegisterForm = (req, res) => {
+//   res.render("auth/register", { title: "Register - Copperstone" });
+// };
+
+// // Handle Student Registration
+// exports.registerUser = async (req, res) => {
+//   const { fullName, email, password, confirmPassword } = req.body;
+//   try {
+//     // Validation
+//     if (!fullName || !email || !password || !confirmPassword) {
+//       req.flash("error_msg", "All fields are required.");
+//       return res.redirect("/register");
+//     }
+//     if (password !== confirmPassword) {
+//       req.flash("error_msg", "Passwords do not match.");
+//       return res.redirect("/register");
+//     }
+
+//     // Check if user exists
+//     const existing = await User.findOne({ email });
+//     if (existing) {
+//       req.flash("error_msg", "Email already registered.");
+//       return res.redirect("/register");
+//     }
+
+//     // Default role is Student
+//     await User.create({ fullName, email, password, role: "Student" });
+
+//     req.flash("success_msg", "Registration successful! Please login.");
+//     res.redirect("/login");
+//   } catch (err) {
+//     console.error("Registration error:", err);
+//     req.flash("error_msg", "Something went wrong. Please try again.");
+//     res.redirect("/register");
+//   }
+// };
+
+// /**
+//  * ===============================
+//  * 2. Authentication
+//  * ===============================
+//  */
+
+// // Show Login Form
+// exports.showLoginForm = (req, res) => {
+//   res.render("auth/login", { title: "Login - Copperstone" });
+// };
+
+// // Handle Login with Passport
+// exports.loginUser = (req, res, next) => {
+//   passport.authenticate("local", (err, user, info) => {
+//     if (err || !user) {
+//       req.flash("error_msg", info?.message || "Login failed.");
+//       return res.redirect("/login");
+//     }
+
+//     req.logIn(user, async (err) => {
+//       if (err) return next(err);
+
+//       req.flash("success_msg", `Welcome back, ${user.fullName || user.email}!`);
+
+//       // Role-based redirects
+//       if (user.role === "Admin") return res.redirect("/dashboard/admin");
+//       if (user.role === "AdmissionsOfficer")
+//         return res.redirect("/dashboard/admissions");
+//       if (user.role === "FinanceOfficer")
+//         return res.redirect("/dashboard/finance");
+
+//       // Default for students
+//       return res.redirect("/dashboard/student");
+//     });
+//   })(req, res, next);
+// };
+
+// // Logout
+// exports.logoutUser = (req, res, next) => {
+//   req.logout((err) => {
+//     if (err) return next(err);
+//     req.flash("success_msg", "Logged out successfully.");
+//     res.redirect("/login");
+//   });
+// };
+
+// /**
+//  * ===============================
+//  * 3. Password Change
+//  * ===============================
+//  */
+
+// // Show Change Password Form
+// exports.getChangePassword = (req, res) => {
+//   res.render("auth/changePassword", {
+//     title: "Change Password",
+//     currentUser: req.user,
+//   });
+// };
+
+// // Handle Password Change
+// exports.postChangePassword = async (req, res) => {
+//   try {
+//     const { oldPassword, newPassword, confirmPassword } = req.body;
+
+//     if (!oldPassword || !newPassword || !confirmPassword) {
+//       req.flash("error_msg", "All fields are required.");
+//       return res.redirect("/change-password");
+//     }
+
+//     if (newPassword !== confirmPassword) {
+//       req.flash("error_msg", "New passwords do not match.");
+//       return res.redirect("/change-password");
+//     }
+
+//     const user = await User.findById(req.user._id);
+//     if (!user) {
+//       req.flash("error_msg", "User not found.");
+//       return res.redirect("/change-password");
+//     }
+
+//     const validOld = await user.isValidPassword(oldPassword);
+//     if (!validOld) {
+//       req.flash("error_msg", "Old password is incorrect.");
+//       return res.redirect("/change-password");
+//     }
+
+//     // Update password
+//     user.password = newPassword; // will be hashed by pre-save hook
+//     await user.save();
+
+//     req.flash("success_msg", "Your password has been updated successfully!");
+//     res.redirect("/change-password");
+//   } catch (err) {
+//     console.error("Password change error:", err);
+//     req.flash("error_msg", "Something went wrong. Please try again.");
+//     res.redirect("/change-password");
+//   }
+// };
+
 const passport = require("passport");
 const User = require("../models/User");
 
@@ -9,7 +156,7 @@ const User = require("../models/User");
 
 // Show Student Registration Form
 exports.showRegisterForm = (req, res) => {
-  res.render("auth/register");
+  res.render("auth/register", { title: "Register - Copperstone" });
 };
 
 // Handle Student Registration
@@ -18,28 +165,39 @@ exports.registerUser = async (req, res) => {
   try {
     // Validation
     if (!fullName || !email || !password || !confirmPassword) {
-      req.flash("error", "All fields are required.");
+      req.flash("error_msg", "All fields are required.");
       return res.redirect("/register");
     }
     if (password !== confirmPassword) {
-      req.flash("error", "Passwords do not match.");
+      req.flash("error_msg", "Passwords do not match.");
       return res.redirect("/register");
     }
 
     // Check if user exists
     const existing = await User.findOne({ email });
     if (existing) {
-      req.flash("error", "Email already registered.");
+      req.flash("error_msg", "Email already registered.");
       return res.redirect("/register");
     }
 
-    // Create new user
-    await User.create({ fullName, email, password });
-    req.flash("success", "Registration successful! Please login.");
+    // Create new user object without password
+    const newUser = new User({
+      fullName,
+      email,
+      role: "Student", // default role
+    });
+
+    // passport-local-mongoose handles hashing
+    await User.register(newUser, password);
+
+    req.flash("success_msg", "Registration successful! Please login.");
     res.redirect("/login");
   } catch (err) {
     console.error("Registration error:", err);
-    req.flash("error", "Something went wrong. Please try again.");
+    req.flash(
+      "error_msg",
+      err.message || "Something went wrong. Please try again."
+    );
     res.redirect("/register");
   }
 };
@@ -52,46 +210,36 @@ exports.registerUser = async (req, res) => {
 
 // Show Login Form
 exports.showLoginForm = (req, res) => {
-  res.render("auth/login");
+  res.render("auth/login", { title: "Login - Copperstone" });
 };
 
 // Handle Login with Passport
 exports.loginUser = (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err || !user) {
-      req.flash("error", info?.message || "Login failed.");
+      req.flash("error_msg", info?.message || "Login failed.");
       return res.redirect("/login");
     }
 
     req.logIn(user, async (err) => {
       if (err) return next(err);
 
-      try {
-        // Optional: populate more data if needed
-        const populatedUser = await User.findById(user._id);
-        const displayName = populatedUser.fullName || populatedUser.email;
+      req.flash("success_msg", `Welcome back, ${user.fullName || user.email}!`);
 
-        req.flash("success", `Welcome back, ${displayName}!`);
-
-        // Store user in session
-        req.session.user = populatedUser;
-
-        // Role-based redirects
-        if (populatedUser.role === "Admin") {
-          return res.redirect("/admin/dashboard");
-        }
-        if (populatedUser.role === "AdmissionsOfficer") {
-          return res.redirect("/admissions/dashboard");
-        }
-        if (populatedUser.role === "FinanceOfficer") {
-          return res.redirect("/finance/dashboard");
-        }
-
-        // Default for students/others
-        return res.redirect("/dashboard");
-      } catch (error) {
-        console.error("Login population error:", error);
-        return next(error);
+      // Role-based redirects
+      switch (user.role) {
+        case "Admin":
+          return res.redirect("/dashboard/admin");
+        case "AdmissionsOfficer":
+          return res.redirect("/dashboard/admissions");
+        case "FinanceOfficer":
+          return res.redirect("/dashboard/finance");
+        case "TeachingStaff":
+          return res.redirect("/dashboard/staff");
+        case "SuperAdmin":
+          return res.redirect("/dashboard/superadmin");
+        default:
+          return res.redirect("/dashboard/student");
       }
     });
   })(req, res, next);
@@ -101,7 +249,7 @@ exports.loginUser = (req, res, next) => {
 exports.logoutUser = (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
-    req.flash("success", "Logged out successfully.");
+    req.flash("success_msg", "Logged out successfully.");
     res.redirect("/login");
   });
 };
@@ -115,9 +263,8 @@ exports.logoutUser = (req, res, next) => {
 // Show Change Password Form
 exports.getChangePassword = (req, res) => {
   res.render("auth/changePassword", {
+    title: "Change Password",
     currentUser: req.user,
-    error: "",
-    success: "",
   });
 };
 
@@ -126,48 +273,50 @@ exports.postChangePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword, confirmPassword } = req.body;
 
-    if (newPassword !== confirmPassword) {
-      return res.render("auth/changePassword", {
-        currentUser: req.user,
-        error: "New passwords do not match.",
-        success: "",
-      });
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      req.flash("error_msg", "All fields are required.");
+      return res.redirect("/change-password");
     }
 
+    if (newPassword !== confirmPassword) {
+      req.flash("error_msg", "New passwords do not match.");
+      return res.redirect("/change-password");
+    }
+
+    // passport-local-mongoose gives us changePassword method
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.render("auth/changePassword", {
-        currentUser: req.user,
-        error: "User not found.",
-        success: "",
-      });
+      req.flash("error_msg", "User not found.");
+      return res.redirect("/change-password");
     }
 
-    // Manually verify old password since we're using bcrypt
-    const validOld = await user.isValidPassword(oldPassword);
-    if (!validOld) {
-      return res.render("auth/changePassword", {
-        currentUser: req.user,
-        error: "Old password is incorrect.",
-        success: "",
-      });
-    }
+    user.changePassword(oldPassword, newPassword, (err) => {
+      if (err) {
+        req.flash("error_msg", "Old password is incorrect.");
+        return res.redirect("/change-password");
+      }
 
-    // Save new password
-    user.password = newPassword;
-    await user.save();
-
-    res.render("auth/changePassword", {
-      currentUser: req.user,
-      error: "",
-      success: "Your password has been updated successfully!",
+      req.flash("success_msg", "Your password has been updated successfully!");
+      res.redirect("/change-password");
     });
   } catch (err) {
     console.error("Password change error:", err);
-    res.render("auth/changePassword", {
-      currentUser: req.user,
-      error: "Something went wrong. Please try again.",
-      success: "",
-    });
+    req.flash("error_msg", "Something went wrong. Please try again.");
+    res.redirect("/change-password");
   }
+};
+
+// Show Forgot Password Page
+exports.showForgotPasswordForm = (req, res) => {
+  res.render("auth/forgot-password", {
+    title: "Forgot Password",
+  });
+};
+
+// Handle Forgot Password POST
+exports.processForgotPassword = async (req, res) => {
+  const { email } = req.body;
+  // TODO: Lookup user, create token, send email
+  req.flash("success_msg", "If this email exists, a reset link has been sent.");
+  res.redirect("/login");
 };

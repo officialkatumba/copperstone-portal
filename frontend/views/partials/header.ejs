@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title || "Copperstone University Portal" %></title>
+
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Google Fonts: Poppins -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Custom Branding -->
+    <style>
+      :root {
+        --primary-purple: #4b345d;
+        --secondary-pink: #e90172;
+        --accent-teal: #28cca2;
+        --light-bg: #f1e9f3;
+        --dark-text: #121212;
+        --light-text: #757575;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f8f9fa;
+        color: var(--dark-text);
+      }
+      .navbar {
+        background-color: var(--primary-purple);
+      }
+      .navbar .nav-link {
+        color: white !important;
+        font-weight: 500;
+      }
+      .navbar .nav-link:hover {
+        color: var(--secondary-pink) !important;
+      }
+      .navbar-brand {
+        font-weight: 700;
+        color: white !important;
+      }
+      footer {
+        background: var(--primary-purple);
+        color: white;
+        padding: 25px 0;
+        font-size: 0.9rem;
+      }
+      footer a {
+        color: var(--accent-teal);
+        text-decoration: none;
+      }
+      footer a:hover {
+        color: var(--secondary-pink);
+      }
+    </style>
+  </head>
+  <body class="d-flex flex-column min-vh-100"></body>
+</html>
