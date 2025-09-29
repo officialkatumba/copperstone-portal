@@ -9,9 +9,6 @@ function ensureAuthenticated(req, res, next) {
 }
 
 // Student Dashboard
-// router.get("/dashboard/student", ensureAuthenticated, (req, res) => {
-//   res.render("dashboard/student", { user: req.user });
-// });
 
 router.get("/dashboard/student", (req, res) => {
   res.render("dashboard/student", {
@@ -26,8 +23,16 @@ router.get("/dashboard/admin", ensureAuthenticated, (req, res) => {
 });
 
 // Admissions Officer Dashboard
+// router.get("/dashboard/admissions", ensureAuthenticated, (req, res) => {
+//   res.render("dashboard/admissions", { user: req.user });
+// });
+
+// Admissions Officer Dashboard
 router.get("/dashboard/admissions", ensureAuthenticated, (req, res) => {
-  res.render("dashboard/admissions", { user: req.user });
+  res.render("dashboard/admissions", {
+    title: "Admissions Dashboard",
+    user: req.user,
+  });
 });
 
 // Finance Officer Dashboard

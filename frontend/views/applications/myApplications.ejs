@@ -1,0 +1,74 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<div class="container my-5">
+  <div class="text-center mb-4">
+    <h2 class="fw-bold" style="color: var(--primary-purple)">
+      <%= user.firstName %> <%= user.surName %> <%= user.otherNames || "" %>
+      Applications
+    </h2>
+    <p class="text-muted">Track the status of your submitted applications</p>
+  </div>
+
+  <% if (applications.length === 0) { %>
+  <div class="alert alert-info text-center">
+    You have not submitted any applications yet.
+    <a
+      href="/programs/apply"
+      class="fw-bold"
+      style="color: var(--secondary-pink)"
+      >Apply now</a
+    >.
+  </div>
+  <% } else { %>
+  <div class="row g-4">
+    <% applications.forEach(app => { %>
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h5 class="fw-bold">
+            <i class="fas fa-file-alt me-2"></i>Application
+          </h5>
+          <p>
+            <strong>First Choice:</strong> <%= app.firstChoice?.name %> (<%=
+            app.firstChoice?.level %>)
+          </p>
+          <% if (app.secondChoice) { %>
+          <p>
+            <strong>Second Choice:</strong> <%= app.secondChoice?.name %> (<%=
+            app.secondChoice?.level %>)
+          </p>
+          <% } %>
+          <p>
+            <strong>Status:</strong>
+            <% if (app.status === "Pending") { %>
+            <span class="badge bg-secondary">Pending</span>
+            <% } else if (app.status === "Under Review") { %>
+            <span class="badge bg-info text-dark">Under Review</span>
+            <% } else if (app.status === "Accepted") { %>
+            <span class="badge bg-success">Accepted</span>
+            <% } else { %>
+            <span class="badge bg-danger">Rejected</span>
+            <% } %>
+          </p>
+          <p>
+            <strong>Submitted On:</strong> <%= app.createdAt.toDateString() %>
+          </p>
+
+          <hr />
+          <h6>Documents</h6>
+          <ul>
+            <% app.documents.forEach(doc => { %>
+            <li>
+              <a href="<%= doc.gcsUrl %>" target="_blank"><%= doc.name %></a>
+            </li>
+            <% }) %>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

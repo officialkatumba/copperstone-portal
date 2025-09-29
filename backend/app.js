@@ -10,10 +10,7 @@ const app = express();
 
 // ----- Database -----
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("❌ MongoDB Error:", err));
 
@@ -59,9 +56,13 @@ app.use((req, res, next) => {
 const homeRoute = require("./routes/homeRoutes");
 const authRoute = require("./routes/authRoutes");
 const dashboardRoute = require("./routes/dashboardRoutes");
+const admissionsRoutes = require("./routes/admissionsRoutes");
 
 app.use("/", homeRoute); // ✅ Homepage now works again
 app.use("/", authRoute);
 app.use("/", dashboardRoute);
+const applicationRoutes = require("./routes/applicationRoutes");
+app.use("/programs", applicationRoutes);
+app.use("/admissions", admissionsRoutes); // ✅ Admissions Desk
 
 module.exports = app;

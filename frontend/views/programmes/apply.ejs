@@ -1,0 +1,58 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<div class="container my-5">
+  <div class="card shadow-lg p-4 mx-auto" style="max-width: 500px">
+    <h3 class="fw-bold text-center mb-4" style="color: var(--primary-purple)">
+      Programme Application
+    </h3>
+    <form action="/programs/apply" method="POST" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">First Choice Programme</label>
+        <select name="firstChoice" class="form-select form-select-lg" required>
+          <option value="">-- Select First Choice --</option>
+          <% programmes.forEach(p => { %>
+          <option value="<%= p._id %>"><%= p.name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Second Choice Programme</label>
+        <select name="secondChoice" class="form-select form-select-lg">
+          <option value="">-- Optional --</option>
+          <% programmes.forEach(p => { %>
+          <option value="<%= p._id %>"><%= p.name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold"
+          >Attach Certificates & Reciepts</label
+        >
+        <input
+          type="file"
+          name="documents"
+          class="form-control"
+          multiple
+          required
+        />
+        <div class="form-text">Upload up to 5 files (PDF, JPG, PNG)</div>
+      </div>
+
+      <button
+        type="submit"
+        class="btn w-100 py-2 fw-semibold"
+        style="
+          background-color: var(--secondary-pink);
+          color: white;
+          border-radius: 30px;
+        "
+      >
+        <i class="fas fa-paper-plane me-1"></i> Submit Application
+      </button>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

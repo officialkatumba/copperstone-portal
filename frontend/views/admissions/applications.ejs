@@ -1,0 +1,51 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<div class="container my-5">
+  <h2 class="fw-bold mb-4" style="color: var(--primary-purple)">
+    All Applications
+  </h2>
+
+  <table class="table table-hover table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Applicant</th>
+        <th>Email</th>
+        <th>Mobile</th>
+        <th>First Choice</th>
+        <th>Second Choice</th>
+        <th>Status</th>
+        <th>Submitted</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% applications.forEach(app => { %>
+      <tr>
+        <td><%= app.applicant.firstName %> <%= app.applicant.surname %></td>
+        <td><%= app.applicant.email %></td>
+        <td><%= app.applicant.mobile %></td>
+        <td><%= app.firstChoice?.name %> (<%= app.firstChoice?.code %>)</td>
+        <td><%= app.secondChoice ? app.secondChoice.name : "-" %></td>
+        <td>
+          <span
+            class="badge <%= app.status === 'Approved' ? 'bg-success' : app.status === 'Rejected' ? 'bg-danger' : app.status === 'Under Review' ? 'bg-warning text-dark' : 'bg-secondary' %>"
+          >
+            <%= app.status %>
+          </span>
+        </td>
+        <td><%= app.createdAt.toDateString() %></td>
+        <td>
+          <a
+            href="/admissions/applications/<%= app._id %>"
+            class="btn btn-sm btn-primary"
+          >
+            <i class="fas fa-eye"></i> View
+          </a>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

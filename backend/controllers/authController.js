@@ -159,21 +159,81 @@ exports.showRegisterForm = (req, res) => {
   res.render("auth/register", { title: "Register - Copperstone" });
 };
 
+// // Handle Student Registration
+// exports.registerUser = async (req, res) => {
+//   const { fullName, email, password, confirmPassword } = req.body;
+//   try {
+//     // Validation
+//     if (!fullName || !email || !password || !confirmPassword) {
+//       req.flash("error_msg", "All fields are required.");
+//       return res.redirect("/register");
+//     }
+//     if (password !== confirmPassword) {
+//       req.flash("error_msg", "Passwords do not match.");
+//       return res.redirect("/register");
+//     }
+
+//     // Check if user exists
+//     const existing = await User.findOne({ email });
+//     if (existing) {
+//       req.flash("error_msg", "Email already registered.");
+//       return res.redirect("/register");
+//     }
+
+//     // Create new user object without password
+//     const newUser = new User({
+//       fullName,
+//       email,
+//       role: "Student", // default role
+//     });
+
+//     // passport-local-mongoose handles hashing
+//     await User.register(newUser, password);
+
+//     req.flash("success_msg", "Registration successful! Please login.");
+//     res.redirect("/login");
+//   } catch (err) {
+//     console.error("Registration error:", err);
+//     req.flash(
+//       "error_msg",
+//       err.message || "Something went wrong. Please try again."
+//     );
+//     res.redirect("/register");
+//   }
+// };
+
 // Handle Student Registration
 exports.registerUser = async (req, res) => {
-  const { fullName, email, password, confirmPassword } = req.body;
+  const {
+    firstName,
+    surname,
+    otherNames,
+    mobile,
+    email,
+    password,
+    confirmPassword,
+  } = req.body;
+
   try {
     // Validation
-    if (!fullName || !email || !password || !confirmPassword) {
-      req.flash("error_msg", "All fields are required.");
+    if (
+      !firstName ||
+      !surname ||
+      !mobile ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
+      req.flash("error_msg", "All required fields must be filled.");
       return res.redirect("/register");
     }
+
     if (password !== confirmPassword) {
       req.flash("error_msg", "Passwords do not match.");
       return res.redirect("/register");
     }
 
-    // Check if user exists
+    // Check if email already exists
     const existing = await User.findOne({ email });
     if (existing) {
       req.flash("error_msg", "Email already registered.");
@@ -182,12 +242,15 @@ exports.registerUser = async (req, res) => {
 
     // Create new user object without password
     const newUser = new User({
-      fullName,
+      firstName,
+      surname,
+      otherNames: otherNames || "",
+      mobile,
       email,
       role: "Student", // default role
     });
 
-    // passport-local-mongoose handles hashing
+    // passport-local-mongoose handles password hashing & salting
     await User.register(newUser, password);
 
     req.flash("success_msg", "Registration successful! Please login.");

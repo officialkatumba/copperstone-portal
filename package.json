@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/storage": "^7.17.1",
     "bcryptjs": "^3.0.2",
     "connect-flash": "^0.1.1",
     "dotenv": "^17.2.2",
@@ -19,6 +20,7 @@
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "mongoose": "^8.18.2",
+    "multer": "^2.0.2",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^8.0.0"

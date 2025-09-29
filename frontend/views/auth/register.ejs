@@ -14,27 +14,66 @@
         style="color: var(--primary-purple)"
       ></i>
       <h3 class="fw-bold" style="color: var(--primary-purple)">
-        Student Registration
+        Account Registration
       </h3>
-      <p class="text-muted mb-0">
-        Register now and have a Copperstone Portal account to apply for a
-        program of your Choice
-      </p>
+      <p class="text-muted mb-0">Create An Account to Apply For A Programme</p>
     </div>
 
     <form action="/register" method="POST">
+      <!-- First Name -->
       <div class="mb-3">
-        <label for="fullName" class="form-label fw-semibold">Full Name</label>
+        <label for="firstName" class="form-label fw-semibold">First Name</label>
         <input
           type="text"
-          name="fullName"
-          id="fullName"
+          name="firstName"
+          id="firstName"
           class="form-control form-control-lg"
-          placeholder="John Doe"
+          placeholder="John"
           required
         />
       </div>
 
+      <!-- Surname -->
+      <div class="mb-3">
+        <label for="surname" class="form-label fw-semibold">Surname</label>
+        <input
+          type="text"
+          name="surname"
+          id="surname"
+          class="form-control form-control-lg"
+          placeholder="Doe"
+          required
+        />
+      </div>
+
+      <!-- Other Names -->
+      <div class="mb-3">
+        <label for="otherNames" class="form-label fw-semibold"
+          >Other Names (Optional)</label
+        >
+        <input
+          type="text"
+          name="otherNames"
+          id="otherNames"
+          class="form-control form-control-lg"
+          placeholder="Mwape"
+        />
+      </div>
+
+      <!-- Mobile -->
+      <div class="mb-3">
+        <label for="mobile" class="form-label fw-semibold">Mobile Number</label>
+        <input
+          type="text"
+          name="mobile"
+          id="mobile"
+          class="form-control form-control-lg"
+          placeholder="096xxxxxxx"
+          required
+        />
+      </div>
+
+      <!-- Email -->
       <div class="mb-3">
         <label for="email" class="form-label fw-semibold">Email</label>
         <input
@@ -47,6 +86,7 @@
         />
       </div>
 
+      <!-- Password -->
       <div class="mb-3">
         <label for="password" class="form-label fw-semibold">Password</label>
         <input
@@ -59,6 +99,7 @@
         />
       </div>
 
+      <!-- Confirm Password -->
       <div class="mb-3">
         <label for="confirmPassword" class="form-label fw-semibold"
           >Confirm Password</label

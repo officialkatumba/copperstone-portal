@@ -2,30 +2,42 @@ const mongoose = require("mongoose");
 
 const applicationSchema = new mongoose.Schema(
   {
-    student: {
+    applicant: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    programme: {
+
+    // ✅ Programme Choices
+    firstChoice: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Programme",
       required: true,
     },
+    secondChoice: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Programme",
+      required: false, // optional
+    },
+
+    // ✅ Supporting Documents stored on Google Cloud
     documents: [
       {
-        fileName: String,
-        fileUrl: String,
-        fileType: String,
+        name: String, // e.g. "Grade 12 Certificate"
+        gcsUrl: String, // Public/Private GCS URL
       },
     ],
+
+    // ✅ Status Flow
     status: {
       type: String,
-      enum: ["Pending", "Recommended", "Approved", "Rejected"],
+      enum: ["Pending", "Under Review", "Approved", "Rejected"],
       default: "Pending",
     },
     remarks: String,
-    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Admissions/Admin
+
+    submittedAt: { type: Date, default: Date.now },
+    reviewedAt: Date,
   },
   { timestamps: true }
 );
