@@ -73,16 +73,54 @@ exports.listApplications = async (req, res) => {
 };
 
 // View application detail
+// exports.viewApplicationDetail = async (req, res) => {
+//   try {
+//     const app = await Application.findById(req.params.id)
+//       .populate("applicant")
+//       .populate("firstChoice")
+//       .populate("secondChoice");
+
+//     if (!app) {
+//       req.flash("error_msg", "Application not found.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     res.render("admissions/applicationDetail", {
+//       title: "Application Detail",
+//       application: app,
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching application detail:", err);
+//     req.flash("error_msg", "Failed to load application detail.");
+//     res.redirect("/admissions/applications");
+//   }
+// };
+
+// controllers/applicationController.js
+const { generateSignedUrl } = require("../config/gcsUpload");
+
 exports.viewApplicationDetail = async (req, res) => {
   try {
     const app = await Application.findById(req.params.id)
       .populate("applicant")
       .populate("firstChoice")
-      .populate("secondChoice");
+      .populate("secondChoice")
+      .lean();
 
     if (!app) {
       req.flash("error_msg", "Application not found.");
       return res.redirect("/admissions/applications");
+    }
+
+    // 🔐 Generate signed URLs for each document
+    for (const doc of app.documents) {
+      if (doc.gcsPath) {
+        doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+      } else if (doc.gcsUrl) {
+        // fallback for old records
+        doc.signedUrl = doc.gcsUrl;
+      }
     }
 
     res.render("admissions/applicationDetail", {

@@ -3,7 +3,7 @@
 <div class="container my-5">
   <div class="text-center mb-4">
     <h2 class="fw-bold" style="color: var(--primary-purple)">
-      <%= user.firstName %> <%= user.surName %> <%= user.otherNames || "" %>
+      <%= user.firstName %> <%= user.surname %> <%= user.otherNames || "" %>
       Applications
     </h2>
     <p class="text-muted">Track the status of your submitted applications</p>
@@ -57,12 +57,20 @@
           <hr />
           <h6>Documents</h6>
           <ul>
-            <% app.documents.forEach(doc => { %>
+            <!-- <% app.documents.forEach(doc => { %>
             <li>
               <a href="<%= doc.gcsUrl %>" target="_blank"><%= doc.name %></a>
             </li>
             <% }) %>
-          </ul>
+          </ul> -->
+          <ul>
+  <% app.documents.forEach(doc => { %>
+    <li>
+      <a href="<%= doc.signedUrl %>" target="_blank"><%= doc.name %></a>
+    </li>
+  <% }) %>
+</ul>
+
         </div>
       </div>
     </div>

@@ -30,27 +30,31 @@ exports.submitApplication = async (req, res) => {
     const { firstChoice, secondChoice } = req.body;
     const applicationYear = new Date().getFullYear();
 
-    // ✅ Fetch programme details for naming
     const programme = await Programme.findById(firstChoice);
     if (!programme) {
       req.flash("error_msg", "Invalid programme selected");
       return res.redirect("back");
     }
+
     const programmeCode = programme.code;
 
     // ✅ Upload supporting documents
     const gcsDocs = [];
     for (const file of req.files) {
-      const url = await uploadToGCS(
+      const uploaded = await uploadToGCS(
         file,
         req.user,
         programmeCode,
         applicationYear
       );
-      gcsDocs.push({ name: file.originalname, gcsUrl: url });
+
+      gcsDocs.push({
+        name: file.originalname,
+        gcsUrl: uploaded.publicUrl, // fallback
+        gcsPath: uploaded.path, // secure internal path
+      });
     }
 
-    // ✅ Save application record
     await Application.create({
       applicant: req.user._id,
       firstChoice,
@@ -66,15 +70,29 @@ exports.submitApplication = async (req, res) => {
     res.redirect("back");
   }
 };
+// view my aplplications
 
-// backend/controllers/applicationController.js
+const { generateSignedUrl } = require("../config/gcsUpload");
 
 exports.getMyApplications = async (req, res) => {
   try {
-    const applications = await Application.find({ applicant: req.user._id })
+    let applications = await Application.find({ applicant: req.user._id })
       .populate("firstChoice")
       .populate("secondChoice")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    for (const app of applications) {
+      for (const doc of app.documents) {
+        if (doc.gcsPath) {
+          // ✅ New secure way
+          doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+        } else if (doc.gcsUrl) {
+          // fallback for old records
+          doc.signedUrl = doc.gcsUrl;
+        }
+      }
+    }
 
     res.render("applications/myApplications", {
       title: "My Applications",

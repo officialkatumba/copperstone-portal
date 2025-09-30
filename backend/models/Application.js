@@ -1,3 +1,4 @@
+// backend/models/Application.js
 const mongoose = require("mongoose");
 
 const applicationSchema = new mongoose.Schema(
@@ -24,7 +25,8 @@ const applicationSchema = new mongoose.Schema(
     documents: [
       {
         name: String, // e.g. "Grade 12 Certificate"
-        gcsUrl: String, // Public/Private GCS URL
+        gcsUrl: String, // old/public style URL
+        gcsPath: String, // ✅ internal GCS object path for signed URL
       },
     ],
 
