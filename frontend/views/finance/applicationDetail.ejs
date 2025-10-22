@@ -1,0 +1,114 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container my-4">
+  <h2 class="fw-bold mb-4 text-center" style="color: var(--primary-purple)">
+    Application Payment Verification
+  </h2>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card shadow-lg border-0 rounded-3 p-3 p-md-4">
+
+        <!-- Applicant Info -->
+        <div class="mb-4">
+          <h5 class="fw-bold text-primary mb-3">
+            <i class="fas fa-user-graduate me-2"></i> Applicant Information
+          </h5>
+          <div class="small text-muted">
+            <p class="mb-1"><strong>Name:</strong> <%= application.applicant.firstName %> <%= application.applicant.surname %></p>
+            <p class="mb-1"><strong>Email:</strong> <%= application.applicant.email %></p>
+            <p class="mb-0"><strong>Mobile:</strong> <%= application.applicant.mobile %></p>
+          </div>
+        </div>
+
+        <!-- Programme -->
+        <div class="mb-4">
+          <h5 class="fw-bold text-success mb-3">
+            <i class="fas fa-book-open me-2"></i> Programme Choice
+          </h5>
+          <p class="small text-muted mb-1"><strong>First Choice:</strong> <%= application.firstChoice?.name %> (<%= application.firstChoice?.code %>)</p>
+          <% if (application.secondChoice) { %>
+            <p class="small text-muted mb-0"><strong>Second Choice:</strong> <%= application.secondChoice?.name %></p>
+          <% } %>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="mb-4">
+          <h5 class="fw-bold text-info mb-3">
+            <i class="fas fa-money-bill me-2"></i> Payment Details
+          </h5>
+          <div class="small text-muted">
+            <p class="mb-1"><strong>Amount:</strong> ZMW <%= application.payment?.amount || "—" %></p>
+            <p class="mb-1"><strong>Method:</strong> <%= application.payment?.method || "—" %></p>
+            <p class="mb-1"><strong>Reference:</strong> <%= application.payment?.reference || "—" %></p>
+            <% if (application.payment?.proofUrl) { %>
+              <p class="mb-1">
+                <strong>Proof of Payment:</strong>
+                <a href="<%= application.payment.proofUrl %>" target="_blank" class="link-primary">
+                  View Proof <i class="fas fa-external-link-alt ms-1"></i>
+                </a>
+              </p>
+            <% } %>
+            <p class="mb-0"><strong>Current Status:</strong>
+              <% if (application.payment?.status === "Verified") { %>
+                <span class="badge bg-success">Verified</span>
+              <% } else if (application.payment?.status === "Rejected") { %>
+                <span class="badge bg-danger">Rejected</span>
+              <% } else { %>
+                <span class="badge bg-warning text-dark">Pending</span>
+              <% } %>
+            </p>
+          </div>
+        </div>
+
+        <!-- Uploaded Docs -->
+        <div class="mb-4">
+          <h5 class="fw-bold text-secondary mb-3">
+            <i class="fas fa-paperclip me-2"></i> Supporting Documents
+          </h5>
+          <ul class="list-group small">
+            <% application.documents.forEach(doc => { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><%= doc.name %></span>
+                <a href="<%= doc.signedUrl %>" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+
+        <!-- Verification Form -->
+        <div>
+          <h5 class="fw-bold text-warning mb-3">
+            <i class="fas fa-clipboard-check me-2"></i> Verify Payment
+          </h5>
+          <form action="/finance/applications/<%= application._id %>/verify" method="POST">
+            <div class="mb-3">
+              <select name="status" class="form-select" required>
+                <option value="">Select Action</option>
+                <option value="Verified" <%= application.payment?.status === 'Verified' ? 'selected' : '' %>>Mark as Verified</option>
+                <option value="Rejected" <%= application.payment?.status === 'Rejected' ? 'selected' : '' %>>Reject Payment</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <textarea name="remarks" class="form-control" rows="3" placeholder="Add remarks (optional)"><%= application.payment?.remarks || "" %></textarea>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-save me-1"></i> Submit Verification
+              </button>
+              <a href="/finance/applications" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back
+              </a>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -36,8 +36,15 @@ router.get("/dashboard/admissions", ensureAuthenticated, (req, res) => {
 });
 
 // Finance Officer Dashboard
+// router.get("/dashboard/finance", ensureAuthenticated, (req, res) => {
+//   res.render("dashboard/finance", { user: req.user });
+// });
+
 router.get("/dashboard/finance", ensureAuthenticated, (req, res) => {
-  res.render("dashboard/finance", { user: req.user });
+  res.render("dashboard/finance", {
+    title: "Finance Dashboard",
+    user: req.user,
+  });
 });
 
 module.exports = router;

@@ -44,8 +44,8 @@
             <span class="badge bg-secondary">Pending</span>
             <% } else if (app.status === "Under Review") { %>
             <span class="badge bg-info text-dark">Under Review</span>
-            <% } else if (app.status === "Accepted") { %>
-            <span class="badge bg-success">Accepted</span>
+            <% } else if (app.status === "Approved") { %>
+            <span class="badge bg-success">Approved</span>
             <% } else { %>
             <span class="badge bg-danger">Rejected</span>
             <% } %>
@@ -55,22 +55,35 @@
           </p>
 
           <hr />
-          <h6>Documents</h6>
+
+          <!-- Application Documents -->
+          <h6><i class="fas fa-file-pdf me-2"></i>Application Documents</h6>
           <ul>
-            <!-- <% app.documents.forEach(doc => { %>
+            <% app.documents.forEach(doc => { %>
             <li>
-              <a href="<%= doc.gcsUrl %>" target="_blank"><%= doc.name %></a>
+              <a href="<%= doc.signedUrl %>" target="_blank"><%= doc.name %></a>
             </li>
             <% }) %>
-          </ul> -->
-          <ul>
-  <% app.documents.forEach(doc => { %>
-    <li>
-      <a href="<%= doc.signedUrl %>" target="_blank"><%= doc.name %></a>
-    </li>
-  <% }) %>
-</ul>
+          </ul>
 
+          <!-- Acceptance Letter -->
+          <h6><i class="fas fa-award me-2"></i>Acceptance Letter</h6>
+          <% if (app.acceptanceLetter && app.acceptanceLetter.gcsName) { %>
+          <div class="d-flex justify-content-between align-items-center">
+            <span>Official Acceptance Letter</span>
+            <a
+              href="/applications/<%= app._id %>/letter"
+              target="_blank"
+              class="btn btn-sm btn-success"
+            >
+              <i class="fas fa-download me-1"></i> View Letter
+            </a>
+          </div>
+          <% } else { %>
+          <div class="text-muted">
+            <i class="fas fa-clock me-1"></i> Not available yet
+          </div>
+          <% } %>
         </div>
       </div>
     </div>

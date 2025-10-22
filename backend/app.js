@@ -64,5 +64,7 @@ app.use("/", dashboardRoute);
 const applicationRoutes = require("./routes/applicationRoutes");
 app.use("/programs", applicationRoutes);
 app.use("/admissions", admissionsRoutes); // ✅ Admissions Desk
+const financeRoutes = require("./routes/financeRoutes");
+app.use("/finance", financeRoutes);
 
 module.exports = app;

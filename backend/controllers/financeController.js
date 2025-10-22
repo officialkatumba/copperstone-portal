@@ -1,35 +1,8 @@
-// const mongoose = require("mongoose");
-
-// const invoiceSchema = new mongoose.Schema(
-//   {
-//     student: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "User",
-//       required: true,
-//     },
-//     application: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "Application",
-//       required: true,
-//     },
-//     amount: { type: Number, required: true },
-//     dueDate: Date,
-//     status: {
-//       type: String,
-//       enum: ["Unpaid", "Paid", "Overdue"],
-//       default: "Unpaid",
-//     },
-//   },
-//   { timestamps: true }
-// );
-
-// module.exports = mongoose.model("Invoice", invoiceSchema);
-
+// backend/controllers/financeController.js
 const Application = require("../models/Application");
-const Invoice = require("../models/Invoice");
 const { generateSignedUrl } = require("../config/gcsUpload");
 
-// ✅ List all applications with attached payments
+// List all applications with payments
 exports.listFinanceApplications = async (req, res) => {
   try {
     const applications = await Application.find()
@@ -51,7 +24,7 @@ exports.listFinanceApplications = async (req, res) => {
   }
 };
 
-// ✅ View single application + documents + payment
+// View single application + payment
 exports.viewFinanceApplicationDetail = async (req, res) => {
   try {
     const app = await Application.findById(req.params.id)
@@ -65,14 +38,14 @@ exports.viewFinanceApplicationDetail = async (req, res) => {
       return res.redirect("/finance/applications");
     }
 
-    // Attach signed URLs for documents
+    // Generate signed URLs for docs
     for (const doc of app.documents) {
       if (doc.gcsPath) doc.signedUrl = await generateSignedUrl(doc.gcsPath);
       else if (doc.gcsUrl) doc.signedUrl = doc.gcsUrl;
     }
 
     res.render("finance/applicationDetail", {
-      title: "Finance - Application Payment Verification",
+      title: "Finance - Application Detail",
       application: app,
       user: req.user,
     });
@@ -83,10 +56,10 @@ exports.viewFinanceApplicationDetail = async (req, res) => {
   }
 };
 
-// ✅ Verify or reject payment + generate invoice if verified
+// Verify / reject payment
 exports.verifyPayment = async (req, res) => {
   try {
-    const { status, remarks } = req.body; // status = "Verified" or "Rejected"
+    const { status, remarks } = req.body; // status = Verified / Rejected
     const app = await Application.findById(req.params.id);
 
     if (!app) {
@@ -94,25 +67,10 @@ exports.verifyPayment = async (req, res) => {
       return res.redirect("/finance/applications");
     }
 
-    // update payment verification
     app.payment.status = status;
     app.payment.remarks = remarks || "";
     app.payment.verifiedBy = req.user._id;
     app.payment.verifiedAt = new Date();
-
-    // If verified, generate and mark invoice paid
-    if (status === "Verified") {
-      const invoice = new Invoice({
-        student: app.applicant,
-        application: app._id,
-        amount: app.payment.amount || 0,
-        status: "Paid",
-        paidAt: new Date(),
-      });
-      await invoice.save();
-      app.payment.invoice = invoice._id;
-    }
-
     await app.save();
 
     req.flash("success_msg", `Payment marked as ${status}.`);

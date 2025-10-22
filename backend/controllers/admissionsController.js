@@ -1,8 +1,11 @@
-// controllers/admissionsController.js
+// backend/controllers/admissionsController.js
 const Application = require("../models/Application");
-// const Application = require("../models/Application");
-// const Programme = require("../models/Programme");
-// const User = require("../models/User");
+const User = require("../models/User");
+const { generateAcceptancePDF } = require("../utils/pdfGenerator");
+const { uploadFile, getSignedUrl } = require("../utils/gcs");
+const { sendEmail } = require("../utils/mailer");
+const fs = require("fs");
+const path = require("path");
 
 exports.showAdmissionsDashboard = (req, res) => {
   res.render("dashboard/admissions", {
@@ -32,26 +35,7 @@ exports.viewAllApplications = async (req, res) => {
   }
 };
 
-// Update application status
-exports.updateApplicationStatus = async (req, res) => {
-  try {
-    const { status, remarks } = req.body;
-    await Application.findByIdAndUpdate(req.params.id, {
-      status,
-      remarks,
-      reviewedAt: new Date(),
-    });
-
-    req.flash("success_msg", "Application status updated successfully.");
-    res.redirect("/admissions/applications");
-  } catch (err) {
-    console.error("Error updating application:", err);
-    req.flash("error_msg", "Failed to update application status.");
-    res.redirect("/admissions/applications");
-  }
-};
-
-// List all applications
+// List all applications (alias for viewAllApplications)
 exports.listApplications = async (req, res) => {
   try {
     const applications = await Application.find()
@@ -72,17 +56,30 @@ exports.listApplications = async (req, res) => {
   }
 };
 
-// View application detail
+// // View application detail
+// const { generateSignedUrl } = require("../config/gcsUpload");
+
 // exports.viewApplicationDetail = async (req, res) => {
 //   try {
 //     const app = await Application.findById(req.params.id)
 //       .populate("applicant")
 //       .populate("firstChoice")
-//       .populate("secondChoice");
+//       .populate("secondChoice")
+//       .lean();
 
 //     if (!app) {
 //       req.flash("error_msg", "Application not found.");
 //       return res.redirect("/admissions/applications");
+//     }
+
+//     // 🔐 Generate signed URLs for each document
+//     for (const doc of app.documents) {
+//       if (doc.gcsPath) {
+//         doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+//       } else if (doc.gcsUrl) {
+//         // fallback for old records
+//         doc.signedUrl = doc.gcsUrl;
+//       }
 //     }
 
 //     res.render("admissions/applicationDetail", {
@@ -97,9 +94,84 @@ exports.listApplications = async (req, res) => {
 //   }
 // };
 
-// controllers/applicationController.js
+// View application detail
 const { generateSignedUrl } = require("../config/gcsUpload");
 
+// exports.viewApplicationDetail = async (req, res) => {
+//   try {
+//     const app = await Application.findById(req.params.id)
+//       .populate("applicant")
+//       .populate("firstChoice")
+//       .populate("secondChoice");
+//     // Remove .lean() to keep as Mongoose document
+
+//     if (!app) {
+//       req.flash("error_msg", "Application not found.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     // Convert to plain object AFTER population but BEFORE async operations
+//     const applicationData = app.toObject();
+
+//     // 🔐 Generate signed URLs for each document
+//     for (const doc of applicationData.documents) {
+//       if (doc.gcsPath) {
+//         doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+//       } else if (doc.gcsUrl) {
+//         // fallback for old records
+//         doc.signedUrl = doc.gcsUrl;
+//       }
+//     }
+
+//     // 🔐 Generate signed URL for acceptance letter if it exists
+//     if (
+//       applicationData.acceptanceLetter &&
+//       applicationData.acceptanceLetter.gcsName
+//     ) {
+//       try {
+//         applicationData.acceptanceLetter.signedUrl = await generateSignedUrl(
+//           applicationData.acceptanceLetter.gcsName
+//         );
+//         console.log(
+//           "✅ Acceptance letter signed URL generated for application:",
+//           applicationData._id
+//         );
+//       } catch (error) {
+//         console.error(
+//           "❌ Error generating signed URL for acceptance letter:",
+//           error
+//         );
+//         applicationData.acceptanceLetter.signedUrl = null;
+//       }
+//     }
+
+//     // Better debug logging
+//     console.log("Application data:", {
+//       id: applicationData._id,
+//       status: applicationData.status,
+//       hasAcceptanceLetter: !!applicationData.acceptanceLetter,
+//       acceptanceLetter: applicationData.acceptanceLetter
+//         ? {
+//             gcsName: applicationData.acceptanceLetter.gcsName,
+//             uploadedAt: applicationData.acceptanceLetter.uploadedAt,
+//             hasSignedUrl: !!applicationData.acceptanceLetter.signedUrl,
+//           }
+//         : "No acceptance letter",
+//     });
+
+//     res.render("admissions/applicationDetail", {
+//       title: "Application Detail",
+//       application: applicationData, // Use the processed data
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching application detail:", err);
+//     req.flash("error_msg", "Failed to load application detail.");
+//     res.redirect("/admissions/applications");
+//   }
+// };
+
+// View application detail
 exports.viewApplicationDetail = async (req, res) => {
   try {
     const app = await Application.findById(req.params.id)
@@ -118,10 +190,29 @@ exports.viewApplicationDetail = async (req, res) => {
       if (doc.gcsPath) {
         doc.signedUrl = await generateSignedUrl(doc.gcsPath);
       } else if (doc.gcsUrl) {
-        // fallback for old records
         doc.signedUrl = doc.gcsUrl;
       }
     }
+
+    // 🔐 Generate signed URL for acceptance letter USING THE SAME LOGIC
+    if (app.acceptanceLetter && app.acceptanceLetter.gcsPath) {
+      try {
+        app.acceptanceLetter.signedUrl = await generateSignedUrl(
+          app.acceptanceLetter.gcsPath
+        );
+        console.log("✅ Acceptance letter URL generated successfully");
+      } catch (error) {
+        console.error("❌ Error generating acceptance letter URL:", error);
+        app.acceptanceLetter.signedUrl = app.acceptanceLetter.gcsUrl;
+      }
+    }
+
+    console.log("DEBUG - Application loaded:", {
+      id: app._id,
+      status: app.status,
+      hasAcceptanceLetter: !!app.acceptanceLetter,
+      acceptanceLetterData: app.acceptanceLetter,
+    });
 
     res.render("admissions/applicationDetail", {
       title: "Application Detail",
@@ -135,30 +226,339 @@ exports.viewApplicationDetail = async (req, res) => {
   }
 };
 
+// // Update application status (approve/reject)
+// exports.updateApplicationStatus = async (req, res) => {
+//   try {
+//     const { status, remarks, selectedChoice, startDate } = req.body;
+
+//     const app = await Application.findById(req.params.id)
+//       .populate("applicant", "firstName surname email mobile") // Explicitly include email
+//       .populate("firstChoice")
+//       .populate("secondChoice");
+
+//     if (!app) {
+//       req.flash("error_msg", "Application not found.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     // ✅ Enhanced email validation
+//     let recipientEmail = app.applicant?.email || app.applicantEmail;
+
+//     // If still no email, try to get it from the User model directly
+//     if (!recipientEmail && app.applicant) {
+//       const user = await User.findById(app.applicant._id).select("email");
+//       recipientEmail = user?.email;
+//     }
+
+//     // Final validation - if no email, fail early
+//     if (!recipientEmail) {
+//       console.error(`❌ No valid email found for application ${app._id}`);
+//       req.flash(
+//         "error_msg",
+//         "Applicant has no valid email address. Cannot send notification."
+//       );
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     // Validate email format
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(recipientEmail)) {
+//       console.error(`❌ Invalid email format: ${recipientEmail}`);
+//       req.flash("error_msg", "Applicant email address is invalid.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     console.log(`📧 Sending email to: ${recipientEmail}`);
+
+//     // ✅ Sync applicant email for consistency
+//     if (app.applicant && app.applicant.email) {
+//       app.applicantEmail = app.applicant.email;
+//     }
+
+//     app.status = status;
+//     app.remarks = remarks || "";
+//     app.reviewedAt = new Date();
+//     await app.save();
+
+//     const applicant = app.applicant;
+
+//     if (status === "Approved") {
+//       const chosenProgramme =
+//         selectedChoice === "second" ? app.secondChoice : app.firstChoice;
+
+//       if (!chosenProgramme) {
+//         req.flash("error_msg", "No programme selected for approval.");
+//         return res.redirect("/admissions/applications");
+//       }
+
+//       // Update user record with approved programme
+//       await User.findByIdAndUpdate(applicant._id, {
+//         $push: {
+//           approvedCourses: {
+//             programme: chosenProgramme._id,
+//             approvalDate: new Date(),
+//             startDate: startDate || null,
+//           },
+//         },
+//       });
+
+//       // 1️⃣ Generate PDF
+//       const pdfPath = await generateAcceptancePDF(
+//         app,
+//         chosenProgramme,
+//         startDate
+//       );
+
+//       // 2️⃣ Upload PDF to GCS
+//       const destPath = `applications/Acceptance_${app._id}_${Date.now()}.pdf`;
+//       await uploadFile(pdfPath, destPath);
+
+//       app.acceptanceLetter = {
+//         gcsName: destPath,
+//         uploadedAt: new Date(),
+//       };
+//       await app.save();
+
+//       // 3️⃣ Generate signed URL
+//       const signedUrl = await getSignedUrl(destPath, 90);
+
+//       // 4️⃣ Send email with object parameter (FIXED)
+//       await sendEmail({
+//         to: recipientEmail,
+//         subject: "🎓 Admission Offer - Copperstone University",
+//         html: `
+//           <p>Dear ${applicant.firstName || "Applicant"},</p>
+//           <p>Congratulations! Your application to <strong>${
+//             chosenProgramme.name
+//           }</strong> has been <strong>approved</strong>.</p>
+//           <p>Your programme is scheduled to start on <strong>${new Date(
+//             startDate
+//           ).toLocaleDateString()}</strong>.</p>
+//           <p>You can download your official acceptance letter here: <a href="${signedUrl}">Download acceptance letter</a></p>
+//           <br/>
+//           <p>Warm regards,<br/>Copperstone University Admissions Office</p>
+//         `,
+//         attachments: [{ filename: "Acceptance_Letter.pdf", path: pdfPath }],
+//       });
+
+//       // Clean up local temp file
+//       try {
+//         fs.unlinkSync(pdfPath);
+//       } catch (e) {
+//         console.warn("⚠️ Failed to remove temporary PDF:", e.message);
+//       }
+//     } else if (status === "Rejected") {
+//       // Send rejection email with object parameter (FIXED)
+//       await sendEmail({
+//         to: recipientEmail,
+//         subject: "🎓 Application Update - Copperstone University",
+//         html: `
+//           <p>Dear ${applicant.firstName || "Applicant"},</p>
+//           <p>We regret to inform you that your application was not successful at this time.</p>
+//           <p><strong>Remarks:</strong> ${
+//             remarks || "We encourage you to apply again next intake."
+//           }</p>
+//           <p>Sincerely,<br/>Admissions Office</p>
+//         `,
+//       });
+//     }
+
+//     req.flash(
+//       "success_msg",
+//       `Application ${status.toLowerCase()} successfully. Email sent to ${recipientEmail}.`
+//     );
+//     res.redirect("/admissions/applications");
+//   } catch (err) {
+//     console.error("❌ Error updating application status:", err);
+//     req.flash("error_msg", "Failed to update application.");
+//     res.redirect("/admissions/applications");
+//   }
+// };
+
 // Update application status (approve/reject)
 exports.updateApplicationStatus = async (req, res) => {
   try {
-    const { status, remarks } = req.body;
+    const { status, remarks, selectedChoice, startDate } = req.body;
 
-    const app = await Application.findById(req.params.id);
+    const app = await Application.findById(req.params.id)
+      .populate("applicant", "firstName surname email mobile")
+      .populate("firstChoice")
+      .populate("secondChoice");
+
     if (!app) {
       req.flash("error_msg", "Application not found.");
       return res.redirect("/admissions/applications");
     }
 
+    // ✅ Enhanced email validation
+    let recipientEmail = app.applicant?.email || app.applicantEmail;
+
+    // If still no email, try to get it from the User model directly
+    if (!recipientEmail && app.applicant) {
+      const user = await User.findById(app.applicant._id).select("email");
+      recipientEmail = user?.email;
+    }
+
+    // Final validation - if no email, fail early
+    if (!recipientEmail) {
+      console.error(`❌ No valid email found for application ${app._id}`);
+      req.flash(
+        "error_msg",
+        "Applicant has no valid email address. Cannot send notification."
+      );
+      return res.redirect("/admissions/applications");
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
+      console.error(`❌ Invalid email format: ${recipientEmail}`);
+      req.flash("error_msg", "Applicant email address is invalid.");
+      return res.redirect("/admissions/applications");
+    }
+
+    console.log(`📧 Sending email to: ${recipientEmail}`);
+
+    // ✅ Sync applicant email for consistency
+    if (app.applicant && app.applicant.email) {
+      app.applicantEmail = app.applicant.email;
+    }
+
     app.status = status;
     app.remarks = remarks || "";
     app.reviewedAt = new Date();
-    await app.save();
+
+    const applicant = app.applicant;
+
+    if (status === "Approved") {
+      const chosenProgramme =
+        selectedChoice === "second" ? app.secondChoice : app.firstChoice;
+
+      if (!chosenProgramme) {
+        req.flash("error_msg", "No programme selected for approval.");
+        return res.redirect("/admissions/applications");
+      }
+
+      // Update user record with approved programme
+      await User.findByIdAndUpdate(applicant._id, {
+        $push: {
+          approvedCourses: {
+            programme: chosenProgramme._id,
+            approvalDate: new Date(),
+            startDate: startDate || null,
+          },
+        },
+      });
+
+      // 1️⃣ Generate PDF
+      const pdfPath = await generateAcceptancePDF(
+        app,
+        chosenProgramme,
+        startDate
+      );
+
+      // 2️⃣ Upload PDF to GCS
+      const destPath = `applications/Acceptance_${app._id}_${Date.now()}.pdf`;
+      await uploadFile(pdfPath, destPath);
+
+      // ✅ SAVE ACCEPTANCE LETTER USING THE SCHEMA STRUCTURE
+      app.acceptanceLetter = {
+        name: "Official Acceptance Letter",
+        gcsUrl: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${destPath}`,
+        gcsPath: destPath,
+        uploadedAt: new Date(),
+      };
+
+      await app.save();
+
+      console.log(
+        "✅ Acceptance letter saved to database:",
+        app.acceptanceLetter
+      );
+
+      // 3️⃣ Generate signed URL using the same function as documents
+      const signedUrl = await generateSignedUrl(destPath);
+
+      // 4️⃣ Send email
+      await sendEmail({
+        to: recipientEmail,
+        subject: "🎓 Admission Offer - Copperstone University",
+        html: `
+          <p>Dear ${applicant.firstName || "Applicant"},</p>
+          <p>Congratulations! Your application to <strong>${
+            chosenProgramme.name
+          }</strong> has been <strong>approved</strong>.</p>
+          <p>Your programme is scheduled to start on <strong>${new Date(
+            startDate
+          ).toLocaleDateString()}</strong>.</p>
+          <p>You can download your official acceptance letter here: <a href="${signedUrl}">Download acceptance letter</a></p>
+          <br/>
+          <p>Warm regards,<br/>Copperstone University Admissions Office</p>
+        `,
+        attachments: [{ filename: "Acceptance_Letter.pdf", path: pdfPath }],
+      });
+
+      // Clean up local temp file
+      try {
+        fs.unlinkSync(pdfPath);
+      } catch (e) {
+        console.warn("⚠️ Failed to remove temporary PDF:", e.message);
+      }
+    } else if (status === "Rejected") {
+      await sendEmail({
+        to: recipientEmail,
+        subject: "🎓 Application Update - Copperstone University",
+        html: `
+          <p>Dear ${applicant.firstName || "Applicant"},</p>
+          <p>We regret to inform you that your application was not successful at this time.</p>
+          <p><strong>Remarks:</strong> ${
+            remarks || "We encourage you to apply again next intake."
+          }</p>
+          <p>Sincerely,<br/>Admissions Office</p>
+        `,
+      });
+
+      await app.save();
+    }
 
     req.flash(
       "success_msg",
-      `Application ${status.toLowerCase()} successfully.`
+      `Application ${status.toLowerCase()} successfully. Email sent to ${recipientEmail}.`
     );
     res.redirect("/admissions/applications");
   } catch (err) {
-    console.error("Error updating application status:", err);
+    console.error("❌ Error updating application status:", err);
     req.flash("error_msg", "Failed to update application.");
     res.redirect("/admissions/applications");
+  }
+};
+
+// Add this to your admissionsController.js or create a new controller
+
+// View acceptance letter
+exports.viewAcceptanceLetter = async (req, res) => {
+  try {
+    const app = await Application.findById(req.params.id);
+
+    if (!app) {
+      req.flash("error_msg", "Application not found.");
+      return res.redirect("/dashboard/student");
+    }
+
+    // Check if acceptance letter exists
+    if (!app.acceptanceLetter || !app.acceptanceLetter.gcsName) {
+      req.flash("error_msg", "Acceptance letter not available yet.");
+      return res.redirect("/dashboard/student");
+    }
+
+    // Generate signed URL for the acceptance letter
+    const signedUrl = await getSignedUrl(app.acceptanceLetter.gcsName, 1); // 1 hour expiry
+
+    // Redirect to the signed URL
+    res.redirect(signedUrl);
+  } catch (err) {
+    console.error("Error fetching acceptance letter:", err);
+    req.flash("error_msg", "Failed to load acceptance letter.");
+    res.redirect("/dashboard/student");
   }
 };
