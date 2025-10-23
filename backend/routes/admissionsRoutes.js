@@ -43,42 +43,42 @@ const { getSignedUrl } = require("../utils/gcs");
 // const { ensureAuthenticated } = require("../middleware/auth");
 
 // Show acceptance letter link (students and admissions staff can view)
-router.get(
-  "/applications/:id/letter",
-  // ensureAuthenticated,
-  async (req, res) => {
-    try {
-      const app = await Application.findById(req.params.id).populate(
-        "applicant"
-      );
-      if (!app || !app.acceptanceLetter?.gcsName) {
-        req.flash("error_msg", "Acceptance letter not found.");
-        return res.redirect("back");
-      }
+// router.get(
+//   "/applications/:id/letter",
+//   // ensureAuthenticated,
+//   async (req, res) => {
+//     try {
+//       const app = await Application.findById(req.params.id).populate(
+//         "applicant"
+//       );
+//       if (!app || !app.acceptanceLetter?.gcsName) {
+//         req.flash("error_msg", "Acceptance letter not found.");
+//         return res.redirect("back");
+//       }
 
-      // Security: allow only admissions staff or the applicant to access
-      const user = req.user;
-      const isApplicant = user._id.toString() === app.applicant._id.toString();
-      const isAdmissionStaff = [
-        "AdmissionsOfficer",
-        "Admin",
-        "Registrar",
-        "VC",
-      ].includes(user.role);
+//       // Security: allow only admissions staff or the applicant to access
+//       const user = req.user;
+//       const isApplicant = user._id.toString() === app.applicant._id.toString();
+//       const isAdmissionStaff = [
+//         "AdmissionsOfficer",
+//         "Admin",
+//         "Registrar",
+//         "VC",
+//       ].includes(user.role);
 
-      if (!isApplicant && !isAdmissionStaff) {
-        req.flash("error_msg", "Unauthorized.");
-        return res.redirect("back");
-      }
+//       if (!isApplicant && !isAdmissionStaff) {
+//         req.flash("error_msg", "Unauthorized.");
+//         return res.redirect("back");
+//       }
 
-      const signedUrl = await getSignedUrl(app.acceptanceLetter.gcsName, 30); // valid 30 days
-      return res.redirect(signedUrl);
-    } catch (err) {
-      console.error(err);
-      req.flash("error_msg", "Failed to get letter.");
-      return res.redirect("back");
-    }
-  }
-);
+//       const signedUrl = await getSignedUrl(app.acceptanceLetter.gcsName, 30); // valid 30 days
+//       return res.redirect(signedUrl);
+//     } catch (err) {
+//       console.error(err);
+//       req.flash("error_msg", "Failed to get letter.");
+//       return res.redirect("back");
+//     }
+//   }
+// );
 
 module.exports = router;

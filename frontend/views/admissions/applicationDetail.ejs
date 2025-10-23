@@ -72,18 +72,18 @@
           </ul>
         </div>
 
-        <!-- Acceptance Letter -->
+        <!-- Acceptance Letter - CORRECTED VERSION -->
         <div class="mb-4">
           <h5 class="fw-bold text-warning mb-3">
             <i class="fas fa-award me-2"></i> Acceptance Letter
           </h5>
           <% if (application.acceptanceLetter &&
-          application.acceptanceLetter.gcsName) { %>
+          application.acceptanceLetter.gcsPath) { %>
           <div class="alert alert-success">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <i class="fas fa-check-circle me-2"></i>
-                <strong>Acceptance letter generated</strong>
+                <strong><%= application.acceptanceLetter.name %></strong>
                 <br />
                 <small class="text-muted"
                   >Uploaded on: <%=
@@ -92,7 +92,7 @@
                 >
               </div>
               <a
-                href="/applications/<%= application._id %>/letter"
+                href="/programs/applications/<%= application._id %>/letter"
                 target="_blank"
                 class="btn btn-success btn-sm"
               >

@@ -157,3 +157,42 @@ exports.getMyApplications = async (req, res) => {
     res.redirect("/dashboard/student");
   }
 };
+
+// In applicationController.js - add this function
+// const Application = require("../models/Application");
+// const { generateSignedUrl } = require("../config/gcsUpload");
+
+exports.viewAcceptanceLetter = async (req, res) => {
+  try {
+    const app = await Application.findById(req.params.id).populate("applicant");
+
+    // FIX: Use gcsPath instead of gcsName to match the schema
+    if (!app || !app.acceptanceLetter?.gcsPath) {
+      req.flash("error_msg", "Acceptance letter not found.");
+      return res.redirect("back");
+    }
+
+    // Security: allow only admissions staff or the applicant to access
+    const user = req.user;
+    const isApplicant = user._id.toString() === app.applicant._id.toString();
+    const isAdmissionStaff = [
+      "AdmissionsOfficer",
+      "Admin",
+      "Registrar",
+      "VC",
+    ].includes(user.role);
+
+    if (!isApplicant && !isAdmissionStaff) {
+      req.flash("error_msg", "Unauthorized.");
+      return res.redirect("back");
+    }
+
+    // FIX: Use the same generateSignedUrl function that works for documents
+    const signedUrl = await generateSignedUrl(app.acceptanceLetter.gcsPath); // Use same function as documents
+    return res.redirect(signedUrl);
+  } catch (err) {
+    console.error(err);
+    req.flash("error_msg", "Failed to get letter.");
+    return res.redirect("back");
+  }
+};

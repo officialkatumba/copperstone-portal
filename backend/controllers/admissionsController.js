@@ -172,6 +172,63 @@ const { generateSignedUrl } = require("../config/gcsUpload");
 // };
 
 // View application detail
+// exports.viewApplicationDetail = async (req, res) => {
+//   try {
+//     const app = await Application.findById(req.params.id)
+//       .populate("applicant")
+//       .populate("firstChoice")
+//       .populate("secondChoice")
+//       .lean();
+
+//     if (!app) {
+//       req.flash("error_msg", "Application not found.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     // 🔐 Generate signed URLs for each document
+//     for (const doc of app.documents) {
+//       if (doc.gcsPath) {
+//         doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+//       } else if (doc.gcsUrl) {
+//         doc.signedUrl = doc.gcsUrl;
+//       }
+//     }
+
+//     // 🔐 Generate signed URL for acceptance letter USING THE SAME LOGIC
+//     if (app.acceptanceLetter && app.acceptanceLetter.gcsPath) {
+//       try {
+//         app.acceptanceLetter.signedUrl = await generateSignedUrl(
+//           app.acceptanceLetter.gcsPath
+//         );
+//         console.log("✅ Acceptance letter URL generated successfully");
+//       } catch (error) {
+//         console.error("❌ Error generating acceptance letter URL:", error);
+//         app.acceptanceLetter.signedUrl = app.acceptanceLetter.gcsUrl;
+//       }
+//     }
+
+//     console.log("DEBUG - Application loaded:", {
+//       id: app._id,
+//       status: app.status,
+//       hasAcceptanceLetter: !!app.acceptanceLetter,
+//       acceptanceLetterData: app.acceptanceLetter,
+//     });
+
+//     res.render("admissions/applicationDetail", {
+//       title: "Application Detail",
+//       application: app,
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching application detail:", err);
+//     req.flash("error_msg", "Failed to load application detail.");
+//     res.redirect("/admissions/applications");
+//   }
+// };
+
+// View application detail
+// const { generateSignedUrl } = require("../config/gcsUpload");
+
 exports.viewApplicationDetail = async (req, res) => {
   try {
     const app = await Application.findById(req.params.id)
@@ -185,7 +242,7 @@ exports.viewApplicationDetail = async (req, res) => {
       return res.redirect("/admissions/applications");
     }
 
-    // 🔐 Generate signed URLs for each document
+    // 🔐 Generate signed URLs for each document (WORKING LOGIC)
     for (const doc of app.documents) {
       if (doc.gcsPath) {
         doc.signedUrl = await generateSignedUrl(doc.gcsPath);
@@ -194,24 +251,36 @@ exports.viewApplicationDetail = async (req, res) => {
       }
     }
 
-    // 🔐 Generate signed URL for acceptance letter USING THE SAME LOGIC
+    // 🔐 Generate signed URL for acceptance letter USING EXACT SAME LOGIC AS DOCUMENTS
     if (app.acceptanceLetter && app.acceptanceLetter.gcsPath) {
       try {
+        // Use the EXACT same function and logic as documents
         app.acceptanceLetter.signedUrl = await generateSignedUrl(
           app.acceptanceLetter.gcsPath
         );
-        console.log("✅ Acceptance letter URL generated successfully");
+        console.log(
+          "✅ Acceptance letter signed URL generated using document logic"
+        );
       } catch (error) {
         console.error("❌ Error generating acceptance letter URL:", error);
+        // Fallback to public URL if signed URL fails, same as documents
         app.acceptanceLetter.signedUrl = app.acceptanceLetter.gcsUrl;
       }
     }
 
-    console.log("DEBUG - Application loaded:", {
-      id: app._id,
+    // Debug logging to see what we have
+    console.log("DEBUG - Application details:", {
+      applicationId: app._id,
       status: app.status,
+      documentsCount: app.documents.length,
       hasAcceptanceLetter: !!app.acceptanceLetter,
-      acceptanceLetterData: app.acceptanceLetter,
+      acceptanceLetter: app.acceptanceLetter
+        ? {
+            name: app.acceptanceLetter.name,
+            gcsPath: app.acceptanceLetter.gcsPath,
+            hasSignedUrl: !!app.acceptanceLetter.signedUrl,
+          }
+        : null,
     });
 
     res.render("admissions/applicationDetail", {

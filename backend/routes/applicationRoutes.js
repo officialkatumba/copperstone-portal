@@ -12,6 +12,7 @@ const {
   showApplicationForm,
   submitApplication,
   getMyApplications, // ✅ add this
+  viewAcceptanceLetter, // ← Make sure this line exists and is spelled correctly
 } = require("../controllers/applicationController");
 
 // GET → Display the application form
@@ -33,5 +34,14 @@ router.get(
   //  ensureAuthenticated,
   getMyApplications
 );
+
+// Show acceptance letter
+router.get(
+  "/applications/:id/letter",
+  // ensureAuthenticated,
+  viewAcceptanceLetter // ✅ Use the controller
+);
+
+// router.get("/programs/applications/:id/letter", viewAcceptanceLetter);
 
 module.exports = router;
