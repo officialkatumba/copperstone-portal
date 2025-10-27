@@ -28,3 +28,10 @@ build/
 # Misc
 *.sqlite
 EOF
+
+
+# Backend seed files to ignore
+backend/seedAllTraining.js
+backend/seedTraining.js
+backend/seedAdmissionOfficer.js
+backend/seedFinaceOfficer.js

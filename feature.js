@@ -9,3 +9,12 @@
 
 // ACCEPTANCE LETTER SECTION IN APPLICATION VIEW FOR ADMISSIONS AND STUDENT ARE NOT VIEWING
 //  BAUT ARE BEING SENT BUT EMAIL
+
+//TO DO
+
+// When the finace de[artment approvem of the applicat an ivoicewill be genarateg and marke paid
+
+// i want to perfect the acceptnace ;letter to include the logo and signature and better format
+
+// also include the date of start of the programme in the letter
+//
