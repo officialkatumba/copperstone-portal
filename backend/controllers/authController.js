@@ -1,150 +1,3 @@
-// const passport = require("passport");
-// const User = require("../models/User");
-
-// /**
-//  * ===============================
-//  * 1. Registration
-//  * ===============================
-//  */
-
-// // Show Student Registration Form
-// exports.showRegisterForm = (req, res) => {
-//   res.render("auth/register", { title: "Register - Copperstone" });
-// };
-
-// // Handle Student Registration
-// exports.registerUser = async (req, res) => {
-//   const { fullName, email, password, confirmPassword } = req.body;
-//   try {
-//     // Validation
-//     if (!fullName || !email || !password || !confirmPassword) {
-//       req.flash("error_msg", "All fields are required.");
-//       return res.redirect("/register");
-//     }
-//     if (password !== confirmPassword) {
-//       req.flash("error_msg", "Passwords do not match.");
-//       return res.redirect("/register");
-//     }
-
-//     // Check if user exists
-//     const existing = await User.findOne({ email });
-//     if (existing) {
-//       req.flash("error_msg", "Email already registered.");
-//       return res.redirect("/register");
-//     }
-
-//     // Default role is Student
-//     await User.create({ fullName, email, password, role: "Student" });
-
-//     req.flash("success_msg", "Registration successful! Please login.");
-//     res.redirect("/login");
-//   } catch (err) {
-//     console.error("Registration error:", err);
-//     req.flash("error_msg", "Something went wrong. Please try again.");
-//     res.redirect("/register");
-//   }
-// };
-
-// /**
-//  * ===============================
-//  * 2. Authentication
-//  * ===============================
-//  */
-
-// // Show Login Form
-// exports.showLoginForm = (req, res) => {
-//   res.render("auth/login", { title: "Login - Copperstone" });
-// };
-
-// // Handle Login with Passport
-// exports.loginUser = (req, res, next) => {
-//   passport.authenticate("local", (err, user, info) => {
-//     if (err || !user) {
-//       req.flash("error_msg", info?.message || "Login failed.");
-//       return res.redirect("/login");
-//     }
-
-//     req.logIn(user, async (err) => {
-//       if (err) return next(err);
-
-//       req.flash("success_msg", `Welcome back, ${user.fullName || user.email}!`);
-
-//       // Role-based redirects
-//       if (user.role === "Admin") return res.redirect("/dashboard/admin");
-//       if (user.role === "AdmissionsOfficer")
-//         return res.redirect("/dashboard/admissions");
-//       if (user.role === "FinanceOfficer")
-//         return res.redirect("/dashboard/finance");
-
-//       // Default for students
-//       return res.redirect("/dashboard/student");
-//     });
-//   })(req, res, next);
-// };
-
-// // Logout
-// exports.logoutUser = (req, res, next) => {
-//   req.logout((err) => {
-//     if (err) return next(err);
-//     req.flash("success_msg", "Logged out successfully.");
-//     res.redirect("/login");
-//   });
-// };
-
-// /**
-//  * ===============================
-//  * 3. Password Change
-//  * ===============================
-//  */
-
-// // Show Change Password Form
-// exports.getChangePassword = (req, res) => {
-//   res.render("auth/changePassword", {
-//     title: "Change Password",
-//     currentUser: req.user,
-//   });
-// };
-
-// // Handle Password Change
-// exports.postChangePassword = async (req, res) => {
-//   try {
-//     const { oldPassword, newPassword, confirmPassword } = req.body;
-
-//     if (!oldPassword || !newPassword || !confirmPassword) {
-//       req.flash("error_msg", "All fields are required.");
-//       return res.redirect("/change-password");
-//     }
-
-//     if (newPassword !== confirmPassword) {
-//       req.flash("error_msg", "New passwords do not match.");
-//       return res.redirect("/change-password");
-//     }
-
-//     const user = await User.findById(req.user._id);
-//     if (!user) {
-//       req.flash("error_msg", "User not found.");
-//       return res.redirect("/change-password");
-//     }
-
-//     const validOld = await user.isValidPassword(oldPassword);
-//     if (!validOld) {
-//       req.flash("error_msg", "Old password is incorrect.");
-//       return res.redirect("/change-password");
-//     }
-
-//     // Update password
-//     user.password = newPassword; // will be hashed by pre-save hook
-//     await user.save();
-
-//     req.flash("success_msg", "Your password has been updated successfully!");
-//     res.redirect("/change-password");
-//   } catch (err) {
-//     console.error("Password change error:", err);
-//     req.flash("error_msg", "Something went wrong. Please try again.");
-//     res.redirect("/change-password");
-//   }
-// };
-
 const passport = require("passport");
 const User = require("../models/User");
 
@@ -155,25 +8,46 @@ const User = require("../models/User");
  */
 
 // Show Student Registration Form
+// exports.showRegisterForm = (req, res) => {
+//   res.render("auth/register", { title: "Register - Copperstone" });
+// };
+
 exports.showRegisterForm = (req, res) => {
   res.render("auth/register", { title: "Register - Copperstone" });
 };
 
-// // Handle Student Registration
+// Handle Student Registration
 // exports.registerUser = async (req, res) => {
-//   const { fullName, email, password, confirmPassword } = req.body;
+//   const {
+//     firstName,
+//     surname,
+//     otherNames,
+//     mobile,
+//     email,
+//     password,
+//     confirmPassword,
+//   } = req.body;
+
 //   try {
 //     // Validation
-//     if (!fullName || !email || !password || !confirmPassword) {
-//       req.flash("error_msg", "All fields are required.");
+//     if (
+//       !firstName ||
+//       !surname ||
+//       !mobile ||
+//       !email ||
+//       !password ||
+//       !confirmPassword
+//     ) {
+//       req.flash("error_msg", "All required fields must be filled.");
 //       return res.redirect("/register");
 //     }
+
 //     if (password !== confirmPassword) {
 //       req.flash("error_msg", "Passwords do not match.");
 //       return res.redirect("/register");
 //     }
 
-//     // Check if user exists
+//     // Check if email already exists
 //     const existing = await User.findOne({ email });
 //     if (existing) {
 //       req.flash("error_msg", "Email already registered.");
@@ -182,12 +56,15 @@ exports.showRegisterForm = (req, res) => {
 
 //     // Create new user object without password
 //     const newUser = new User({
-//       fullName,
+//       firstName,
+//       surname,
+//       otherNames: otherNames || "",
+//       mobile,
 //       email,
 //       role: "Student", // default role
 //     });
 
-//     // passport-local-mongoose handles hashing
+//     // passport-local-mongoose handles password hashing & salting
 //     await User.register(newUser, password);
 
 //     req.flash("success_msg", "Registration successful! Please login.");
@@ -240,7 +117,7 @@ exports.registerUser = async (req, res) => {
       return res.redirect("/register");
     }
 
-    // Create new user object without password
+    // ✅ Create base user object with default student profile
     const newUser = new User({
       firstName,
       surname,
@@ -248,12 +125,40 @@ exports.registerUser = async (req, res) => {
       mobile,
       email,
       role: "Student", // default role
+
+      // initialize the studentProfile structure
+      studentProfile: {
+        personalInfo: {
+          dateOfBirth: null,
+          gender: null,
+          nationality: null,
+          nationalIdNumber: null,
+        },
+        contactAddress: {
+          street: "",
+          city: "",
+          province: "",
+          postalCode: "",
+        },
+        emergencyContact: {
+          fullName: "",
+          relation: "",
+          phone: "",
+          email: "",
+        },
+        previousEducation: [],
+        registrationStatus: "Pending",
+        admissionStatus: "Applied",
+      },
     });
 
-    // passport-local-mongoose handles password hashing & salting
+    // ✅ Register user using passport-local-mongoose (handles hashing)
     await User.register(newUser, password);
 
-    req.flash("success_msg", "Registration successful! Please login.");
+    req.flash(
+      "success_msg",
+      "Registration successful! Please login to complete your student profile."
+    );
     res.redirect("/login");
   } catch (err) {
     console.error("Registration error:", err);

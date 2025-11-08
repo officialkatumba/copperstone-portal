@@ -25,52 +25,6 @@ exports.showApplicationForm = async (req, res) => {
  * Handle application submission
 //  */
 
-// exports.submitApplication = async (req, res) => {
-//   try {
-//     const { firstChoice, secondChoice } = req.body;
-//     const applicationYear = new Date().getFullYear();
-
-//     const programme = await Programme.findById(firstChoice);
-//     if (!programme) {
-//       req.flash("error_msg", "Invalid programme selected");
-//       return res.redirect("back");
-//     }
-
-//     const programmeCode = programme.code;
-
-//     // ✅ Upload supporting documents
-//     const gcsDocs = [];
-//     for (const file of req.files) {
-//       const uploaded = await uploadToGCS(
-//         file,
-//         req.user,
-//         programmeCode,
-//         applicationYear
-//       );
-
-//       gcsDocs.push({
-//         name: file.originalname,
-//         gcsUrl: uploaded.publicUrl, // fallback
-//         gcsPath: uploaded.path, // secure internal path
-//       });
-//     }
-
-//     await Application.create({
-//       applicant: req.user._id,
-//       firstChoice,
-//       secondChoice: secondChoice || null,
-//       documents: gcsDocs,
-//     });
-
-//     req.flash("success_msg", "Application submitted successfully!");
-//     res.redirect("/dashboard/student");
-//   } catch (err) {
-//     console.error("Application Error:", err);
-//     req.flash("error_msg", "Failed to submit application.");
-//     res.redirect("back");
-//   }
-// };
-
 exports.submitApplication = async (req, res) => {
   try {
     const { firstChoice, secondChoice, paymentMethod, paymentAmount } =

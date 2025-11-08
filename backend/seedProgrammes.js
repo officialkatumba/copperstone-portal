@@ -1,3 +1,5 @@
+// seedData();
+
 // backend/seed.js
 const mongoose = require("mongoose");
 require("dotenv").config();
@@ -13,11 +15,16 @@ const seedData = async () => {
     });
     console.log("✅ MongoDB Connected for seeding");
 
-    // Clear old data
-    await Programme.deleteMany({});
+    // ✅ DON'T delete existing programmes - just add new ones
+    // Remove or comment out this line:
+    // await Programme.deleteMany({});
 
-    // Seed Programmes
-    const programmes = await Programme.insertMany([
+    // Check if programmes already exist to avoid duplicates
+    const existingProgrammes = await Programme.find({});
+    console.log(`📊 Found ${existingProgrammes.length} existing programmes`);
+
+    // Seed Programmes (only insert if they don't exist)
+    const programmesToInsert = [
       // ---------------- Certificate ----------------
       {
         name: "Certificate in Fire Safety",
@@ -187,9 +194,22 @@ const seedData = async () => {
         tuitionFee: 11500,
         level: "Masters",
       },
-    ]);
+    ];
 
-    console.log(`✅ Seeded ${programmes.length} programmes`);
+    // Insert only programmes that don't already exist (based on code)
+    let insertedCount = 0;
+    for (const programme of programmesToInsert) {
+      const existing = await Programme.findOne({ code: programme.code });
+      if (!existing) {
+        await Programme.create(programme);
+        insertedCount++;
+        console.log(`✅ Added: ${programme.name}`);
+      } else {
+        console.log(`⏭️  Skipped (already exists): ${programme.name}`);
+      }
+    }
+
+    console.log(`✅ Seeding complete! Added ${insertedCount} new programmes`);
 
     // Close connection
     mongoose.connection.close();

@@ -67,4 +67,7 @@ app.use("/admissions", admissionsRoutes); // ✅ Admissions Desk
 const financeRoutes = require("./routes/financeRoutes");
 app.use("/finance", financeRoutes);
 
+// New addition
+app.use("/", require("./routes/registrationRoutes"));
+
 module.exports = app;
