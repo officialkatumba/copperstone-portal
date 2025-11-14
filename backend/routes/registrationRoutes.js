@@ -25,11 +25,23 @@ function ensureApprovedStudent(req, res, next) {
   next();
 }
 
+async function refreshUser(req, res, next) {
+  if (req.isAuthenticated()) {
+    const User = require("../models/User");
+    req.user = await User.findById(req.user._id);
+  }
+  next();
+}
+
 // Routes
-router.get("/student/register", ensureApprovedStudent, showRegistrationForm);
+router.get(
+  "/student/register",
+  //  ensureApprovedStudent,
+  showRegistrationForm
+);
 router.post(
   "/student/register",
-  ensureApprovedStudent,
+  // ensureApprovedStudent,
   upload.single("profilePicture"),
   submitRegistration
 );

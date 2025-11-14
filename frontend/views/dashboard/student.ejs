@@ -2,12 +2,37 @@
 
 <div class="container my-5">
   <div class="text-center mb-4">
-    <h2 class="fw-bold" style="color: var(--primary-purple)">
+
+    <div class="text-center mb-4">
+
+  <% if (profilePicUrl) { %>
+    <img 
+      src="<%= profilePicUrl %>" 
+      class="rounded-circle mb-3"
+      alt="Profile Picture"
+      style="width: 120px; height: 120px; object-fit: cover; border: 3px solid var(--primary-purple);" 
+    />
+  <% } else { %>
+    <i class="fas fa-user-circle mb-3" style="font-size: 120px; color: #ccc;"></i>
+  <% } %>
+
+  <h2 class="fw-bold" style="color: var(--primary-purple)">
+    Welcome, <%= user.firstName %>!
+  </h2>
+
+  <p class="lead text-muted">
+    You are logged in as <strong><%= user.role %></strong>.
+  </p>
+
+</div>
+
+
+    <!-- <h2 class="fw-bold" style="color: var(--primary-purple)">
       Welcome, <%= user.firstName %>!
     </h2>
     <p class="lead text-muted">
       You are logged in as <strong><%= user.role %></strong>.
-    </p>
+    </p> -->
   </div>
     <!-- Dashboard Cards -->
     <div class="row g-4 justify-content-center">

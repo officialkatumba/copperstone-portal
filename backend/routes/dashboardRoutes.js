@@ -110,15 +110,51 @@ function ensureAuthenticated(req, res, next) {
 //   }
 // });
 
+// router.get("/dashboard/student", ensureAuthenticated, async (req, res) => {
+//   try {
+//     const dbUser = await User.findById(req.user._id)
+//       .populate("appliedCourses.firstChoice")
+//       .populate("appliedCourses.secondChoice")
+//       .populate("approvedCourses.programme");
+//     res.render("dashboard/student", {
+//       title: "Student Dashboard",
+//       user: dbUser, // ✅ use fresh dbUser, not req.user
+//     });
+//   } catch (err) {
+//     console.error("Dashboard load error:", err);
+//     req.flash("error_msg", "Failed to load dashboard.");
+//     res.redirect("/login");
+//   }
+// });
+
+// const User = require("../models/User");
+const { generateSignedUrl } = require("../config/gcsUpload");
+// const { ensureAuthenticated } = require("../middleware/auth");
+
 router.get("/dashboard/student", ensureAuthenticated, async (req, res) => {
   try {
+    // Load fresh user document with all relations
     const dbUser = await User.findById(req.user._id)
       .populate("appliedCourses.firstChoice")
       .populate("appliedCourses.secondChoice")
-      .populate("approvedCourses.programme");
+      .populate("approvedCourses.programme")
+      .lean(); // lean for faster rendering
+
+    // Default: no image
+    let profilePicUrl = null;
+
+    // Generate signed URL if picture exists
+    if (dbUser?.studentProfile?.profilePicture?.gcsPath) {
+      profilePicUrl = await generateSignedUrl(
+        dbUser.studentProfile.profilePicture.gcsPath
+      );
+    }
+
+    // Render dashboard with signed URL
     res.render("dashboard/student", {
       title: "Student Dashboard",
-      user: dbUser, // ✅ use fresh dbUser, not req.user
+      user: dbUser,
+      profilePicUrl,
     });
   } catch (err) {
     console.error("Dashboard load error:", err);
