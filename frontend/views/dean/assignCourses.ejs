@@ -1,0 +1,141 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<div
+  class="d-flex align-items-center justify-content-center min-vh-100 mt-5 mb-5"
+>
+  <div
+    class="card shadow-lg border-0 p-4"
+    style="max-width: 500px; width: 100%; border-radius: 12px"
+  >
+    <div class="text-center mb-4">
+      <i
+        class="fas fa-book-open fa-3x mb-2"
+        style="color: var(--primary-purple)"
+      ></i>
+      <h3 class="fw-bold" style="color: var(--primary-purple)">
+        Assign Courses
+      </h3>
+      <p class="text-muted mb-0">Assign courses to registered students</p>
+    </div>
+
+    <!-- No visible flash messages - they'll be handled by SweetAlert -->
+
+    <form action="/dean/assign-courses" method="POST" id="assignCoursesForm">
+      <!-- Select Student -->
+      <div class="mb-4">
+        <label class="form-label fw-bold">Select Student</label>
+        <select
+          class="form-select"
+          name="studentId"
+          id="studentSelect"
+          required
+        >
+          <option value="">-- Select Student --</option>
+          <% students.forEach(s => { %>
+          <option
+            value="<%= s._id %>"
+            data-programme='<%= s.programme ? JSON.stringify(s.programme) : (s.approvedCourses && s.approvedCourses.length > 0 ? JSON.stringify(s.approvedCourses[0].programme) : "{}") %>'
+            data-level="<%= s.level || 'Not set' %>"
+          >
+            <%= s.firstName %> <%= s.surname %> - <%= s.email %>
+          </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Display Approved Programme Info -->
+      <div class="mb-3 p-3 border rounded bg-light">
+        <h6 class="fw-bold mb-2">Approved Programme Information</h6>
+        <div class="row">
+          <div class="col-md-6">
+            <small class="text-muted">Programme:</small>
+            <p class="mb-1 fw-semibold" id="programmeName">Not selected</p>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted">Level:</small>
+            <p class="mb-1 fw-semibold" id="programmeLevel">Not selected</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semester Selection -->
+      <div class="mb-4">
+        <label class="form-label fw-bold">Semester</label>
+        <select class="form-select" name="semester" required>
+          <option value="">-- Select Semester --</option>
+          <option value="1">Semester 1</option>
+          <option value="2">Semester 2</option>
+          <option value="3">Semester 3</option>
+          <option value="4">Semester 4</option>
+          <option value="5">Semester 5</option>
+          <option value="6">Semester 6</option>
+          <option value="7">Semester 7</option>
+          <option value="8">Semester 8</option>
+        </select>
+      </div>
+
+      <!-- Date Range -->
+      <div class="mb-4">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Start Date</label>
+            <input type="date" class="form-control" name="startDate" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">End Date</label>
+            <input type="date" class="form-control" name="endDate" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- Select Courses -->
+      <div class="mb-4">
+        <label class="form-label fw-bold">Select Courses</label>
+        <select multiple class="form-select" name="courseIds" required size="8">
+          <% courses.forEach(c => { %>
+          <option value="<%= c._id %>">
+            <%= c.code %> - <%= c.name %> (<%= c.credits %> credits)
+          </option>
+          <% }) %>
+        </select>
+        <small class="text-muted">Hold CTRL to select multiple</small>
+      </div>
+
+      <button
+        type="submit"
+        class="btn w-100 py-2 fw-semibold text-white"
+        style="background-color: var(--secondary-pink); border-radius: 30px"
+      >
+        <i class="fas fa-check-circle me-1"></i> Assign Courses
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- SweetAlert CDN (if not already in your header) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // Update programme info when student is selected
+  document
+    .getElementById("studentSelect")
+    .addEventListener("change", function () {
+      const selectedOption = this.options[this.selectedIndex];
+      const programmeData = selectedOption.getAttribute("data-programme");
+      const level = selectedOption.getAttribute("data-level");
+
+      if (programmeData && programmeData !== "{}") {
+        const programme = JSON.parse(programmeData);
+        document.getElementById("programmeName").textContent =
+          programme.name || "Not available";
+        document.getElementById("programmeLevel").textContent =
+          level || "Not set";
+      } else {
+        document.getElementById("programmeName").textContent = "Not assigned";
+        document.getElementById("programmeLevel").textContent = "Not set";
+      }
+    });
+
+  // SweetAlert for flash messages
+</script>
+
+<%- include('../partials/footer') %>

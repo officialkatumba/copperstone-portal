@@ -176,6 +176,19 @@ router.get("/dashboard/admissions", ensureAuthenticated, (req, res) => {
   });
 });
 
+// Dean Dashboard
+router.get("/dashboard/dean", ensureAuthenticated, (req, res) => {
+  if (req.user.role !== "Dean") {
+    req.flash("error_msg", "Access denied.");
+    return res.redirect("/login");
+  }
+
+  res.render("dashboard/dean", {
+    title: "Dean Dashboard",
+    user: req.user,
+  });
+});
+
 // Finance Officer Dashboard
 router.get("/dashboard/finance", ensureAuthenticated, (req, res) => {
   res.render("dashboard/finance", {

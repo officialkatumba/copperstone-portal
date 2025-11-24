@@ -70,4 +70,7 @@ app.use("/finance", financeRoutes);
 // New addition
 app.use("/", require("./routes/registrationRoutes"));
 
+const deanRoutes = require("./routes/deanRoutes");
+app.use("/", deanRoutes);
+
 module.exports = app;
