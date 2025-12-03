@@ -27,3 +27,41 @@ const courseSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Course", courseSchema);
+
+// const mongoose = require("mongoose");
+
+// const courseSchema = new mongoose.Schema(
+//   {
+//     code: { type: String, required: true, unique: true },
+//     name: { type: String, required: true },
+//     description: String,
+//     credits: { type: Number, default: 3 },
+
+//     // New: duration for skill courses
+//     duration: { type: String }, // e.g., "3 Months", "2 Weeks", "5 Days"
+
+//     // New: Academic vs Skill
+//     category: {
+//       type: String,
+//       enum: ["Academic", "Skill"],
+//       default: "Academic",
+//     },
+
+//     programmes: [
+//       {
+//         type: mongoose.Schema.Types.ObjectId,
+//         ref: "Programme",
+//       },
+//     ],
+
+//     lecturers: [
+//       {
+//         type: mongoose.Schema.Types.ObjectId,
+//         ref: "User",
+//       },
+//     ],
+//   },
+//   { timestamps: true }
+// );
+
+// module.exports = mongoose.model("Course", courseSchema);

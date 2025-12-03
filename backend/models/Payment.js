@@ -11,7 +11,11 @@ const paymentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    method: { type: String, enum: ["Online", "Manual"], required: true },
+    method: {
+      type: String,
+      enum: ["Online", "Manual", "CDF Sponsored"],
+      required: true,
+    },
     proofUrl: String, // For manual uploads
     transactionId: String, // For online payments
     amount: { type: Number, required: true },

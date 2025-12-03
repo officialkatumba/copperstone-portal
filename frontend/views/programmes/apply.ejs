@@ -1,81 +1,85 @@
-<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+<%- include('../partials/header') %>
+  <%- include('../partials/navbar') %>
 
-<div class="container my-5">
-  <div class="card shadow-lg p-4 mx-auto" style="max-width: 500px">
-    <h3 class="fw-bold text-center mb-4" style="color: var(--primary-purple)">
-      Programme Application
-    </h3>
-    <form action="/programs/apply" method="POST" enctype="multipart/form-data">
-      <div class="mb-3">
-        <label class="form-label fw-semibold">First Choice Programme</label>
-        <select name="firstChoice" class="form-select form-select-lg" required>
-          <option value="">-- Select First Choice --</option>
-          <% programmes.forEach(p => { %>
-          <option value="<%= p._id %>"><%= p.name %></option>
-          <% }) %>
-        </select>
+    <div class="container my-5">
+      <div class="card shadow-lg p-4 mx-auto" style="max-width: 500px">
+        <h3 class="fw-bold text-center mb-4" style="color: var(--primary-purple)">
+          Programme Application
+        </h3>
+
+        <form action="/programs/apply" method="POST" enctype="multipart/form-data">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">First Choice Programme</label>
+            <select name="firstChoice" class="form-select form-select-lg" required>
+              <option value="">-- Select First Choice --</option>
+              <% programmes.forEach(p=> { %>
+                <option value="<%= p._id %>">
+                  <%= p.name %>
+                </option>
+                <% }) %>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Second Choice Programme</label>
+            <select name="secondChoice" class="form-select form-select-lg">
+              <option value="">-- Optional --</option>
+              <% programmes.forEach(p=> { %>
+                <option value="<%= p._id %>">
+                  <%= p.name %>
+                </option>
+                <% }) %>
+            </select>
+          </div>
+
+          <!-- Payment Information -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Payment Method</label>
+            <select id="paymentMethod" name="paymentMethod" class="form-select" required>
+              <option value="">-- Select Payment Method --</option>
+              <option value="Manual">Manual Payment</option>
+              <option value="Electronic">Electronic Payment</option>
+            </select>
+          </div>
+
+          <div class="mb-3" id="amountGroup">
+            <label class="form-label fw-semibold">Amount Paid</label>
+            <input type="number" id="paymentAmount" name="paymentAmount" class="form-control" min="0" step="0.01"
+              placeholder="Enter amount paid" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Attach Certificates & Receipts</label>
+            <input type="file" name="documents" class="form-control" multiple required />
+            <div class="form-text">Upload up to 5 files (PDF, JPG, PNG)</div>
+          </div>
+
+          <button type="submit" class="btn w-100 py-2 fw-semibold"
+            style="background-color: var(--secondary-pink); color: white; border-radius: 30px;">
+            <i class="fas fa-paper-plane me-1"></i> Submit Application
+          </button>
+
+        </form>
       </div>
+    </div>
 
-      <div class="mb-3">
-        <label class="form-label fw-semibold">Second Choice Programme</label>
-        <select name="secondChoice" class="form-select form-select-lg">
-          <option value="">-- Optional --</option>
-          <% programmes.forEach(p => { %>
-          <option value="<%= p._id %>"><%= p.name %></option>
-          <% }) %>
-        </select>
-      </div>
+    <script>
+      const paymentMethod = document.getElementById("paymentMethod");
+      const amountGroup = document.getElementById("amountGroup");
+      const paymentAmount = document.getElementById("paymentAmount");
 
-      <!-- Payment Information -->
-      <div class="mb-3">
-        <label class="form-label fw-semibold">Payment Method</label>
-        <select name="paymentMethod" class="form-select" required>
-          <option value="">-- Select Payment Method --</option>
-          <option value="Manual">Manual Payment</option>
-          <option value="Electronic">Electronic Payment</option>
-        </select>
-      </div>
+      paymentMethod.addEventListener("change", function () {
+        if (this.value === "CDF Sponsored") {
+          amountGroup.style.display = "none";
+          paymentAmount.required = false;
+          paymentAmount.value = 0; // auto-default to zero
+        } else {
+          amountGroup.style.display = "block";
+          paymentAmount.required = true;
+          paymentAmount.value = "";
+        }
+      });
+    </script>
 
-      <div class="mb-3">
-        <label class="form-label fw-semibold">Amount Paid</label>
-        <input
-          type="number"
-          name="paymentAmount"
-          class="form-control"
-          min="0"
-          step="0.01"
-          placeholder="Enter amount paid"
-          required
-        />
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label fw-semibold"
-          >Attach Certificates & Receipts</label
-        >
-        <input
-          type="file"
-          name="documents"
-          class="form-control"
-          multiple
-          required
-        />
-        <div class="form-text">Upload up to 5 files (PDF, JPG, PNG)</div>
-      </div>
-
-      <button
-        type="submit"
-        class="btn w-100 py-2 fw-semibold"
-        style="
-          background-color: var(--secondary-pink);
-          color: white;
-          border-radius: 30px;
-        "
-      >
-        <i class="fas fa-paper-plane me-1"></i> Submit Application
-      </button>
-    </form>
-  </div>
-</div>
-
-<%- include('../partials/footer') %>
+    <%- include('../partials/footer') %>

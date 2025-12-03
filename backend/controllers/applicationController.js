@@ -29,6 +29,8 @@ exports.submitApplication = async (req, res) => {
   try {
     const { firstChoice, secondChoice, paymentMethod, paymentAmount } =
       req.body;
+    // Default paymentAmount → 0
+    const amountToSave = paymentAmount ? parseFloat(paymentAmount) : 0;
     const applicationYear = new Date().getFullYear();
 
     const programme = await Programme.findById(firstChoice);
@@ -62,7 +64,7 @@ exports.submitApplication = async (req, res) => {
       secondChoice: secondChoice || null,
       documents: gcsDocs,
       payment: {
-        amount: parseFloat(paymentAmount),
+        amount: amountToSave,
         method: paymentMethod,
         status: "Pending",
       },
@@ -73,7 +75,8 @@ exports.submitApplication = async (req, res) => {
   } catch (err) {
     console.error("Application Error:", err);
     req.flash("error_msg", "Failed to submit application.");
-    res.redirect("back");
+    // res.redirect("back");
+    res.redirect("/applications/apply");
   }
 };
 // view my aplplications

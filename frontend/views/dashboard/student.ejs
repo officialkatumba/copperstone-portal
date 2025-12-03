@@ -1,203 +1,235 @@
 <%- include('../partials/header') %> <%- include('../partials/navbar') %>
 
-<div class="container my-5">
-  <div class="text-center mb-4">
+    <div class="container my-5">
+      <div class="text-center mb-4">
 
-    <div class="text-center mb-4">
+        <div class="text-center mb-4">
 
-  <% if (profilePicUrl) { %>
-    <img 
-      src="<%= profilePicUrl %>" 
-      class="rounded-circle mb-3"
-      alt="Profile Picture"
-      style="width: 120px; height: 120px; object-fit: cover; border: 3px solid var(--primary-purple);" 
-    />
-  <% } else { %>
-    <i class="fas fa-user-circle mb-3" style="font-size: 120px; color: #ccc;"></i>
-  <% } %>
+          <% if (profilePicUrl) { %>
+            <img src="<%= profilePicUrl %>" class="rounded-circle mb-3" alt="Profile Picture"
+              style="width: 120px; height: 120px; object-fit: cover; border: 3px solid var(--primary-purple);" />
+            <% } else { %>
+              <i class="fas fa-user-circle mb-3" style="font-size: 120px; color: #ccc;"></i>
+              <% } %>
 
-  <h2 class="fw-bold" style="color: var(--primary-purple)">
-    Welcome, <%= user.firstName %>!
-  </h2>
+                <h2 class="fw-bold" style="color: var(--primary-purple)">
+                  Welcome, <%= user.firstName %>!
+                </h2>
 
-  <p class="lead text-muted">
-    You are logged in as <strong><%= user.role %></strong>.
-  </p>
+                <p class="lead text-muted">
+                  You are logged in as <strong>
+                    <%= user.role %>
+                  </strong>.
+                </p>
 
-</div>
+        </div>
 
 
-    <!-- <h2 class="fw-bold" style="color: var(--primary-purple)">
+        <!-- <h2 class="fw-bold" style="color: var(--primary-purple)">
       Welcome, <%= user.firstName %>!
     </h2>
     <p class="lead text-muted">
       You are logged in as <strong><%= user.role %></strong>.
     </p> -->
-  </div>
-    <!-- Dashboard Cards -->
-    <div class="row g-4 justify-content-center">
-      <!-- Apply for a Program -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-file-signature fa-3x mb-3 text-primary"></i>
-            <h5 class="card-title fw-bold">Apply for a Program</h5>
-            <p class="card-text text-muted">
-              Submit your application and upload supporting documents.
-            </p>
-            <a href="/programs/apply" class="btn btn-primary w-100">
-              <i class="fas fa-pen me-1"></i> Apply Now
-            </a>
+      </div>
+      <!-- Dashboard Cards -->
+      <div class="row g-4 justify-content-center">
+        <!-- Apply for a Program -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-file-signature fa-3x mb-3 text-primary"></i>
+              <h5 class="card-title fw-bold">Apply for a Program</h5>
+              <p class="card-text text-muted">
+                Submit your application and upload supporting documents.
+              </p>
+              <a href="/programs/apply" class="btn btn-primary w-100">
+                <i class="fas fa-pen me-1"></i> Apply Now
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- My Applications -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-folder-open fa-3x mb-3 text-success"></i>
-            <h5 class="card-title fw-bold">My Applications</h5>
-            <p class="card-text text-muted">
-              Track the status of your applications and view feedback.
-            </p>
-            <a href="/programs/my" class="btn btn-success w-100">
-              <i class="fas fa-eye me-1"></i> View Applications
-            </a>
+        <!-- Apply for a Skill -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-tools fa-3x mb-3 text-warning"></i>
+              <h5 class="card-title fw-bold">Apply for a Skill</h5>
+              <p class="card-text text-muted">
+                Enroll in short skills training under SELF Or CDF sponsorship.
+              </p>
+              <a href="/skills/apply" class="btn btn-warning text-dark w-100">
+                <i class="fas fa-hammer me-1"></i> Apply for Skill
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Complete Registration (Always Visible) -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-id-card fa-3x mb-3 text-warning"></i>
-            <h5 class="card-title fw-bold">Complete Registration</h5>
-            <p class="card-text text-muted">
-              Provide your personal, contact, and academic details to complete
-              your student registration.
-            </p>
-            <a href="/student/register" class="btn btn-warning text-dark w-100">
-              <i class="fas fa-edit me-1"></i> Complete Registration
-            </a>
+
+        <!-- My Applications -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-folder-open fa-3x mb-3 text-success"></i>
+              <h5 class="card-title fw-bold">My Applications</h5>
+              <p class="card-text text-muted">
+                Track the status of your applications and view feedback.
+              </p>
+              <a href="/programs/my" class="btn btn-success w-100">
+                <i class="fas fa-eye me-1"></i> View Applications
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Register for Classes (Always Visible) -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-chalkboard-teacher fa-3x mb-3 text-primary"></i>
-            <h5 class="card-title fw-bold">Register for Classes</h5>
-            <p class="card-text text-muted">
-              Choose your courses and enroll for the semester.
-            </p>
-            <a href="/student/register-classes" class="btn btn-primary w-100">
-              <i class="fas fa-edit me-1"></i> Register for Classes
-            </a>
+        <!-- My Skill Applications -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-folder-open fa-3x mb-3 text-success"></i>
+              <h5 class="card-title fw-bold">My Skill Applications</h5>
+              <p class="card-text text-muted">
+                Track your applications for skills and short courses.
+              </p>
+              <a href="/skills/my" class="btn btn-success w-100">
+                <i class="fas fa-eye me-1"></i> View Skill Applications
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- My Courses -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-book-open fa-3x mb-3 text-info"></i>
-            <h5 class="card-title fw-bold">My Courses</h5>
-            <p class="card-text text-muted">
-              View your enrolled courses and track academic progress.
-            </p>
-            <a href="/student/courses" class="btn btn-info text-white w-100">
-              <i class="fas fa-book me-1"></i> View Courses
-            </a>
+
+        <!-- Complete Registration (Always Visible) -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-id-card fa-3x mb-3 text-warning"></i>
+              <h5 class="card-title fw-bold">Complete Registration</h5>
+              <p class="card-text text-muted">
+                Provide your personal, contact, and academic details to complete
+                your student registration.
+              </p>
+              <a href="/student/register" class="btn btn-warning text-dark w-100">
+                <i class="fas fa-edit me-1"></i> Complete Registration
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Payments -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-credit-card fa-3x mb-3 text-danger"></i>
-            <h5 class="card-title fw-bold">Payments</h5>
-            <p class="card-text text-muted">
-              View invoices, make payments, and download receipts.
-            </p>
-            <a href="/student/payments" class="btn btn-danger w-100">
-              <i class="fas fa-money-bill-wave me-1"></i> Manage Payments
-            </a>
+        <!-- Register for Classes (Always Visible) -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-chalkboard-teacher fa-3x mb-3 text-primary"></i>
+              <h5 class="card-title fw-bold">Register for Classes</h5>
+              <p class="card-text text-muted">
+                Choose your courses and enroll for the semester.
+              </p>
+              <a href="/student/register-classes" class="btn btn-primary w-100">
+                <i class="fas fa-edit me-1"></i> Register for Classes
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Profile Settings -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-user-cog fa-3x mb-3 text-secondary"></i>
-            <h5 class="card-title fw-bold">Profile Settings</h5>
-            <p class="card-text text-muted">
-              Update your personal info, password, and contact details.
-            </p>
-            <a href="/profile" class="btn btn-secondary w-100">
-              <i class="fas fa-user-edit me-1"></i> Edit Profile
-            </a>
+        <!-- My Courses -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-book-open fa-3x mb-3 text-info"></i>
+              <h5 class="card-title fw-bold">My Courses</h5>
+              <p class="card-text text-muted">
+                View your enrolled courses and track academic progress.
+              </p>
+              <a href="/student/courses" class="btn btn-info text-white w-100">
+                <i class="fas fa-book me-1"></i> View Courses
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Timetable -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-calendar-alt fa-3x mb-3 text-primary"></i>
-            <h5 class="card-title fw-bold">My Timetable</h5>
-            <p class="card-text text-muted">
-              Access your class schedule and upcoming events.
-            </p>
-            <a href="/student/timetable" class="btn btn-primary w-100">
-              <i class="fas fa-clock me-1"></i> View Timetable
-            </a>
+        <!-- Payments -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-credit-card fa-3x mb-3 text-danger"></i>
+              <h5 class="card-title fw-bold">Payments</h5>
+              <p class="card-text text-muted">
+                View invoices, make payments, and download receipts.
+              </p>
+              <a href="/student/payments" class="btn btn-danger w-100">
+                <i class="fas fa-money-bill-wave me-1"></i> Manage Payments
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Announcements -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-bullhorn fa-3x mb-3 text-success"></i>
-            <h5 class="card-title fw-bold">Announcements</h5>
-            <p class="card-text text-muted">
-              Stay updated with campus news and notices.
-            </p>
-            <a href="/student/announcements" class="btn btn-success w-100">
-              <i class="fas fa-bell me-1"></i> View Announcements
-            </a>
+        <!-- Profile Settings -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-user-cog fa-3x mb-3 text-secondary"></i>
+              <h5 class="card-title fw-bold">Profile Settings</h5>
+              <p class="card-text text-muted">
+                Update your personal info, password, and contact details.
+              </p>
+              <a href="/profile" class="btn btn-secondary w-100">
+                <i class="fas fa-user-edit me-1"></i> Edit Profile
+              </a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Support -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <i class="fas fa-headset fa-3x mb-3 text-info"></i>
-            <h5 class="card-title fw-bold">Support & Help</h5>
-            <p class="card-text text-muted">
-              Get assistance with technical issues or academic inquiries.
-            </p>
-            <a href="/support" class="btn btn-info text-white w-100">
-              <i class="fas fa-life-ring me-1"></i> Get Help
-            </a>
+        <!-- Timetable -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-calendar-alt fa-3x mb-3 text-primary"></i>
+              <h5 class="card-title fw-bold">My Timetable</h5>
+              <p class="card-text text-muted">
+                Access your class schedule and upcoming events.
+              </p>
+              <a href="/student/timetable" class="btn btn-primary w-100">
+                <i class="fas fa-clock me-1"></i> View Timetable
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-bullhorn fa-3x mb-3 text-success"></i>
+              <h5 class="card-title fw-bold">Announcements</h5>
+              <p class="card-text text-muted">
+                Stay updated with campus news and notices.
+              </p>
+              <a href="/student/announcements" class="btn btn-success w-100">
+                <i class="fas fa-bell me-1"></i> View Announcements
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Support -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-headset fa-3x mb-3 text-info"></i>
+              <h5 class="card-title fw-bold">Support & Help</h5>
+              <p class="card-text text-muted">
+                Get assistance with technical issues or academic inquiries.
+              </p>
+              <a href="/support" class="btn btn-info text-white w-100">
+                <i class="fas fa-life-ring me-1"></i> Get Help
+              </a>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <%- include('../partials/footer') %>
-</div>
+    <%- include('../partials/footer') %>
+      </div>

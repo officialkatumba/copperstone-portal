@@ -1,255 +1,232 @@
 <%- include('../partials/header') %> <%- include('../partials/navbar') %>
 
-<div class="container my-4">
-  <h2 class="fw-bold mb-4 text-center" style="color: var(--primary-purple)">
-    Application Detail By admission
-  </h2>
+    <div class="container my-4">
 
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-8 col-lg-6">
-      <!-- Main Card -->
-      <div class="card shadow-lg border-0 rounded-3 p-3 p-md-4">
-        <!-- Applicant Info -->
-        <div class="mb-4">
-          <h5 class="fw-bold text-primary mb-3">
-            <i class="fas fa-user-graduate me-2"></i> Applicant Information
-          </h5>
-          <div class="small text-muted">
-            <p class="mb-1">
-              <strong>Name:</strong> <%= application.applicant.firstName %> <%=
-              application.applicant.surname %>
-            </p>
-            <p class="mb-1">
-              <strong>Email:</strong> <%= application.applicant.email %>
-            </p>
-            <p class="mb-0">
-              <strong>Mobile:</strong> <%= application.applicant.mobile %>
-            </p>
-          </div>
-        </div>
 
-        <!-- Programme Choices -->
-        <div class="mb-4">
-          <h5 class="fw-bold text-success mb-3">
-            <i class="fas fa-book-open me-2"></i> Programme Choices
-          </h5>
-          <div class="small text-muted">
-            <p class="mb-1">
-              <strong>First Choice:</strong> <%= application.firstChoice.name %>
-              (<%= application.firstChoice.code %>)
-            </p>
-            <p class="mb-0">
-              <strong>Second Choice:</strong>
-              <%= application.secondChoice ? application.secondChoice.name :
-              "None" %>
-            </p>
-          </div>
-        </div>
 
-        <!-- Documents -->
-        <div class="mb-4">
-          <h5 class="fw-bold text-info mb-3">
-            <i class="fas fa-file-alt me-2"></i> Documents
-          </h5>
-          <ul class="list-group small">
-            <% application.documents.forEach(doc => { %>
-            <li
-              class="list-group-item d-flex justify-content-between align-items-center"
-            >
-              <span
-                ><i class="fas fa-paperclip me-2 text-secondary"></i><%=
-                doc.name %></span
-              >
-              <a
-                href="<%= doc.signedUrl %>"
-                target="_blank"
-                class="btn btn-sm btn-outline-primary"
-              >
-                View
-              </a>
-            </li>
-            <% }) %>
-          </ul>
-        </div>
+      <h2 class="fw-bold mb-4 text-center" style="color: var(--primary-purple)">
+        Application Detail By admission
+      </h2>
 
-        <!-- Acceptance Letter - CORRECTED VERSION -->
-        <div class="mb-4">
-          <h5 class="fw-bold text-warning mb-3">
-            <i class="fas fa-award me-2"></i> Acceptance Letter
-          </h5>
-          <% if (application.acceptanceLetter &&
-          application.acceptanceLetter.gcsPath) { %>
-          <div class="alert alert-success">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <i class="fas fa-check-circle me-2"></i>
-                <strong><%= application.acceptanceLetter.name %></strong>
-                <br />
-                <small class="text-muted"
-                  >Uploaded on: <%=
-                  application.acceptanceLetter.uploadedAt.toDateString()
-                  %></small
-                >
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+
+          <!-- Main Card -->
+          <div class="card shadow-lg border-0 rounded-3 p-3 p-md-4">
+
+            <% if (application.payment?.method==="CDF Sponsored" ) { %>
+              <div class="position-absolute top-0 start-0 w-100 text-center fw-bold text-white py-1" style="background: linear-gradient(90deg, #ff6a00, #ff0084);
+              border-top-left-radius: 8px;
+              border-top-right-radius: 8px;
+              z-index: 10;">
+                🎓 CDF SPONSORED APPLICATION
               </div>
-              <a
-                href="/programs/applications/<%= application._id %>/letter"
-                target="_blank"
-                class="btn btn-success btn-sm"
-              >
-                <i class="fas fa-download me-1"></i> View Letter
-              </a>
-            </div>
-          </div>
-          <% } else { %>
-          <div class="alert alert-secondary">
-            <i class="fas fa-clock me-2"></i> Not available yet
-          </div>
-          <% } %>
-        </div>
+              <% } %>
+                <!-- Applicant Info -->
+                <div class="mb-4 mt-4">
+                  <h5 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-user-graduate me-2"></i> Applicant Information
+                  </h5>
+                  <div class="small text-muted">
+                    <p class="mb-1">
+                      <strong>Name:</strong>
+                      <%= application.applicant.firstName %>
+                        <%= application.applicant.surname %>
+                    </p>
+                    <p class="mb-1">
+                      <strong>Email:</strong>
+                      <%= application.applicant.email %>
+                    </p>
+                    <p class="mb-0">
+                      <strong>Mobile:</strong>
+                      <%= application.applicant.mobile %>
+                    </p>
+                  </div>
+                </div>
 
-        <!-- Status & Actions -->
-        <div>
-          <h5 class="fw-bold text-warning mb-3">
-            <i class="fas fa-tasks me-2"></i> Application Status
-          </h5>
+                <!-- Programme Choices -->
+                <div class="mb-4">
+                  <h5 class="fw-bold text-success mb-3">
+                    <i class="fas fa-book-open me-2"></i> Programme Choices
+                  </h5>
+                  <div class="small text-muted">
+                    <p class="mb-1">
+                      <strong>First Choice:</strong>
+                      <%= application.firstChoice.name %>
+                        (<%= application.firstChoice.code %>)
+                    </p>
+                    <p class="mb-0">
+                      <strong>Second Choice:</strong>
+                      <%= application.secondChoice ? application.secondChoice.name : "None" %>
+                    </p>
+                  </div>
+                </div>
 
-          <!-- Show current status -->
-          <div class="mb-3">
-            <strong>Current Status:</strong>
-            <% if (application.status === "Pending") { %>
-            <span class="badge bg-secondary">Pending</span>
-            <% } else if (application.status === "Under Review") { %>
-            <span class="badge bg-info text-dark">Under Review</span>
-            <% } else if (application.status === "Approved") { %>
-            <span class="badge bg-success">Approved</span>
-            <% } else { %>
-            <span class="badge bg-danger">Rejected</span>
-            <% } %>
-          </div>
+                <!-- Documents -->
+                <div class="mb-4">
+                  <h5 class="fw-bold text-info mb-3">
+                    <i class="fas fa-file-alt me-2"></i> Documents
+                  </h5>
+                  <ul class="list-group small">
+                    <% application.documents.forEach(doc=> { %>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-paperclip me-2 text-secondary"></i>
+                          <%= doc.name %>
+                        </span>
+                        <a href="<%= doc.signedUrl %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                          View
+                        </a>
+                      </li>
+                      <% }) %>
+                  </ul>
+                </div>
 
-          <!-- Only show update form if not already approved -->
-          <% if (application.status !== "Approved") { %>
-          <form
-            action="/admissions/applications/<%= application._id %>/status"
-            method="POST"
-          >
-            <!-- Decision -->
-            <div class="mb-3">
-              <label for="status" class="form-label fw-semibold"
-                >Decision</label
-              >
-              <select name="status" class="form-select" required>
-                <option value="">-- Select Decision --</option>
-                <option value="Approved">Approve</option>
-                <option value="Rejected">Reject</option>
-              </select>
-            </div>
+                <!-- Acceptance Letter - CORRECTED VERSION -->
+                <div class="mb-4">
+                  <h5 class="fw-bold text-warning mb-3">
+                    <i class="fas fa-award me-2"></i> Acceptance Letter
+                  </h5>
+                  <% if (application.acceptanceLetter && application.acceptanceLetter.gcsPath) { %>
+                    <div class="alert alert-success">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <i class="fas fa-check-circle me-2"></i>
+                          <strong>
+                            <%= application.acceptanceLetter.name %>
+                          </strong>
+                          <br />
+                          <small class="text-muted">Uploaded on: <%=
+                              application.acceptanceLetter.uploadedAt.toDateString() %></small>
+                        </div>
+                        <a href="/programs/applications/<%= application._id %>/letter" target="_blank"
+                          class="btn btn-success btn-sm">
+                          <i class="fas fa-download me-1"></i> View Letter
+                        </a>
+                      </div>
+                    </div>
+                    <% } else { %>
+                      <div class="alert alert-secondary">
+                        <i class="fas fa-clock me-2"></i> Not available yet
+                      </div>
+                      <% } %>
+                </div>
 
-            <!-- Select Approved Choice (only show if approving) -->
-            <div class="mb-3" id="approvedChoiceSection">
-              <label for="selectedChoice" class="form-label fw-semibold"
-                >Approved Choice</label
-              >
-              <select name="selectedChoice" class="form-select">
-                <option value="first">
-                  First Choice: <%= application.firstChoice.name %>
-                </option>
-                <% if (application.secondChoice) { %>
-                <option value="second">
-                  Second Choice: <%= application.secondChoice.name %>
-                </option>
-                <% } %>
-              </select>
-              <small class="text-muted">Select which course to approve.</small>
-            </div>
+                <!-- Status & Actions -->
+                <div>
+                  <h5 class="fw-bold text-warning mb-3">
+                    <i class="fas fa-tasks me-2"></i> Application Status
+                  </h5>
 
-            <!-- Select Start Date (only show if approving) -->
-            <div class="mb-3" id="startDateSection">
-              <label for="startDate" class="form-label fw-semibold"
-                >Program Start Date</label
-              >
-              <input
-                type="date"
-                name="startDate"
-                id="startDate"
-                class="form-control"
-              />
-              <small class="text-muted"
-                >Select when this program is scheduled to begin.</small
-              >
-            </div>
+                  <!-- Show current status -->
+                  <div class="mb-3">
+                    <strong>Current Status:</strong>
+                    <% if (application.status==="Pending" ) { %>
+                      <span class="badge bg-secondary">Pending</span>
+                      <% } else if (application.status==="Under Review" ) { %>
+                        <span class="badge bg-info text-dark">Under Review</span>
+                        <% } else if (application.status==="Approved" ) { %>
+                          <span class="badge bg-success">Approved</span>
+                          <% } else { %>
+                            <span class="badge bg-danger">Rejected</span>
+                            <% } %>
+                  </div>
 
-            <!-- Remarks -->
-            <div class="mb-3">
-              <label for="remarks" class="form-label fw-semibold"
-                >Remarks</label
-              >
-              <textarea
-                name="remarks"
-                class="form-control"
-                rows="3"
-                placeholder="Add remarks (optional)"
-              >
-<%= application.remarks || "" %></textarea
-              >
-            </div>
+                  <!-- Only show update form if not already approved -->
+                  <% if (application.status !=="Approved" ) { %>
+                    <form action="/admissions/applications/<%= application._id %>/status" method="POST">
+                      <!-- Decision -->
+                      <div class="mb-3">
+                        <label for="status" class="form-label fw-semibold">Decision</label>
+                        <select name="status" class="form-select" required>
+                          <option value="">-- Select Decision --</option>
+                          <option value="Approved">Approve</option>
+                          <option value="Rejected">Reject</option>
+                        </select>
+                      </div>
 
-            <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-success">
-                <i class="fas fa-save me-1"></i> Update Status
-              </button>
-            </div>
-          </form>
-          <% } else { %>
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            This application has already been approved. No further action
-            required.
-          </div>
-          <% } %>
+                      <!-- Select Approved Choice (only show if approving) -->
+                      <div class="mb-3" id="approvedChoiceSection">
+                        <label for="selectedChoice" class="form-label fw-semibold">Approved Choice</label>
+                        <select name="selectedChoice" class="form-select">
+                          <option value="first">
+                            First Choice: <%= application.firstChoice.name %>
+                          </option>
+                          <% if (application.secondChoice) { %>
+                            <option value="second">
+                              Second Choice: <%= application.secondChoice.name %>
+                            </option>
+                            <% } %>
+                        </select>
+                        <small class="text-muted">Select which course to approve.</small>
+                      </div>
 
-          <div class="d-grid gap-2 mt-3">
-            <a
-              href="/admissions/applications"
-              class="btn btn-outline-secondary"
-            >
-              <i class="fas fa-arrow-left me-1"></i> Back to Applications
-            </a>
+                      <!-- Select Start Date (only show if approving) -->
+                      <div class="mb-3" id="startDateSection">
+                        <label for="startDate" class="form-label fw-semibold">Program Start Date</label>
+                        <input type="date" name="startDate" id="startDate" class="form-control" />
+                        <small class="text-muted">Select when this program is scheduled to begin.</small>
+                      </div>
+
+                      <!-- Remarks -->
+                      <div class="mb-3">
+                        <label for="remarks" class="form-label fw-semibold">Remarks</label>
+                        <textarea name="remarks" class="form-control" rows="3" placeholder="Add remarks (optional)">
+<%= application.remarks || "" %></textarea>
+                      </div>
+
+                      <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                          <i class="fas fa-save me-1"></i> Update Status
+                        </button>
+                      </div>
+                    </form>
+                    <% } else { %>
+                      <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This application has already been approved. No further action
+                        required.
+                      </div>
+                      <% } %>
+
+                        <div class="d-grid gap-2 mt-3">
+                          <a href="/admissions/applications" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Applications
+                          </a>
+                        </div>
+                </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const statusSelect = document.querySelector('select[name="status"]');
-    const approvedChoiceSection = document.getElementById(
-      "approvedChoiceSection"
-    );
-    const startDateSection = document.getElementById("startDateSection");
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const statusSelect = document.querySelector('select[name="status"]');
+        const approvedChoiceSection = document.getElementById(
+          "approvedChoiceSection"
+        );
+        const startDateSection = document.getElementById("startDateSection");
 
-    function toggleApprovalSections() {
-      if (statusSelect.value === "Approved") {
-        approvedChoiceSection.style.display = "block";
-        startDateSection.style.display = "block";
-        startDateSection
-          .querySelector("input")
-          .setAttribute("required", "required");
-      } else {
-        approvedChoiceSection.style.display = "none";
-        startDateSection.style.display = "none";
-        startDateSection.querySelector("input").removeAttribute("required");
-      }
-    }
+        function toggleApprovalSections() {
+          if (statusSelect.value === "Approved") {
+            approvedChoiceSection.style.display = "block";
+            startDateSection.style.display = "block";
+            startDateSection
+              .querySelector("input")
+              .setAttribute("required", "required");
+          } else {
+            approvedChoiceSection.style.display = "none";
+            startDateSection.style.display = "none";
+            startDateSection.querySelector("input").removeAttribute("required");
+          }
+        }
 
-    // Initial state
-    toggleApprovalSections();
+        // Initial state
+        toggleApprovalSections();
 
-    // Update on change
-    statusSelect.addEventListener("change", toggleApprovalSections);
-  });
-</script>
+        // Update on change
+        statusSelect.addEventListener("change", toggleApprovalSections);
+      });
+    </script>
 
-<%- include('../partials/footer') %>
+    <%- include('../partials/footer') %>

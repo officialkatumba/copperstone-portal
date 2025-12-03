@@ -1,171 +1,164 @@
 <%- include('../partials/header') %> <%- include('../partials/navbar') %>
 
-<div class="container my-5">
-  <div class="text-center mb-4">
-    <h2 class="fw-bold mb-2" style="color: var(--primary-purple)">
-      <%= user.firstName %> <%= user.surname %> <%= user.otherNames || "" %>
-      Applications
-    </h2>
-    <p class="text-muted">Track the status of your submitted applications</p>
-  </div>
-
-  <% if (applications.length === 0) { %>
-  <div class="alert alert-info text-center">
-    You have not submitted any applications yet.
-    <a
-      href="/programs/apply"
-      class="fw-bold"
-      style="color: var(--secondary-pink)"
-      >Apply now</a
-    >.
-  </div>
-  <% } else { %>
-
-  <!-- Responsive layout: centered when 1, stacked on mobile, up to 3 on desktop -->
-  <div class="row justify-content-center g-4">
-    <% applications.forEach((app, index) => { %>
-    <div
-      class="col-12 col-md-6 col-lg-4 <%= applications.length === 1 ? 'col-xl-6' : '' %>"
-    >
-      <div class="card shadow-lg border-0 rounded-3 h-100">
-        <div class="card-body p-4">
-          <!-- Application Header -->
-          <div class="text-center mb-4">
-            <div
-              class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3"
-              style="width: 60px; height: 60px"
-            >
-              <i class="fas fa-file-alt fa-lg text-primary"></i>
-            </div>
-            <h5 class="fw-bold text-primary mb-2">
-              Application #<%= index + 1 %>
-            </h5>
-            <span
-              class="badge <% if (app.status === 'Approved') { %> bg-success <% } %> <% if (app.status === 'Rejected') { %> bg-danger <% } %> <% if (app.status === 'Under Review') { %> bg-info text-dark <% } %> <% if (app.status === 'Pending') { %> bg-secondary <% } %>"
-              ><%= app.status %></span
-            >
-          </div>
-
-          <!-- Programme Choices -->
-          <div class="mb-4">
-            <h6 class="fw-bold text-success mb-3">
-              <i class="fas fa-book-open me-2"></i> Programme Choices
-            </h6>
-            <div class="small text-muted">
-              <p class="mb-1">
-                <strong>First Choice:</strong> <%= app.firstChoice?.name %> (<%=
-                app.firstChoice?.code %>)
-              </p>
-              <% if (app.secondChoice) { %>
-              <p class="mb-0">
-                <strong>Second Choice:</strong> <%= app.secondChoice?.name %>
-              </p>
-              <% } %>
-            </div>
-          </div>
-
-          <!-- Application Details -->
-          <div class="mb-4">
-            <h6 class="fw-bold text-info mb-3">
-              <i class="fas fa-calendar me-2"></i> Application Details
-            </h6>
-            <div class="small text-muted">
-              <p class="mb-1">
-                <strong>Submitted:</strong> <%= app.createdAt.toDateString() %>
-              </p>
-              <p class="mb-0">
-                <strong>Level:</strong> <%= app.firstChoice?.level %>
-              </p>
-            </div>
-          </div>
-
-          <!-- Documents Section -->
-          <div class="mb-4">
-            <h6 class="fw-bold text-secondary mb-3">
-              <i class="fas fa-paperclip me-2"></i> Supporting Documents
-            </h6>
-            <ul class="list-group small">
-              <% app.documents.forEach(doc => { %>
-              <li
-                class="list-group-item d-flex justify-content-between align-items-center"
-              >
-                <span><%= doc.name %></span>
-                <a
-                  href="<%= doc.signedUrl %>"
-                  target="_blank"
-                  class="btn btn-sm btn-outline-primary"
-                  >View</a
-                >
-              </li>
-              <% }) %>
-            </ul>
-          </div>
-
-          <!-- Acceptance Letter Section - CORRECTED VERSION -->
-          <div class="mb-4">
-            <h5 class="fw-bold text-warning mb-3">
-              <i class="fas fa-award me-2"></i> Acceptance Letter
-            </h5>
-            <% if (app.acceptanceLetter && app.acceptanceLetter.gcsPath) { %>
-            <div class="alert alert-success">
-              <div class="d-flex justify-content-between align-items-center">
-                <div>
-                  <i class="fas fa-check-circle me-2"></i>
-                  <strong><%= app.acceptanceLetter.name %></strong>
-                  <br />
-                  <small class="text-muted"
-                    >Uploaded on: <%=
-                    app.acceptanceLetter.uploadedAt.toDateString() %></small
-                  >
-                </div>
-                <a
-                  href="/programs/applications/<%= app._id %>/letter"
-                  target="_blank"
-                  class="btn btn-success btn-sm"
-                >
-                  <i class="fas fa-download me-1"></i> View Letter
-                </a>
-              </div>
-            </div>
-            <% } else { %>
-            <div class="alert alert-secondary">
-              <i class="fas fa-clock me-2"></i> Not available yet
-            </div>
-            <% } %>
-          </div>
-
-          <!-- Status Summary -->
-          <div class="mt-4 pt-3 border-top">
-            <div class="text-center">
-              <% if (app.status === 'Approved') { %>
-              <div class="alert alert-success py-2 mb-0">
-                <i class="fas fa-check-circle me-2"></i>
-                <strong>Application Approved</strong>
-              </div>
-              <% } else if (app.status === 'Rejected') { %>
-              <div class="alert alert-danger py-2 mb-0">
-                <i class="fas fa-times-circle me-2"></i>
-                <strong>Application Rejected</strong>
-              </div>
-              <% } else if (app.status === 'Under Review') { %>
-              <div class="alert alert-info py-2 mb-0">
-                <i class="fas fa-sync-alt me-2"></i>
-                <strong>Under Review</strong>
-              </div>
-              <% } else { %>
-              <div class="alert alert-secondary py-2 mb-0">
-                <i class="fas fa-clock me-2"></i>
-                <strong>Pending Review</strong>
-              </div>
-              <% } %>
-            </div>
-          </div>
-        </div>
+    <div class="container my-5">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold mb-2" style="color: var(--primary-purple)">
+          <%= user.firstName %>
+            <%= user.surname %>
+              <%= user.otherNames || "" %>
+                Applications
+        </h2>
+        <p class="text-muted">Track the status of your submitted applications</p>
       </div>
-    </div>
-    <% }) %>
-  </div>
-  <% } %>
-</div>
 
-<%- include('../partials/footer') %>
+      <% if (applications.length===0) { %>
+        <div class="alert alert-info text-center">
+          You have not submitted any applications yet.
+          <a href="/programs/apply" class="fw-bold" style="color: var(--secondary-pink)">Apply now</a>.
+        </div>
+        <% } else { %>
+
+          <!-- Responsive layout: centered when 1, stacked on mobile, up to 3 on desktop -->
+          <div class="row justify-content-center g-4">
+            <% applications.forEach((app, index)=> { %>
+              <div class="col-12 col-md-6 col-lg-4 <%= applications.length === 1 ? 'col-xl-6' : '' %>">
+                <div class="card shadow-lg border-0 rounded-3 h-100">
+
+
+
+                  <div class="card-body p-4">
+                    <!-- Application Header -->
+                    <div class="text-center mb-4">
+                      <div
+                        class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 60px; height: 60px">
+                        <i class="fas fa-file-alt fa-lg text-primary"></i>
+                      </div>
+                      <h5 class="fw-bold text-primary mb-2">
+                        Application #<%= index + 1 %>
+                      </h5>
+                      <span
+                        class="badge <% if (app.status === 'Approved') { %> bg-success <% } %> <% if (app.status === 'Rejected') { %> bg-danger <% } %> <% if (app.status === 'Under Review') { %> bg-info text-dark <% } %> <% if (app.status === 'Pending') { %> bg-secondary <% } %>">
+                        <%= app.status %>
+                      </span>
+                    </div>
+
+                    <!-- Programme Choices -->
+                    <div class="mb-4">
+                      <h6 class="fw-bold text-success mb-3">
+                        <i class="fas fa-book-open me-2"></i> Programme Choices
+                      </h6>
+                      <div class="small text-muted">
+                        <p class="mb-1">
+                          <strong>First Choice:</strong>
+                          <%= app.firstChoice?.name %> (<%= app.firstChoice?.code %>)
+                        </p>
+                        <% if (app.secondChoice) { %>
+                          <p class="mb-0">
+                            <strong>Second Choice:</strong>
+                            <%= app.secondChoice?.name %>
+                          </p>
+                          <% } %>
+                      </div>
+                    </div>
+
+                    <!-- Application Details -->
+                    <div class="mb-4">
+                      <h6 class="fw-bold text-info mb-3">
+                        <i class="fas fa-calendar me-2"></i> Application Details
+                      </h6>
+                      <div class="small text-muted">
+                        <p class="mb-1">
+                          <strong>Submitted:</strong>
+                          <%= app.createdAt.toDateString() %>
+                        </p>
+                        <p class="mb-0">
+                          <strong>Level:</strong>
+                          <%= app.firstChoice?.level %>
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- Documents Section -->
+                    <div class="mb-4">
+                      <h6 class="fw-bold text-secondary mb-3">
+                        <i class="fas fa-paperclip me-2"></i> Supporting Documents
+                      </h6>
+                      <ul class="list-group small">
+                        <% app.documents.forEach(doc=> { %>
+                          <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                              <%= doc.name %>
+                            </span>
+                            <a href="<%= doc.signedUrl %>" target="_blank"
+                              class="btn btn-sm btn-outline-primary">View</a>
+                          </li>
+                          <% }) %>
+                      </ul>
+                    </div>
+
+                    <!-- Acceptance Letter Section - CORRECTED VERSION -->
+                    <div class="mb-4">
+                      <h5 class="fw-bold text-warning mb-3">
+                        <i class="fas fa-award me-2"></i> Acceptance Letter
+                      </h5>
+                      <% if (app.acceptanceLetter && app.acceptanceLetter.gcsPath) { %>
+                        <div class="alert alert-success">
+                          <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                              <i class="fas fa-check-circle me-2"></i>
+                              <strong>
+                                <%= app.acceptanceLetter.name %>
+                              </strong>
+                              <br />
+                              <small class="text-muted">Uploaded on: <%= app.acceptanceLetter.uploadedAt.toDateString()
+                                  %></small>
+                            </div>
+                            <a href="/programs/applications/<%= app._id %>/letter" target="_blank"
+                              class="btn btn-success btn-sm">
+                              <i class="fas fa-download me-1"></i> View Letter
+                            </a>
+                          </div>
+                        </div>
+                        <% } else { %>
+                          <div class="alert alert-secondary">
+                            <i class="fas fa-clock me-2"></i> Not available yet
+                          </div>
+                          <% } %>
+                    </div>
+
+                    <!-- Status Summary -->
+                    <div class="mt-4 pt-3 border-top">
+                      <div class="text-center">
+                        <% if (app.status==='Approved' ) { %>
+                          <div class="alert alert-success py-2 mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Application Approved</strong>
+                          </div>
+                          <% } else if (app.status==='Rejected' ) { %>
+                            <div class="alert alert-danger py-2 mb-0">
+                              <i class="fas fa-times-circle me-2"></i>
+                              <strong>Application Rejected</strong>
+                            </div>
+                            <% } else if (app.status==='Under Review' ) { %>
+                              <div class="alert alert-info py-2 mb-0">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                <strong>Under Review</strong>
+                              </div>
+                              <% } else { %>
+                                <div class="alert alert-secondary py-2 mb-0">
+                                  <i class="fas fa-clock me-2"></i>
+                                  <strong>Pending Review</strong>
+                                </div>
+                                <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <% }) %>
+          </div>
+          <% } %>
+    </div>
+
+    <%- include('../partials/footer') %>

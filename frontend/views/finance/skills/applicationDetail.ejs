@@ -1,0 +1,141 @@
+<%- include('../../partials/header') %>
+    <%- include('../../partials/navbar') %>
+
+        <div class="container my-4">
+            <h2 class="fw-bold text-center mb-4" style="color: var(--primary-purple)">
+                Skill Application Payment Verification
+            </h2>
+
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card shadow-lg border-0 rounded-3 p-3 p-md-4 position-relative">
+
+                        <% if (application.payment?.method=="CDF Sponsored" ) { %>
+                            <div class="position-absolute top-0 start-0 w-100 text-center fw-bold text-white py-1"
+                                style="background: linear-gradient(90deg, #ff6a00, #ff0084);
+            border-top-left-radius: 8px; border-top-right-radius: 8px; z-index: 5;">
+                                🎓 CDF SPONSORED APPLICATION
+                            </div>
+                            <% } %>
+
+                                <!-- Applicant Details -->
+                                <div class="mt-4 mb-4">
+                                    <h5 class="fw-bold text-primary mb-3"><i class="fas fa-user me-2"></i> Applicant
+                                        Information</h5>
+                                    <p class="small text-muted mb-1"><strong>Name:</strong>
+                                        <%= application.applicant.firstName %>
+                                            <%= application.applicant.surname %>
+                                    </p>
+                                    <p class="small text-muted mb-1"><strong>Email:</strong>
+                                        <%= application.applicant.email %>
+                                    </p>
+                                    <p class="small text-muted mb-0"><strong>Mobile:</strong>
+                                        <%= application.applicant.mobile %>
+                                    </p>
+                                </div>
+
+                                <!-- Skill Info -->
+                                <div class="mb-4">
+                                    <h5 class="fw-bold text-success mb-3"><i class="fas fa-tools me-2"></i> Skill
+                                        Information</h5>
+                                    <p class="small text-muted mb-1"><strong>Skill:</strong>
+                                        <%= application.skill?.name %>
+                                    </p>
+                                    <p class="small text-muted mb-0"><strong>Code:</strong>
+                                        <%= application.skill?.code %>
+                                    </p>
+                                </div>
+
+                                <!-- Payment Info -->
+                                <div class="mb-4">
+                                    <h5 class="fw-bold text-info mb-3"><i class="fas fa-money-bill me-2"></i> Payment
+                                        Details</h5>
+                                    <p class="small text-muted mb-1"><strong>Amount:</strong> ZMW <%=
+                                            application.payment?.amount || "—" %>
+                                    </p>
+                                    <p class="small text-muted mb-1"><strong>Method:</strong>
+                                        <%= application.payment?.method %>
+                                    </p>
+
+                                    <p class="small text-muted mb-1">
+                                        <strong>Status:</strong>
+                                        <% if (application.payment?.status==="Verified" ) { %>
+                                            <span class="badge bg-success">Verified</span>
+                                            <% } else if (application.payment?.status==="Rejected" ) { %>
+                                                <span class="badge bg-danger">Rejected</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                    <% } %>
+                                    </p>
+
+                                    <% if (application.payment?.verifiedAt) { %>
+                                        <div class="p-2 bg-light rounded small mt-2">
+                                            <strong>Date:</strong>
+                                            <%= new Date(application.payment.verifiedAt).toLocaleDateString() %><br>
+                                                <strong>Remarks:</strong>
+                                                <%= application.payment.remarks || "—" %>
+                                        </div>
+                                        <% } %>
+                                </div>
+
+                                <!-- Documents Section -->
+                                <div class="mb-4">
+                                    <h5 class="fw-bold text-secondary mb-3"><i class="fas fa-file me-2"></i> Uploaded
+                                        Documents</h5>
+                                    <ul class="list-group small">
+                                        <% application.documents.forEach(doc=> { %>
+                                            <li
+                                                class="list-group-item d-flex justify-content-between align-items-center">
+                                                <%= doc.name %>
+                                                    <a href="<%= doc.signedUrl %>" target="_blank"
+                                                        class="btn btn-sm btn-outline-primary">View</a>
+                                            </li>
+                                            <% }) %>
+                                    </ul>
+                                </div>
+
+                                <!-- Verification Form -->
+                                <% if (application.payment?.status !=="Verified" && application.payment?.status
+                                    !=="Rejected" ) { %>
+                                    <form action="/finance/skills/applications/<%= application._id %>/verify"
+                                        method="POST">
+
+                                        <h5 class="fw-bold text-warning mb-3"><i class="fas fa-check-circle me-2"></i>
+                                            Verify Payment</h5>
+
+                                        <div class="mb-3">
+                                            <select name="status" class="form-select" required>
+                                                <option value="">Select Action</option>
+                                                <option value="Verified">Mark as Verified</option>
+                                                <option value="Rejected">Reject Payment</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <textarea name="remarks" class="form-control" rows="3"
+                                                placeholder="Remarks (optional)"></textarea>
+                                        </div>
+
+                                        <div class="d-grid">
+                                            <button class="btn btn-success">
+                                                <i class="fas fa-save me-1"></i> Submit Verification
+                                            </button>
+                                        </div>
+
+                                    </form>
+                                    <% } else { %>
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-1"></i> Payment already processed.
+                                        </div>
+                                        <% } %>
+
+                                            <a href="/finance/skills" class="btn btn-outline-secondary mt-3 w-100">
+                                                <i class="fas fa-arrow-left me-2"></i> Back to Applications
+                                            </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../../partials/footer') %>

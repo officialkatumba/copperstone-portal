@@ -1,0 +1,163 @@
+<%- include('../../partials/header') %>
+    <%- include('../../partials/navbar') %>
+
+        <div class="container my-4">
+            <h2 class="fw-bold text-center mb-4" style="color: var(--primary-purple)">
+                Skill Application Detail
+            </h2>
+
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-9 col-lg-7">
+                    <div class="card shadow-sm rounded-3 p-4 position-relative">
+
+                        <% if (application.payment?.method==="CDF Sponsored" ) { %>
+                            <div class="position-absolute top-0 start-0 w-100 text-center fw-bold text-white py-1"
+                                style="background: linear-gradient(90deg, #ff6a00, #ff0084);
+                      border-top-left-radius: 8px; border-top-right-radius: 8px; z-index: 5;">
+                                🎓 CDF SPONSORED APPLICATION
+                            </div>
+                            <% } %>
+
+                                <!-- Applicant -->
+                                <div class="mb-4 mt-4">
+                                    <h5 class="fw-bold text-primary mb-2"><i class="fas fa-user me-2"></i> Applicant
+                                    </h5>
+                                    <p class="small text-muted mb-1"><strong>Name:</strong>
+                                        <%= application.applicant.firstName %>
+                                            <%= application.applicant.surname %>
+                                    </p>
+                                    <p class="small text-muted mb-1"><strong>Email:</strong>
+                                        <%= application.applicant.email %>
+                                    </p>
+                                    <p class="small text-muted mb-0"><strong>Mobile:</strong>
+                                        <%= application.applicant.mobile %>
+                                    </p>
+                                </div>
+
+                                <!-- Skill -->
+                                <div class="mb-4">
+                                    <h5 class="fw-bold text-success mb-2"><i class="fas fa-tools me-2"></i> Skill</h5>
+                                    <p class="small text-muted mb-1"><strong>Skill:</strong>
+                                        <%= application.skill.name %>
+                                    </p>
+                                    <p class="small text-muted mb-0"><strong>Duration:</strong>
+                                        <%= application.skill.duration %>
+                                    </p>
+                                </div>
+
+                                <!-- Payment -->
+                                <div class="mb-4">
+                                    <h5 class="fw-bold text-info mb-2"><i class="fas fa-money-bill me-2"></i> Payment
+                                    </h5>
+                                    <p class="small text-muted mb-1"><strong>Amount:</strong>
+                                        <%= application.payment?.amount ? "ZMW " + application.payment.amount.toFixed(2)
+                                            : "—" %>
+                                    </p>
+                                    <p class="small text-muted mb-1"><strong>Method:</strong>
+                                        <%= application.payment?.method || "—" %>
+                                    </p>
+                                    <p class="small text-muted mb-0"><strong>Payment Status:</strong>
+                                        <% if (application.payment?.status==="Verified" ) { %>
+                                            <span class="badge bg-success">Verified</span>
+                                            <% } else if (application.payment?.status==="Rejected" ) { %>
+                                                <span class="badge bg-danger">Rejected</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                    <% } %>
+                                    </p>
+                                </div>
+
+                                <!-- Documents -->
+                                <div class="mb-4">
+                                    <h5 class="fw-bold text-secondary mb-2"><i class="fas fa-paperclip me-2"></i>
+                                        Documents</h5>
+                                    <ul class="list-group small">
+                                        <% application.documents.forEach(doc=> { %>
+                                            <li
+                                                class="list-group-item d-flex justify-content-between align-items-center">
+                                                <%= doc.name %>
+                                                    <a href="<%= doc.signedUrl %>" target="_blank"
+                                                        class="btn btn-sm btn-outline-primary">View</a>
+                                            </li>
+                                            <% }) %>
+                                    </ul>
+                                </div>
+                                <!-- Acceptance Letter -->
+                                <div class="mb-4">
+                                    <h5 class="fw-bold text-warning mb-2">
+                                        <i class="fas fa-file-alt me-2"></i> Acceptance Letter
+                                    </h5>
+
+                                    <% if (application.acceptanceLetter && application.acceptanceLetter.gcsPath) { %>
+
+                                        <div class="alert alert-success small">
+                                            <strong>
+                                                <%= application.acceptanceLetter.name %>
+                                            </strong><br>
+                                            <small class="text-muted">
+                                                Uploaded: <%= application.acceptanceLetter.uploadedAt.toDateString() %>
+                                            </small>
+
+                                            <div class="mt-2">
+                                                <a href="/skills/applications/<%= application._id %>/letter"
+                                                    target="_blank" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-download me-1"></i> View Letter
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <% } else { %>
+
+                                            <div class="alert alert-secondary small">
+                                                <i class="fas fa-clock me-2"></i> Acceptance letter not available yet.
+                                            </div>
+
+                                            <% } %>
+                                </div>
+
+
+                                <!-- Approve / Reject Form -->
+                                <% if (application.status !=="Approved" ) { %>
+                                    <form action="/admissions/skills/applications/<%= application._id %>/status"
+                                        method="POST">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Action</label>
+                                            <select name="status" class="form-select" required>
+                                                <option value="">Select action</option>
+                                                <option value="Approved">Approve</option>
+                                                <option value="Rejected">Reject</option>
+                                                <option value="Under Review">Mark Under Review</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Start Date (optional)</label>
+                                            <input type="date" name="startDate" class="form-control" />
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Remarks (optional)</label>
+                                            <textarea name="remarks" class="form-control" rows="3"></textarea>
+                                        </div>
+
+                                        <div class="d-grid">
+                                            <button class="btn btn-primary">
+                                                <i class="fas fa-check me-1"></i> Submit
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <% } else { %>
+                                        <div class="alert alert-success">This application is already approved.</div>
+                                        <% } %>
+
+                                            <a href="/admissions/skills/applications"
+                                                class="btn btn-outline-secondary mt-3 w-100">
+                                                <i class="fas fa-arrow-left me-1"></i> Back to Skill Applications
+                                            </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../../partials/footer') %>

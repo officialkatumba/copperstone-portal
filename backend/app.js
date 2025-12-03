@@ -73,4 +73,13 @@ app.use("/", require("./routes/registrationRoutes"));
 const deanRoutes = require("./routes/deanRoutes");
 app.use("/", deanRoutes);
 
+app.use("/skills", require("./routes/skillApplicationRoutes"));
+
+const skillFinanceRoutes = require("./routes/skillFinanceRoutes");
+app.use("/finance", skillFinanceRoutes);
+
+// skill admissions
+const skillAdmissionsRoutes = require("./routes/skillAdmissionsRoutes");
+app.use("/admissions", skillAdmissionsRoutes);
+
 module.exports = app;
