@@ -909,7 +909,9 @@ async function generateAcceptancePDF(application, chosenProgramme, startDate) {
         .text(
           "• Failure to register by the deadline may result in cancellation"
         )
-        .text("• For any queries, contact admissions@copperstone.edu.zm")
+        .text(
+          "• For any queries, contact registrar@copperstoneuniversity.ac.zm"
+        )
         .moveDown(2);
 
       if (application.remarks) {
@@ -938,7 +940,7 @@ async function generateAcceptancePDF(application, chosenProgramme, startDate) {
         .font("Helvetica-Bold")
         .text("Admissions Office")
         .text("Copperstone University")
-        .text("Email: admissions@copperstone.edu.zm")
+        .text("Email: registrar@copperstoneuniversity.ac.zm")
         .text("Phone: +260 211 123 4567")
         .moveDown(2);
 
@@ -948,7 +950,7 @@ async function generateAcceptancePDF(application, chosenProgramme, startDate) {
         .font("Helvetica")
         .fillColor("#000000") // Black color
         .text(
-          "Copperstone University - Transforming Lives Through Quality Education",
+          "Copperstone University - Our Vision! Our country! Our World",
           50,
           780,
           { align: "center", width: 495 }

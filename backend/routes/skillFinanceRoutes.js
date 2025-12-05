@@ -1,4 +1,41 @@
-// backend/routes/skillFinanceRoutes.js
+// // backend/routes/skillFinanceRoutes.js
+// const express = require("express");
+// const router = express.Router();
+
+// const {
+//   listFinanceSkillApplications,
+//   viewFinanceSkillApplicationDetail,
+//   verifySkillPayment,
+// } = require("../controllers/skillFinanceController");
+
+// // ---------------------------------------------------------
+// // 1. Redirect /finance/skills → /finance/skills/applications
+// // ---------------------------------------------------------
+// router.get("/skills", (req, res) => {
+//   res.redirect("/finance/skills/applications");
+// });
+
+// // ---------------------------------------------------------
+// // 2. LIST all skill applications
+// //    GET /finance/skills/applications
+// // ---------------------------------------------------------
+// router.get("/skills/applications", listFinanceSkillApplications);
+
+// // ---------------------------------------------------------
+// // 3. VIEW ONE application
+// //    GET /finance/skills/applications/:id
+// // ---------------------------------------------------------
+// router.get("/skills/applications/:id", viewFinanceSkillApplicationDetail);
+
+// // ---------------------------------------------------------
+// // 4. VERIFY PAYMENT (POST)
+// //    POST /finance/skills/applications/:id/verify
+// // ---------------------------------------------------------
+// router.post("/skills/applications/:id/verify", verifySkillPayment);
+
+// module.exports = router;
+
+// backend/routes/skillFinanceRoutes.js - CORRECTED
 const express = require("express");
 const router = express.Router();
 
@@ -11,7 +48,8 @@ const {
 // ---------------------------------------------------------
 // 1. Redirect /finance/skills → /finance/skills/applications
 // ---------------------------------------------------------
-router.get("/skills", (req, res) => {
+router.get("/", (req, res) => {
+  // Changed from "/skills" to "/"
   res.redirect("/finance/skills/applications");
 });
 
@@ -19,18 +57,18 @@ router.get("/skills", (req, res) => {
 // 2. LIST all skill applications
 //    GET /finance/skills/applications
 // ---------------------------------------------------------
-router.get("/skills/applications", listFinanceSkillApplications);
+router.get("/applications", listFinanceSkillApplications); // Removed "/skills" prefix
 
 // ---------------------------------------------------------
 // 3. VIEW ONE application
 //    GET /finance/skills/applications/:id
 // ---------------------------------------------------------
-router.get("/skills/applications/:id", viewFinanceSkillApplicationDetail);
+router.get("/applications/:id", viewFinanceSkillApplicationDetail); // Removed "/skills" prefix
 
 // ---------------------------------------------------------
 // 4. VERIFY PAYMENT (POST)
 //    POST /finance/skills/applications/:id/verify
 // ---------------------------------------------------------
-router.post("/skills/applications/:id/verify", verifySkillPayment);
+router.post("/applications/:id/verify", verifySkillPayment); // Removed "/skills" prefix
 
 module.exports = router;

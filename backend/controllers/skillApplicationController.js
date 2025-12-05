@@ -68,6 +68,37 @@ exports.submitSkillApplication = async (req, res) => {
   }
 };
 
+// exports.getMySkillApplications = async (req, res) => {
+//   try {
+//     const applications = await SkillApplication.find({
+//       applicant: req.user._id,
+//     })
+//       .populate("skill")
+//       .sort({ createdAt: -1 })
+//       .lean();
+
+//     for (const app of applications) {
+//       for (const doc of app.documents) {
+//         if (doc.gcsPath) {
+//           doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+//         } else {
+//           doc.signedUrl = doc.gcsUrl;
+//         }
+//       }
+//     }
+
+//     res.render("skills/mySkillApplications", {
+//       title: "My Skill Applications",
+//       applications,
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("Error loading skill applications:", err);
+//     req.flash("error_msg", "Failed to load your skill applications.");
+//     res.redirect("/dashboard/student");
+//   }
+// };
+
 exports.getMySkillApplications = async (req, res) => {
   try {
     const applications = await SkillApplication.find({
@@ -78,12 +109,20 @@ exports.getMySkillApplications = async (req, res) => {
       .lean();
 
     for (const app of applications) {
+      // Document signed URLs
       for (const doc of app.documents) {
         if (doc.gcsPath) {
           doc.signedUrl = await generateSignedUrl(doc.gcsPath);
         } else {
           doc.signedUrl = doc.gcsUrl;
         }
+      }
+
+      // Acceptance Letter signed URL
+      if (app.acceptanceLetter?.gcsPath) {
+        app.acceptanceLetter.signedUrl = await generateSignedUrl(
+          app.acceptanceLetter.gcsPath
+        );
       }
     }
 
@@ -98,6 +137,7 @@ exports.getMySkillApplications = async (req, res) => {
     res.redirect("/dashboard/student");
   }
 };
+
 exports.viewSkillAcceptanceLetter = async (req, res) => {
   try {
     const app = await SkillApplication.findById(req.params.id).populate(

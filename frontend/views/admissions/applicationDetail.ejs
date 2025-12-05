@@ -81,35 +81,6 @@
                   </ul>
                 </div>
 
-                <!-- Acceptance Letter - CORRECTED VERSION -->
-                <div class="mb-4">
-                  <h5 class="fw-bold text-warning mb-3">
-                    <i class="fas fa-award me-2"></i> Acceptance Letter
-                  </h5>
-                  <% if (application.acceptanceLetter && application.acceptanceLetter.gcsPath) { %>
-                    <div class="alert alert-success">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                          <i class="fas fa-check-circle me-2"></i>
-                          <strong>
-                            <%= application.acceptanceLetter.name %>
-                          </strong>
-                          <br />
-                          <small class="text-muted">Uploaded on: <%=
-                              application.acceptanceLetter.uploadedAt.toDateString() %></small>
-                        </div>
-                        <a href="/programs/applications/<%= application._id %>/letter" target="_blank"
-                          class="btn btn-success btn-sm">
-                          <i class="fas fa-download me-1"></i> View Letter
-                        </a>
-                      </div>
-                    </div>
-                    <% } else { %>
-                      <div class="alert alert-secondary">
-                        <i class="fas fa-clock me-2"></i> Not available yet
-                      </div>
-                      <% } %>
-                </div>
 
                 <!-- Status & Actions -->
                 <div>
@@ -123,7 +94,41 @@
                     <% if (application.status==="Pending" ) { %>
                       <span class="badge bg-secondary">Pending</span>
                       <% } else if (application.status==="Under Review" ) { %>
-                        <span class="badge bg-info text-dark">Under Review</span>
+                        <span class="badge bg-info text-dark">Un<!-- Acceptance Letter - CORRECTED VERSION -->
+                          <div class="mb-4">
+                            <h5 class="fw-bold text-warning mb-3">
+                              <i class="fas fa-award me-2"></i> Acceptance Letter
+                            </h5>
+
+                            <% if (application.acceptanceLetter && application.acceptanceLetter.gcsPath) { %>
+                              <div class="alert alert-success">
+                                <div class="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>
+                                      <%= application.acceptanceLetter.name %>
+                                    </strong>
+                                    <br />
+                                    <small class="text-muted">
+                                      Uploaded on: <%= application.acceptanceLetter.uploadedAt.toDateString() %>
+                                    </small>
+                                  </div>
+
+                                  <!-- 🔥 Correct Skill Admissions Route -->
+                                  <a href="/admissions/skills/applications/<%= application._id %>/letter"
+                                    target="_blank" class="btn btn-success btn-sm">
+                                    <i class="fas fa-download me-1"></i> View Letter
+                                  </a>
+                                </div>
+                              </div>
+                              <% } else { %>
+                                <div class="alert alert-secondary">
+                                  <i class="fas fa-clock me-2"></i> Not available yet
+                                </div>
+                                <% } %>
+                          </div>
+                          der Review
+                        </span>
                         <% } else if (application.status==="Approved" ) { %>
                           <span class="badge bg-success">Approved</span>
                           <% } else { %>

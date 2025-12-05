@@ -96,8 +96,11 @@ router.post(
 // View My Skill Applications
 router.get("/my", getMySkillApplications);
 
-// View Skill Acceptance Letter
-router.get("/applications/:id/letter", viewSkillAcceptanceLetter);
+// // View Skill Acceptance Letter
+// router.get("/applications/:id/letter", viewSkillAcceptanceLetter);
+
+// View Skill Acceptance Letter (REQUIRED ROUTE)
+router.get("/:id/letter", viewSkillAcceptanceLetter);
 
 // Fallback route
 router.get("/back", (req, res) => {
