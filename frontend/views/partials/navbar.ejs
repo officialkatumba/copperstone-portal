@@ -3,12 +3,7 @@
     <a class="navbar-brand" href="/">
       <i class="fas fa-university me-2"></i> Copperstone University Portal
     </a>
-    <button
-      class="navbar-toggler bg-light"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarNav"
-    >
+    <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -18,34 +13,48 @@
         <li class="nav-item">
           <a class="nav-link" href="/">Home</a>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link" href="/about">About Us</a>
         </li>
-       
-        </li>
+
+
         <li class="nav-item">
           <a class="nav-link" href="/contact">Contact</a>
-        </li>
+        </li> -->
 
         <!-- Conditional Auth Links -->
         <% if (!user) { %>
-        <li class="nav-item">
-          <a class="nav-link" href="/login">Login</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/register">Register</a>
-        </li>
-        <% } else { %>
-        <li class="nav-item">
-          <a class="nav-link" href="/dashboard">Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/change-password">Change Password</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-danger" href="/logout">Logout</a>
-        </li>
-        <% } %>
+          <li class="nav-item">
+            <a class="nav-link" href="/login">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/register">Register</a>
+          </li>
+          <% } else { %>
+            <li class="nav-item">
+              <!-- <a class="nav-link" href="/dashboard">Dashboard</a> -->
+
+              <a class="nav-link" href="<%= 
+  user.role === 'Admin' ? '/dashboard/admin' :
+  user.role === 'AdmissionsOfficer' ? '/dashboard/admissions' :
+  user.role === 'FinanceOfficer' ? '/dashboard/finance' :
+  user.role === 'Registrar' ? '/dashboard/registrar' :
+  user.role === 'VC' ? '/dashboard/vc' :
+  user.role === 'Dean' ? '/dashboard/dean' :
+  user.role === 'Lecturer' ? '/dashboard/lecturer' :
+  '/dashboard/student'
+%>">
+                Dashboard
+              </a>
+
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/change-password">Change Password</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-danger" href="/logout">Logout</a>
+            </li>
+            <% } %>
       </ul>
     </div>
   </div>

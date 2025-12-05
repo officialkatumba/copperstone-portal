@@ -1,46 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Copperstone University - Accredited Degree Programmes</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <style>
-      :root {
-        --primary-purple: #4b345d;
-        --secondary-pink: #e90172;
-        --accent-teal: #28cca2;
-        --light-bg: #f1e9f3;
-        --dark-text: #121212;
-        --light-text: #757575;
-      }
 
-      /* body {
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Copperstone University - Accredited Degree Programmes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary-purple: #4b345d;
+      --secondary-pink: #e90172;
+      --accent-teal: #28cca2;
+      --light-bg: #f1e9f3;
+      --dark-text: #121212;
+      --light-text: #757575;
+    }
+
+    /* body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         background-color: #f8f9fa;
         color: var(--dark-text);
         line-height: 1.6;
       } */
 
-      body {
-        font-family: "Poppins", Arial, sans-serif;
-        background-color: #f8f9fa;
-        color: var(--dark-text);
-        line-height: 1.6;
-      }
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: var(--dark-text);
+      line-height: 1.6;
+    }
 
-      /* h1,
+    /* h1,
       h2,
       h3,
       h4,
@@ -50,756 +42,780 @@
         font-weight: 400;
       } */
 
-      h1,
-      h2,
-      h3,
-      h4,
-      h5 {
-        font-family: "Poppins", Arial, sans-serif;
-        color: var(--primary-purple);
-        font-weight: 400;
-      }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5 {
+      font-family: "Poppins", Arial, sans-serif;
+      color: var(--primary-purple);
+      font-weight: 400;
+    }
 
-      h1 {
-        font-size: 46px;
-        line-height: 1.1;
-      }
+    h1 {
+      font-size: 46px;
+      line-height: 1.1;
+    }
 
-      h2 {
-        font-size: 40px;
-        line-height: 1.1;
-      }
+    h2 {
+      font-size: 40px;
+      line-height: 1.1;
+    }
 
-      h3 {
-        font-size: 34px;
-        line-height: 1.1;
-      }
+    h3 {
+      font-size: 34px;
+      line-height: 1.1;
+    }
 
-      a {
-        color: var(--secondary-pink);
-        text-decoration: none;
-        transition: all 0.3s ease;
-      }
+    a {
+      color: var(--secondary-pink);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
 
-      a:hover {
-        color: var(--primary-purple);
-        text-decoration: underline;
-      }
+    a:hover {
+      color: var(--primary-purple);
+      text-decoration: underline;
+    }
 
-      /* Top Bar */
-      .top-bar {
-        background-color: #f5f2f6;
-        border-bottom: 1px solid #e6e6e6;
-        padding: 5px 0;
-        font-size: 12px;
-      }
+    /* Top Bar */
+    .top-bar {
+      background-color: #f5f2f6;
+      border-bottom: 1px solid #e6e6e6;
+      padding: 5px 0;
+      font-size: 12px;
+    }
 
-      .top-bar a {
-        color: var(--light-text);
-        margin: 0 10px;
-      }
+    .top-bar a {
+      color: var(--light-text);
+      margin: 0 10px;
+    }
 
-      .top-bar a:hover {
-        color: var(--secondary-pink);
-      }
+    .top-bar a:hover {
+      color: var(--secondary-pink);
+    }
 
-      /* Navigation */
-      .navbar {
-        background-color: white;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        padding: 15px 0;
-      }
+    /* Navigation */
+    .navbar {
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 15px 0;
+    }
 
-      .navbar-brand {
-        font-weight: 700;
-        font-size: 24px;
-        color: var(--primary-purple);
-      }
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 24px;
+      color: var(--primary-purple);
+    }
 
-      .navbar-nav .nav-link {
-        color: var(--dark-text);
-        font-weight: 600;
-        padding: 10px 15px;
-        position: relative;
-      }
+    .navbar-nav .nav-link {
+      color: var(--dark-text);
+      font-weight: 600;
+      padding: 10px 15px;
+      position: relative;
+    }
 
-      .navbar-nav .nav-link:hover {
-        color: var(--secondary-pink);
-      }
+    .navbar-nav .nav-link:hover {
+      color: var(--secondary-pink);
+    }
 
-      .navbar-nav .nav-item.dropdown:hover .dropdown-menu {
-        display: block;
-      }
+    .navbar-nav .nav-item.dropdown:hover .dropdown-menu {
+      display: block;
+    }
 
-      .dropdown-menu {
-        border: none;
-        border-radius: 0;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        margin-top: 0;
-      }
+    .dropdown-menu {
+      border: none;
+      border-radius: 0;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      margin-top: 0;
+    }
 
-      .dropdown-item {
-        padding: 10px 20px;
-        color: var(--dark-text);
-      }
+    .dropdown-item {
+      padding: 10px 20px;
+      color: var(--dark-text);
+    }
 
-      .dropdown-item:hover {
-        background-color: var(--light-bg);
-        color: var(--secondary-pink);
+    .dropdown-item:hover {
+      background-color: var(--light-bg);
+      color: var(--secondary-pink);
+    }
+
+    .apply-btn {
+      background-color: var(--secondary-pink);
+      color: white;
+      border-radius: 30px;
+      padding: 10px 25px;
+      font-weight: 600;
+      margin-left: 15px;
+    }
+
+    .apply-btn:hover {
+      background-color: var(--primary-purple);
+      color: white;
+    }
+
+
+    /* Dashboard Button */
+    .dashboard-btn {
+      background-color: var(--accent-teal);
+      /* Teal */
+      color: white;
+      border-radius: 30px;
+      padding: 10px 25px;
+      font-weight: 600;
+      margin-left: 15px;
+    }
+
+    .dashboard-btn:hover {
+      background-color: #1fa384;
+      /* darker teal */
+      color: white;
+    }
+
+    /* Logout Button */
+    .logout-btn {
+      background-color: #dc3545;
+      /* Bootstrap Red */
+      color: white;
+      border-radius: 30px;
+      padding: 10px 25px;
+      font-weight: 600;
+      margin-left: 15px;
+    }
+
+    .logout-btn:hover {
+      background-color: #c82333;
+      /* darker red */
+      color: white;
+    }
+
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(rgba(75, 52, 93, 0.8),
+          rgba(75, 52, 93, 0.8)),
+        url("https://images.theconversation.com/files/120040/original/image-20160425-22383-jttauj.jpg?ixlib=rb-4.1.0&q=45&auto=format&w=926&fit=clip") center/cover no-repeat;
+      color: white;
+      padding: 100px 20px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      color: white;
+      font-size: 3.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      max-width: 700px;
+      margin: 0 auto 30px;
+    }
+
+    .hero-btn {
+      background-color: var(--secondary-pink);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin: 10px;
+    }
+
+    .hero-btn.outline {
+      background-color: transparent;
+      border: 2px solid white;
+    }
+
+    .hero-btn:hover {
+      background-color: white;
+      color: var(--primary-purple);
+    }
+
+    .hero-btn.outline:hover {
+      background-color: white;
+      color: var(--primary-purple);
+    }
+
+    /* Features Section */
+    .features {
+      padding: 80px 0;
+      background-color: white;
+    }
+
+    .feature-box {
+      text-align: center;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      color: var(--secondary-pink);
+      margin-bottom: 20px;
+    }
+
+    /* Courses Section */
+    .courses {
+      padding: 80px 0;
+      background-color: var(--light-bg);
+    }
+
+    .card {
+      border: none;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      height: 100%;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-img-top {
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .card-title {
+      color: var(--primary-purple);
+      font-weight: 600;
+    }
+
+    .card-btn {
+      background-color: var(--secondary-pink);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 600;
+    }
+
+    .card-btn:hover {
+      background-color: var(--primary-purple);
+      color: white;
+    }
+
+    /* Testimonials */
+    .testimonials {
+      padding: 80px 0;
+      background-color: white;
+    }
+
+    .testimonial-card {
+      background-color: var(--light-bg);
+      padding: 30px;
+      border-radius: 10px;
+      margin: 15px;
+    }
+
+    .testimonial-text {
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+
+    .testimonial-author {
+      font-weight: 600;
+      color: var(--primary-purple);
+    }
+
+    /* Stats Section */
+    .stats {
+      padding: 80px 0;
+      background-color: var(--primary-purple);
+      color: white;
+    }
+
+    .stat-number {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .stat-title {
+      font-size: 1.2rem;
+      opacity: 0.8;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--primary-purple);
+      color: white;
+      padding: 60px 0 20px;
+    }
+
+    .footer-title {
+      color: white;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .footer-links {
+      list-style: none;
+      padding: 0;
+    }
+
+    .footer-links li {
+      margin-bottom: 10px;
+    }
+
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .footer-links a:hover {
+      color: white;
+      text-decoration: none;
+    }
+
+    .social-links a {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      background-color: rgba(255, 255, 255, 0.1);
+      text-align: center;
+      line-height: 40px;
+      border-radius: 50%;
+      color: white;
+      margin-right: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .social-links a:hover {
+      background-color: var(--secondary-pink);
+      transform: translateY(-5px);
+    }
+
+    .copyright {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 20px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 992px) {
+      .navbar-nav {
+        padding: 10px 0;
       }
 
       .apply-btn {
-        background-color: var(--secondary-pink);
-        color: white;
-        border-radius: 30px;
-        padding: 10px 25px;
-        font-weight: 600;
-        margin-left: 15px;
+        margin: 10px 0 0 0;
       }
 
-      .apply-btn:hover {
-        background-color: var(--primary-purple);
-        color: white;
+      h1 {
+        font-size: 36px;
       }
 
-      /* Hero Section */
-      .hero {
-        background: linear-gradient(
-            rgba(75, 52, 93, 0.8),
-            rgba(75, 52, 93, 0.8)
-          ),
-          url("https://images.theconversation.com/files/120040/original/image-20160425-22383-jttauj.jpg?ixlib=rb-4.1.0&q=45&auto=format&w=926&fit=clip")
-            center/cover no-repeat;
-        color: white;
-        padding: 100px 20px;
-        text-align: center;
+      h2 {
+        font-size: 32px;
       }
+    }
+  </style>
+</head>
 
-      .hero h1 {
-        color: white;
-        font-size: 3.5rem;
-        font-weight: bold;
-        margin-bottom: 20px;
-      }
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <a href="#"><i class="fas fa-phone-alt me-2"></i>(260) 965 571 607</a>
+          <a href="#"><i class="fas fa-envelope me-2"></i>info@copperstone.edu</a>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="#">Current Students</a>
+          <a href="#">Faculty & Staff</a>
+          <a href="#">Alumni</a>
+          <a href="#">Parents & Families</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      .hero p {
-        font-size: 1.2rem;
-        max-width: 700px;
-        margin: 0 auto 30px;
-      }
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqGKMVkoU7mUpB8DpvbH816_X_QCyEogiGAw&s"
+          alt="Copperstone University" height="60" />
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="academicsDropdown" role="button" data-bs-toggle="dropdown">
+              Academics
+            </a>
+            <div class="dropdown-menu" aria-labelledby="academicsDropdown">
+              <a class="dropdown-item" href="#">Programs & Degrees</a>
+              <a class="dropdown-item" href="#">Schools & Departments</a>
+              <a class="dropdown-item" href="#">Course Catalog</a>
+              <a class="dropdown-item" href="#">Academic Calendar</a>
+              <a class="dropdown-item" href="#">Library</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#">Online Learning</a>
+              <a class="dropdown-item" href="#">Study Abroad</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="admissionsDropdown" role="button"
+              data-bs-toggle="dropdown">
+              Admissions
+            </a>
+            <div class="dropdown-menu" aria-labelledby="admissionsDropdown">
+              <a class="dropdown-item" href="/register">Apply Now</a>
+              <a class="dropdown-item" href="#">Undergraduate</a>
+              <a class="dropdown-item" href="#">Graduate</a>
+              <a class="dropdown-item" href="#">International</a>
+              <a class="dropdown-item" href="#">Tuition & Fees</a>
+              <a class="dropdown-item" href="#">Financial Aid</a>
+              <a class="dropdown-item" href="#">Scholarships</a>
+              <a class="dropdown-item" href="#">Campus Tours</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="campusLifeDropdown" role="button"
+              data-bs-toggle="dropdown">
+              Campus Life
+            </a>
+            <div class="dropdown-menu" aria-labelledby="campusLifeDropdown">
+              <a class="dropdown-item" href="#">Housing & Dining</a>
+              <a class="dropdown-item" href="#">Student Activities</a>
+              <a class="dropdown-item" href="#">Clubs & Organizations</a>
+              <a class="dropdown-item" href="#">Athletics</a>
+              <a class="dropdown-item" href="#">Arts & Culture</a>
+              <a class="dropdown-item" href="#">Campus Services</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown">
+              About
+            </a>
+            <div class="dropdown-menu" aria-labelledby="aboutDropdown">
+              <a class="dropdown-item" href="#">History & Mission</a>
+              <a class="dropdown-item" href="#">Leadership</a>
+              <a class="dropdown-item" href="#">Accreditations</a>
+              <a class="dropdown-item" href="#">Careers</a>
+              <a class="dropdown-item" href="#">News & Events</a>
+              <a class="dropdown-item" href="#">Campus Map</a>
+            </div>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Research</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Contact</a>
+          </li>
+        </ul>
+        <!-- <a href="/register" class="btn apply-btn">Apply Now</a> -->
 
-      .hero-btn {
-        background-color: var(--secondary-pink);
-        color: white;
-        border: none;
-        padding: 15px 40px;
-        border-radius: 30px;
-        font-weight: 600;
-        font-size: 1.1rem;
-        margin: 10px;
-      }
+        <!-- Right-side Navbar Buttons -->
+        <div class="d-flex align-items-center">
 
-      .hero-btn.outline {
-        background-color: transparent;
-        border: 2px solid white;
-      }
+          <% if (!user) { %>
+            <!-- Guest sees Join Us -->
+            <a href="/register" class="btn apply-btn">Join Us</a>
+            <% } else { %>
+              <!-- Logged-in user sees Dashboard -->
+              <!-- <a href="/dashboard" class="btn apply-btn">Dashboard</a>
+              <a class="btn apply-btn" href="/logout">Logout</a> -->
 
-      .hero-btn:hover {
-        background-color: white;
-        color: var(--primary-purple);
-      }
+              <!-- Logged-in user sees Dashboard -->
+              <!-- <a href="/dashboard" class="btn dashboard-btn">Dashboard</a>
+              <a href="/logout" class="btn logout-btn">Logout</a> -->
 
-      .hero-btn.outline:hover {
-        background-color: white;
-        color: var(--primary-purple);
-      }
+              <% const dashboardLink=user.role==='Admin' ? '/dashboard/admin' : user.role==='AdmissionsOfficer'
+                ? '/dashboard/admissions' : user.role==='FinanceOfficer' ? '/dashboard/finance' :
+                user.role==='Registrar' ? '/dashboard/registrar' : user.role==='VC' ? '/dashboard/vc' :
+                user.role==='Dean' ? '/dashboard/dean' : user.role==='Lecturer' ? '/dashboard/lecturer'
+                : '/dashboard/student' ; %>
 
-      /* Features Section */
-      .features {
-        padding: 80px 0;
-        background-color: white;
-      }
+                <!-- Role-based Dashboard -->
+                <a href="<%= dashboardLink %>" class="btn dashboard-btn">Dashboard</a>
+                <a href="/logout" class="btn logout-btn">Logout</a>
 
-      .feature-box {
-        text-align: center;
-        padding: 30px;
-        margin-bottom: 30px;
-      }
 
-      .feature-icon {
-        font-size: 40px;
-        color: var(--secondary-pink);
-        margin-bottom: 20px;
-      }
+                <% } %>
 
-      /* Courses Section */
-      .courses {
-        padding: 80px 0;
-        background-color: var(--light-bg);
-      }
+        </div>
 
-      .card {
-        border: none;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        height: 100%;
-      }
+      </div>
+    </div>
+  </nav>
 
-      .card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-      }
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <h1>Welcome to Copperstone University</h1>
+      <p>
+        Excellence in education since 2000. Join our community of learners and
+        innovators shaping the future.
+      </p>
+      <div class="hero-buttons">
+        <a href="#" class="btn hero-btn">Explore Programs</a>
+        <a href="#" class="btn hero-btn outline">Request Information</a>
+      </div>
+    </div>
+  </section>
 
-      .card-img-top {
-        height: 200px;
-        object-fit: cover;
-      }
-
-      .card-title {
-        color: var(--primary-purple);
-        font-weight: 600;
-      }
-
-      .card-btn {
-        background-color: var(--secondary-pink);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 30px;
-        font-weight: 600;
-      }
-
-      .card-btn:hover {
-        background-color: var(--primary-purple);
-        color: white;
-      }
-
-      /* Testimonials */
-      .testimonials {
-        padding: 80px 0;
-        background-color: white;
-      }
-
-      .testimonial-card {
-        background-color: var(--light-bg);
-        padding: 30px;
-        border-radius: 10px;
-        margin: 15px;
-      }
-
-      .testimonial-text {
-        font-style: italic;
-        margin-bottom: 20px;
-      }
-
-      .testimonial-author {
-        font-weight: 600;
-        color: var(--primary-purple);
-      }
-
-      /* Stats Section */
-      .stats {
-        padding: 80px 0;
-        background-color: var(--primary-purple);
-        color: white;
-      }
-
-      .stat-number {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-      }
-
-      .stat-title {
-        font-size: 1.2rem;
-        opacity: 0.8;
-      }
-
-      /* Footer */
-      footer {
-        background: var(--primary-purple);
-        color: white;
-        padding: 60px 0 20px;
-      }
-
-      .footer-title {
-        color: white;
-        font-size: 1.5rem;
-        margin-bottom: 20px;
-        font-weight: 600;
-      }
-
-      .footer-links {
-        list-style: none;
-        padding: 0;
-      }
-
-      .footer-links li {
-        margin-bottom: 10px;
-      }
-
-      .footer-links a {
-        color: rgba(255, 255, 255, 0.8);
-      }
-
-      .footer-links a:hover {
-        color: white;
-        text-decoration: none;
-      }
-
-      .social-links a {
-        display: inline-block;
-        width: 40px;
-        height: 40px;
-        background-color: rgba(255, 255, 255, 0.1);
-        text-align: center;
-        line-height: 40px;
-        border-radius: 50%;
-        color: white;
-        margin-right: 10px;
-        transition: all 0.3s ease;
-      }
-
-      .social-links a:hover {
-        background-color: var(--secondary-pink);
-        transform: translateY(-5px);
-      }
-
-      .copyright {
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding-top: 20px;
-        margin-top: 40px;
-        text-align: center;
-        font-size: 0.9rem;
-        opacity: 0.8;
-      }
-
-      /* Responsive Adjustments */
-      @media (max-width: 992px) {
-        .navbar-nav {
-          padding: 10px 0;
-        }
-
-        .apply-btn {
-          margin: 10px 0 0 0;
-        }
-
-        h1 {
-          font-size: 36px;
-        }
-
-        h2 {
-          font-size: 32px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Top Bar -->
-    <div class="top-bar">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-6">
-            <a href="#"
-              ><i class="fas fa-phone-alt me-2"></i>(260) 965 571 607</a
-            >
-            <a href="#"
-              ><i class="fas fa-envelope me-2"></i>info@copperstone.edu</a
-            >
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <div class="row text-center mb-5">
+        <div class="col-12">
+          <h2>Why Choose Copperstone?</h2>
+          <p class="lead">Discover what makes us different</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="feature-box">
+            <div class="feature-icon">
+              <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h3>Accredited Programs</h3>
+            <p>
+              Our programs are fully accredited and recognized globally for
+              their academic excellence.
+            </p>
           </div>
-          <div class="col-md-6 text-md-end">
-            <a href="#">Current Students</a>
-            <a href="#">Faculty & Staff</a>
-            <a href="#">Alumni</a>
-            <a href="#">Parents & Families</a>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-box">
+            <div class="feature-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <h3>Expert Faculty</h3>
+            <p>
+              Learn from industry professionals and renowned academics
+              dedicated to your success.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-box">
+            <div class="feature-icon">
+              <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <h3>Affordable Tuition</h3>
+            <p>
+              Quality education shouldn't break the bank. We offer competitive
+              tuition and financial aid.
+            </p>
           </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
-      <div class="container">
-        <a class="navbar-brand" href="#">
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqGKMVkoU7mUpB8DpvbH816_X_QCyEogiGAw&s"
-            alt="Copperstone University"
-            height="60"
-          />
-        </a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto">
-            <li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                id="academicsDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-              >
-                Academics
-              </a>
-              <div class="dropdown-menu" aria-labelledby="academicsDropdown">
-                <a class="dropdown-item" href="#">Programs & Degrees</a>
-                <a class="dropdown-item" href="#">Schools & Departments</a>
-                <a class="dropdown-item" href="#">Course Catalog</a>
-                <a class="dropdown-item" href="#">Academic Calendar</a>
-                <a class="dropdown-item" href="#">Library</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">Online Learning</a>
-                <a class="dropdown-item" href="#">Study Abroad</a>
-              </div>
-            </li>
-            <li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                id="admissionsDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-              >
-                Admissions
-              </a>
-              <div class="dropdown-menu" aria-labelledby="admissionsDropdown">
-                <a class="dropdown-item" href="/register">Apply Now</a>
-                <a class="dropdown-item" href="#">Undergraduate</a>
-                <a class="dropdown-item" href="#">Graduate</a>
-                <a class="dropdown-item" href="#">International</a>
-                <a class="dropdown-item" href="#">Tuition & Fees</a>
-                <a class="dropdown-item" href="#">Financial Aid</a>
-                <a class="dropdown-item" href="#">Scholarships</a>
-                <a class="dropdown-item" href="#">Campus Tours</a>
-              </div>
-            </li>
-            <li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                id="campusLifeDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-              >
-                Campus Life
-              </a>
-              <div class="dropdown-menu" aria-labelledby="campusLifeDropdown">
-                <a class="dropdown-item" href="#">Housing & Dining</a>
-                <a class="dropdown-item" href="#">Student Activities</a>
-                <a class="dropdown-item" href="#">Clubs & Organizations</a>
-                <a class="dropdown-item" href="#">Athletics</a>
-                <a class="dropdown-item" href="#">Arts & Culture</a>
-                <a class="dropdown-item" href="#">Campus Services</a>
-              </div>
-            </li>
-            <li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                id="aboutDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-              >
-                About
-              </a>
-              <div class="dropdown-menu" aria-labelledby="aboutDropdown">
-                <a class="dropdown-item" href="#">History & Mission</a>
-                <a class="dropdown-item" href="#">Leadership</a>
-                <a class="dropdown-item" href="#">Accreditations</a>
-                <a class="dropdown-item" href="#">Careers</a>
-                <a class="dropdown-item" href="#">News & Events</a>
-                <a class="dropdown-item" href="#">Campus Map</a>
-              </div>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Research</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Contact</a>
-            </li>
-          </ul>
-          <a href="/register" class="btn apply-btn">Apply Now</a>
+  <!-- Courses Section -->
+  <section class="courses">
+    <div class="container">
+      <div class="row text-center mb-5">
+        <div class="col-12">
+          <h2>Popular Programs</h2>
+          <p class="lead">Explore our most sought-after degrees</p>
         </div>
       </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero">
-      <div class="container">
-        <h1>Welcome to Copperstone University</h1>
-        <p>
-          Excellence in education since 2000. Join our community of learners and
-          innovators shaping the future.
-        </p>
-        <div class="hero-buttons">
-          <a href="#" class="btn hero-btn">Explore Programs</a>
-          <a href="#" class="btn hero-btn outline">Request Information</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features">
-      <div class="container">
-        <div class="row text-center mb-5">
-          <div class="col-12">
-            <h2>Why Choose Copperstone?</h2>
-            <p class="lead">Discover what makes us different</p>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-4">
-            <div class="feature-box">
-              <div class="feature-icon">
-                <i class="fas fa-graduation-cap"></i>
-              </div>
-              <h3>Accredited Programs</h3>
-              <p>
-                Our programs are fully accredited and recognized globally for
-                their academic excellence.
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card">
+            <img
+              src="https://media.istockphoto.com/id/1396801868/photo/a-young-african-american-doctor-works-on-hud-or-graphic-display-in-front-of-her.jpg?s=1024x1024&w=is&k=20&c=2lHP_sEKCF-oGDLXmMtkDZaY0smbQCEHGdi7KBS_9Jg="
+              class="card-img-top" alt="Computer Science" />
+            <div class="card-body">
+              <h5 class="card-title">Computer Science</h5>
+              <p class="card-text">
+                Master programming, AI, and data science through hands-on
+                projects with industry experts and cutting-edge technology.
               </p>
+              <a href="#" class="btn card-btn">Learn More</a>
             </div>
           </div>
-          <div class="col-md-4">
-            <div class="feature-box">
-              <div class="feature-icon">
-                <i class="fas fa-users"></i>
-              </div>
-              <h3>Expert Faculty</h3>
-              <p>
-                Learn from industry professionals and renowned academics
-                dedicated to your success.
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <img
+              src="https://media.istockphoto.com/id/635977924/photo/workplace-safety-manual-with-work-equipment.jpg?s=1024x1024&w=is&k=20&c=wT005jqKxBGRBHcGEXdpa4muJQigLaIFcvTSDTY-kMU="
+              class="card-img-top" alt="Health and Safety Management" />
+            <div class="card-body">
+              <h5 class="card-title">Health & Safety Management</h5>
+              <p class="card-text">
+                Learn risk assessment, safety protocols, and regulatory
+                compliance for workplace environments across various
+                industries.
               </p>
+              <a href="#" class="btn card-btn">Learn More</a>
             </div>
           </div>
-          <div class="col-md-4">
-            <div class="feature-box">
-              <div class="feature-icon">
-                <i class="fas fa-hand-holding-usd"></i>
-              </div>
-              <h3>Affordable Tuition</h3>
-              <p>
-                Quality education shouldn't break the bank. We offer competitive
-                tuition and financial aid.
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <img
+              src="https://media.istockphoto.com/id/2161387257/photo/young-businesswoman-using-laptop-at-table-looking-to-side.jpg?s=1024x1024&w=is&k=20&c=KktrDV-Cf2cjUZiZgNmA6BKKddE5qoZhfGmS93CHmqQ="
+              class="card-img-top" alt="Business Administration" />
+            <div class="card-body">
+              <h5 class="card-title">Business Administration</h5>
+              <p class="card-text">
+                Develop leadership, finance, and entrepreneurial skills for
+                today's dynamic global business environment and challenges.
               </p>
+              <a href="#" class="btn card-btn">Learn More</a>
             </div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Courses Section -->
-    <section class="courses">
-      <div class="container">
-        <div class="row text-center mb-5">
-          <div class="col-12">
-            <h2>Popular Programs</h2>
-            <p class="lead">Explore our most sought-after degrees</p>
-          </div>
-        </div>
-        <div class="row g-4">
-          <div class="col-md-4">
-            <div class="card">
-              <img
-                src="https://media.istockphoto.com/id/1396801868/photo/a-young-african-american-doctor-works-on-hud-or-graphic-display-in-front-of-her.jpg?s=1024x1024&w=is&k=20&c=2lHP_sEKCF-oGDLXmMtkDZaY0smbQCEHGdi7KBS_9Jg="
-                class="card-img-top"
-                alt="Computer Science"
-              />
-              <div class="card-body">
-                <h5 class="card-title">Computer Science</h5>
-                <p class="card-text">
-                  Master programming, AI, and data science through hands-on
-                  projects with industry experts and cutting-edge technology.
-                </p>
-                <a href="#" class="btn card-btn">Learn More</a>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card">
-              <img
-                src="https://media.istockphoto.com/id/635977924/photo/workplace-safety-manual-with-work-equipment.jpg?s=1024x1024&w=is&k=20&c=wT005jqKxBGRBHcGEXdpa4muJQigLaIFcvTSDTY-kMU="
-                class="card-img-top"
-                alt="Health and Safety Management"
-              />
-              <div class="card-body">
-                <h5 class="card-title">Health & Safety Management</h5>
-                <p class="card-text">
-                  Learn risk assessment, safety protocols, and regulatory
-                  compliance for workplace environments across various
-                  industries.
-                </p>
-                <a href="#" class="btn card-btn">Learn More</a>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card">
-              <img
-                src="https://media.istockphoto.com/id/2161387257/photo/young-businesswoman-using-laptop-at-table-looking-to-side.jpg?s=1024x1024&w=is&k=20&c=KktrDV-Cf2cjUZiZgNmA6BKKddE5qoZhfGmS93CHmqQ="
-                class="card-img-top"
-                alt="Business Administration"
-              />
-              <div class="card-body">
-                <h5 class="card-title">Business Administration</h5>
-                <p class="card-text">
-                  Develop leadership, finance, and entrepreneurial skills for
-                  today's dynamic global business environment and challenges.
-                </p>
-                <a href="#" class="btn card-btn">Learn More</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row mt-5 text-center">
-          <div class="col-12">
-            <a href="#" class="btn btn-outline-primary btn-lg"
-              >View All Programs</a
-            >
-          </div>
+      <div class="row mt-5 text-center">
+        <div class="col-12">
+          <a href="#" class="btn btn-outline-primary btn-lg">View All Programs</a>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Stats Section -->
-    <section class="stats">
-      <div class="container">
-        <div class="row text-center">
-          <div class="col-md-3 col-6 mb-4">
-            <div class="stat-number">15,000+</div>
-            <div class="stat-title">Students Enrolled</div>
-          </div>
-          <div class="col-md-3 col-6 mb-4">
-            <div class="stat-number">120+</div>
-            <div class="stat-title">Programs Offered</div>
-          </div>
-          <div class="col-md-3 col-6 mb-4">
-            <div class="stat-number">95%</div>
-            <div class="stat-title">Graduation Rate</div>
-          </div>
-          <div class="col-md-3 col-6 mb-4">
-            <div class="stat-number">85%</div>
-            <div class="stat-title">Employment After Graduation</div>
-          </div>
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="container">
+      <div class="row text-center">
+        <div class="col-md-3 col-6 mb-4">
+          <div class="stat-number">15,000+</div>
+          <div class="stat-title">Students Enrolled</div>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+          <div class="stat-number">120+</div>
+          <div class="stat-title">Programs Offered</div>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+          <div class="stat-number">95%</div>
+          <div class="stat-title">Graduation Rate</div>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+          <div class="stat-number">85%</div>
+          <div class="stat-title">Employment After Graduation</div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Testimonials -->
-    <section class="testimonials">
-      <div class="container">
-        <div class="row text-center mb-5">
-          <div class="col-12">
-            <h2>What Our Students Say</h2>
-            <p class="lead">Hear from our community</p>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-4">
-            <div class="testimonial-card">
-              <p class="testimonial-text">
-                "Copperstone's faculty genuinely care about student success.
-                Their personalized approach made a significant difference
-                throughout my academic journey."
-              </p>
-              <p class="testimonial-author">Chanda M., Business Major</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="testimonial-card">
-              <p class="testimonial-text">
-                "The practical learning approach perfectly prepared me for my
-                career. I received multiple job offers before graduation day
-                arrived."
-              </p>
-              <p class="testimonial-author">- Tembo T., Computer Science</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="testimonial-card">
-              <p class="testimonial-text">
-                "The diverse community and inclusive environment immediately
-                felt like home. I've built lasting friendships and valuable
-                professional connections."
-              </p>
-              <p class="testimonial-author">
-                - Kaweche R., Health & Safety Management
-              </p>
-            </div>
-          </div>
+  <!-- Testimonials -->
+  <section class="testimonials">
+    <div class="container">
+      <div class="row text-center mb-5">
+        <div class="col-12">
+          <h2>What Our Students Say</h2>
+          <p class="lead">Hear from our community</p>
         </div>
       </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-3 col-md-6 mb-4">
-            <h5 class="footer-title">Copperstone University</h5>
-            <p>
-              Providing quality education for over 25 years. Accredited and
-              recognized for academic excellence.
+      <div class="row">
+        <div class="col-md-4">
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "Copperstone's faculty genuinely care about student success.
+              Their personalized approach made a significant difference
+              throughout my academic journey."
             </p>
-            <div class="social-links">
-              <a href="#"><i class="fab fa-facebook-f"></i></a>
-              <a href="#"><i class="fab fa-twitter"></i></a>
-              <a href="#"><i class="fab fa-instagram"></i></a>
-              <a href="#"><i class="fab fa-linkedin-in"></i></a>
-              <a href="#"><i class="fab fa-youtube"></i></a>
-            </div>
-          </div>
-          <div class="col-lg-3 col-md-6 mb-4">
-            <h5 class="footer-title">Quick Links</h5>
-            <ul class="footer-links">
-              <li><a href="#">Home</a></li>
-              <li><a href="#">About Us</a></li>
-              <li><a href="#">Programs</a></li>
-              <li><a href="#">Admissions</a></li>
-              <li><a href="#">Tuition & Fees</a></li>
-              <li><a href="#">Contact Us</a></li>
-            </ul>
-          </div>
-          <div class="col-lg-3 col-md-6 mb-4">
-            <h5 class="footer-title">Resources</h5>
-            <ul class="footer-links">
-              <li><a href="#">Library</a></li>
-              <li><a href="#">Career Services</a></li>
-              <li><a href="#">Campus Directory</a></li>
-              <li><a href="#">IT Support</a></li>
-              <li><a href="#">Alumni Portal</a></li>
-              <li><a href="#">Give Now</a></li>
-            </ul>
-          </div>
-          <div class="col-lg-3 col-md-6 mb-4">
-            <h5 class="footer-title">Contact Info</h5>
-            <p>
-              <i class="fas fa-map-marker-alt me-2"></i> 38002 Baluba Campus,
-              Along, Kitwe Dual carriageway
-            </p>
-            <p><i class="fas fa-phone-alt me-2"></i> (260) 965 571 607</p>
-            <p><i class="fas fa-envelope me-2"></i> info@copperstone.edu</p>
-            <p><i class="fas fa-clock me-2"></i> Mon-Fri: 8:00 AM - 6:00 PM</p>
+            <p class="testimonial-author">Chanda M., Business Major</p>
           </div>
         </div>
-        <div class="copyright">
+        <div class="col-md-4">
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "The practical learning approach perfectly prepared me for my
+              career. I received multiple job offers before graduation day
+              arrived."
+            </p>
+            <p class="testimonial-author">- Tembo T., Computer Science</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "The diverse community and inclusive environment immediately
+              felt like home. I've built lasting friendships and valuable
+              professional connections."
+            </p>
+            <p class="testimonial-author">
+              - Kaweche R., Health & Safety Management
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 col-md-6 mb-4">
+          <h5 class="footer-title">Copperstone University</h5>
           <p>
-            © 2025 Copperstone University. All rights reserved. |
-            <a href="#">Privacy Policy</a> | <a href="#">Terms of Use</a> |
-            <a href="#">Accreditation</a>
+            Providing quality education for over 25 years. Accredited and
+            recognized for academic excellence.
           </p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+          <h5 class="footer-title">Quick Links</h5>
+          <ul class="footer-links">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Programs</a></li>
+            <li><a href="#">Admissions</a></li>
+            <li><a href="#">Tuition & Fees</a></li>
+            <li><a href="#">Contact Us</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+          <h5 class="footer-title">Resources</h5>
+          <ul class="footer-links">
+            <li><a href="#">Library</a></li>
+            <li><a href="#">Career Services</a></li>
+            <li><a href="#">Campus Directory</a></li>
+            <li><a href="#">IT Support</a></li>
+            <li><a href="#">Alumni Portal</a></li>
+            <li><a href="#">Give Now</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+          <h5 class="footer-title">Contact Info</h5>
+          <p>
+            <i class="fas fa-map-marker-alt me-2"></i> 38002 Baluba Campus,
+            Along, Kitwe Dual carriageway
+          </p>
+          <p><i class="fas fa-phone-alt me-2"></i> (260) 965 571 607</p>
+          <p><i class="fas fa-envelope me-2"></i> info@copperstone.edu</p>
+          <p><i class="fas fa-clock me-2"></i> Mon-Fri: 8:00 AM - 6:00 PM</p>
         </div>
       </div>
-    </footer>
+      <div class="copyright">
+        <p>
+          © 2025 Copperstone University. All rights reserved. |
+          <a href="#">Privacy Policy</a> | <a href="#">Terms of Use</a> |
+          <a href="#">Accreditation</a>
+        </p>
+      </div>
+    </div>
+  </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
 </html>
