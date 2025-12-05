@@ -189,6 +189,22 @@
       color: white;
     }
 
+    /* Login button (Home page) */
+    .home-login-btn {
+      background-color: var(--accent-teal);
+      /* GREEN/TEAL */
+      color: white;
+      border-radius: 30px;
+      padding: 10px 25px;
+      font-weight: 600;
+      margin-left: 15px;
+    }
+
+    .home-login-btn:hover {
+      background-color: var(--primary-purple);
+      color: white;
+    }
+
 
     /* Hero Section */
     .hero {
@@ -429,7 +445,7 @@
       <div class="row">
         <div class="col-md-6">
           <a href="#"><i class="fas fa-phone-alt me-2"></i>(260) 965 571 607</a>
-          <a href="#"><i class="fas fa-envelope me-2"></i>info@copperstone.edu</a>
+          <a href="#"><i class="fas fa-envelope me-2"></i>registrar@copperstoneuniversity.ac.zm</a>
         </div>
         <div class="col-md-6 text-md-end">
           <a href="#">Current Students</a>
@@ -525,7 +541,12 @@
 
           <% if (!user) { %>
             <!-- Guest sees Join Us -->
-            <a href="/register" class="btn apply-btn">Join Us</a>
+            <a href="/register" class="btn apply-btn">Register</a>
+            <!-- <a class="btn apply-btn" href="/login">Login</a> -->
+            <!-- <a href="/register" class="btn home-register-btn">Register</a> -->
+            <a href="/login" class="btn home-login-btn">Login</a>
+
+
             <% } else { %>
               <!-- Logged-in user sees Dashboard -->
               <!-- <a href="/dashboard" class="btn apply-btn">Dashboard</a>
