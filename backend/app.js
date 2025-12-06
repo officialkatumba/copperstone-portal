@@ -295,6 +295,6 @@ app.use("/finance/skills", skillFinanceRoutes);
 
 // ----- SKILL ADMISSIONS (Admin Side) -----
 // Mounted at: /admissions
-app.use("/admissions", skillAdmissionsRoutes);
+app.use("/admissions/skills", skillAdmissionsRoutes);
 
 module.exports = app;

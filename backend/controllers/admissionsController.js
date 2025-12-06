@@ -15,6 +15,27 @@ exports.showAdmissionsDashboard = (req, res) => {
 };
 
 // View all student applications
+// exports.viewAllApplications = async (req, res) => {
+//   try {
+//     const applications = await Application.find()
+//       .populate("applicant", "firstName surname email mobile")
+//       .populate("firstChoice", "name code level")
+//       .populate("secondChoice", "name code level")
+//       .sort({ createdAt: -1 });
+
+//     res.render("admissions/applications", {
+//       title: "All Applications",
+//       applications,
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching applications:", err);
+//     req.flash("error_msg", "Could not load applications.");
+//     res.redirect("/dashboard/admissions");
+//   }
+// };
+
+// View all student applications - LINE 31
 exports.viewAllApplications = async (req, res) => {
   try {
     const applications = await Application.find()
@@ -22,6 +43,19 @@ exports.viewAllApplications = async (req, res) => {
       .populate("firstChoice", "name code level")
       .populate("secondChoice", "name code level")
       .sort({ createdAt: -1 });
+
+    // 🔧 FIX: Ensure each application has a valid applicant object
+    applications.forEach((app) => {
+      if (!app.applicant) {
+        // Create a dummy applicant object to prevent errors in EJS
+        app.applicant = {
+          firstName: "Unknown",
+          surname: "Applicant",
+          email: "email@not.found",
+          mobile: "N/A",
+        };
+      }
+    });
 
     res.render("admissions/applications", {
       title: "All Applications",
@@ -36,6 +70,27 @@ exports.viewAllApplications = async (req, res) => {
 };
 
 // List all applications (alias for viewAllApplications)
+// exports.listApplications = async (req, res) => {
+//   try {
+//     const applications = await Application.find()
+//       .populate("applicant", "firstName surname email mobile")
+//       .populate("firstChoice", "name code level")
+//       .populate("secondChoice", "name code level")
+//       .sort({ createdAt: -1 });
+
+//     res.render("admissions/applications", {
+//       title: "All Applications",
+//       applications,
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching applications:", err);
+//     req.flash("error_msg", "Failed to load applications.");
+//     res.redirect("/dashboard/admissions");
+//   }
+// };
+
+// List all applications (alias for viewAllApplications) - LINE 53
 exports.listApplications = async (req, res) => {
   try {
     const applications = await Application.find()
@@ -43,6 +98,19 @@ exports.listApplications = async (req, res) => {
       .populate("firstChoice", "name code level")
       .populate("secondChoice", "name code level")
       .sort({ createdAt: -1 });
+
+    // 🔧 FIX: Ensure each application has a valid applicant object
+    applications.forEach((app) => {
+      if (!app.applicant) {
+        // Create a dummy applicant object to prevent errors in EJS
+        app.applicant = {
+          firstName: "Unknown",
+          surname: "Applicant",
+          email: "email@not.found",
+          mobile: "N/A",
+        };
+      }
+    });
 
     res.render("admissions/applications", {
       title: "All Applications",
@@ -292,6 +360,34 @@ exports.updateApplicationStatus = async (req, res) => {
 
 // Add this to your admissionsController.js or create a new controller
 
+// // View acceptance letter
+// exports.viewAcceptanceLetter = async (req, res) => {
+//   try {
+//     const app = await Application.findById(req.params.id);
+
+//     if (!app) {
+//       req.flash("error_msg", "Application not found.");
+//       return res.redirect("/dashboard/student");
+//     }
+
+//     // Check if acceptance letter exists
+//     if (!app.acceptanceLetter || !app.acceptanceLetter.gcsName) {
+//       req.flash("error_msg", "Acceptance letter not available yet.");
+//       return res.redirect("/dashboard/student");
+//     }
+
+//     // Generate signed URL for the acceptance letter
+//     const signedUrl = await getSignedUrl(app.acceptanceLetter.gcsName, 1); // 1 hour expiry
+
+//     // Redirect to the signed URL
+//     res.redirect(signedUrl);
+//   } catch (err) {
+//     console.error("Error fetching acceptance letter:", err);
+//     req.flash("error_msg", "Failed to load acceptance letter.");
+//     res.redirect("/dashboard/student");
+//   }
+// };
+
 // View acceptance letter
 exports.viewAcceptanceLetter = async (req, res) => {
   try {
@@ -302,14 +398,14 @@ exports.viewAcceptanceLetter = async (req, res) => {
       return res.redirect("/dashboard/student");
     }
 
-    // Check if acceptance letter exists
-    if (!app.acceptanceLetter || !app.acceptanceLetter.gcsName) {
+    // Check if acceptance letter exists - USE gcsPath NOT gcsName
+    if (!app.acceptanceLetter || !app.acceptanceLetter.gcsPath) {
       req.flash("error_msg", "Acceptance letter not available yet.");
       return res.redirect("/dashboard/student");
     }
 
-    // Generate signed URL for the acceptance letter
-    const signedUrl = await getSignedUrl(app.acceptanceLetter.gcsName, 1); // 1 hour expiry
+    // Generate signed URL for the acceptance letter - USE gcsPath NOT gcsName
+    const signedUrl = await getSignedUrl(app.acceptanceLetter.gcsPath, 1); // 1 hour expiry
 
     // Redirect to the signed URL
     res.redirect(signedUrl);
