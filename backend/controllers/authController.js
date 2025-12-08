@@ -208,6 +208,8 @@ exports.loginUser = (req, res, next) => {
           return res.redirect("/dashboard/superadmin");
         case "Dean":
           return res.redirect("/dashboard/dean");
+        case "VC":
+          return res.redirect("/dashboard/vc");
         default:
           return res.redirect("/dashboard/student");
       }

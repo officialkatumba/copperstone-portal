@@ -35,3 +35,8 @@ backend/seedAllTraining.js
 backend/seedTraining.js
 backend/seedAdmissionOfficer.js
 backend/seedFinaceOfficer.js
+backend/seedVC.js
+backend/seed.js
+backend/seedDean.js
+backend/seedProgrammes.js
+backend/seedSkills.js

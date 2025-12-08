@@ -257,6 +257,9 @@ const financeRoutes = require("./routes/financeRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
 const deanRoutes = require("./routes/deanRoutes");
 
+// Import VC routes
+const vcRoutes = require("./routes/vcRoutes");
+
 // STUDENT skill routes (mounted at /skills)
 const skillApplicationRoutes = require("./routes/skillApplicationRoutes");
 
@@ -296,5 +299,8 @@ app.use("/finance/skills", skillFinanceRoutes);
 // ----- SKILL ADMISSIONS (Admin Side) -----
 // Mounted at: /admissions
 app.use("/admissions/skills", skillAdmissionsRoutes);
+
+// Use VC routes
+app.use("/", vcRoutes);
 
 module.exports = app;
