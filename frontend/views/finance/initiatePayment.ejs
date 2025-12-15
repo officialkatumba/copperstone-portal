@@ -1,0 +1,253 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-4">
+            <div class="card shadow-lg p-4 mx-auto" style="max-width: 600px">
+                <!-- <h4 class="fw-bold text-center mb-4">Initiate Payment</h4> -->
+
+                <div class="text-center mb-4">
+                    <!-- Main icon and heading -->
+                    <div class="mb-3">
+                        <i class="fas fa-credit-card fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="fw-bold">Initiate Payment</h4>
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Create a new payment record for a student
+                    </p>
+                </div>
+
+                <form action="/finance/payments" method="POST" id="paymentForm">
+
+                    <!-- Searchable Student Dropdown -->
+                    <div class="mb-3">
+                        <label class="fw-semibold">Student</label>
+                        <div class="position-relative">
+                            <input type="text" id="studentSearch" class="form-control"
+                                placeholder="Start typing student name or email..." autocomplete="off">
+                            <input type="hidden" name="student" id="selectedStudentId" required>
+                            <div id="studentDropdown" class="dropdown-menu w-100"
+                                style="display: none; max-height: 250px; overflow-y: auto;">
+                                <!-- Search results will appear here -->
+                            </div>
+                        </div>
+                        <div id="selectedStudentInfo" class="mt-2 p-2 border rounded bg-light" style="display: none;">
+                            <small class="text-muted">Selected:</small>
+                            <span id="selectedStudentText" class="fw-semibold ms-2"></span>
+                            <button type="button" id="clearSelection"
+                                class="btn btn-sm btn-outline-danger float-end">×</button>
+                        </div>
+                        <div class="form-text">
+                            Search by name (e.g., "samuel") or email
+                        </div>
+                    </div>
+
+                    <!-- Rest of the form remains the same -->
+                    <div class="mb-3">
+                        <label class="fw-semibold">Category</label>
+                        <select name="category" class="form-select" required>
+                            <option value="">Select Category</option>
+                            <% [ "Application Fee" , "Registration Fee" , "Semester Registration Fee"
+                                , "Tuition Fee (Semester)" , "Tuition Fee (Full Year)" , "Exam Fee"
+                                , "Student Management Fee" , "Medical Fee" , "Library Fee" , "Internet Fee"
+                                , "Maintenance Fee" , "Distance Learning Logistics Fee" , "Research Fee"
+                                , "Graduation Fee" ,"Penalty" , "Other" ].forEach(c=> { %>
+                                <option value="<%= c %>">
+                                    <%= c %>
+                                </option>
+                                <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-semibold">Description</label>
+                        <input type="text" name="description" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-semibold">Amount (ZMW)</label>
+                        <input type="number" name="amount" step="0.01" min="0" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-semibold">Payment Method</label>
+                        <select name="method" class="form-select" required>
+                            <option value="">Select Method</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Manual">Manual</option>
+                            <option value="Online">Online</option>
+                        </select>
+                    </div>
+
+
+
+                    <div class="mb-3">
+                        <label class="fw-semibold">Semester (optional)</label>
+                        <select name="semester" class="form-select">
+                            <option value="">Select Semester</option>
+                            <% [ "Semester 1" , "Semester 2" , "Semester 3" , "Semester 4" , "Semester 5" , "Semester 6"
+                                , "Semester 7" , "Semester 8" ].forEach(s=> { %>
+                                <option value="<%= s %>">
+                                    <%= s %>
+                                </option>
+                                <% }) %>
+                        </select>
+
+                        <div class="mb-3">
+                            <label class="fw-semibold">Academic Year (optional)</label>
+                            <input type="text" name="academicYear" placeholder="2025/2026" class="form-control" />
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-check-circle me-1"></i> Create Payment
+                        </button>
+                </form>
+            </div>
+        </div>
+
+        </div>
+
+        <!-- Add this script at the bottom -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const studentSearch = document.getElementById('studentSearch');
+                const studentDropdown = document.getElementById('studentDropdown');
+                const selectedStudentId = document.getElementById('selectedStudentId');
+                const selectedStudentInfo = document.getElementById('selectedStudentInfo');
+                const selectedStudentText = document.getElementById('selectedStudentText');
+                const clearSelectionBtn = document.getElementById('clearSelection');
+                let searchTimeout;
+
+                // Debounced search function
+                studentSearch.addEventListener('input', function () {
+                    clearTimeout(searchTimeout);
+                    const searchTerm = this.value.trim();
+
+                    if (searchTerm.length < 2) {
+                        studentDropdown.style.display = 'none';
+                        return;
+                    }
+
+                    searchTimeout = setTimeout(() => {
+                        searchStudents(searchTerm);
+                    }, 300);
+                });
+
+                // Handle click outside to close dropdown
+                document.addEventListener('click', function (e) {
+                    if (!studentSearch.contains(e.target) && !studentDropdown.contains(e.target)) {
+                        studentDropdown.style.display = 'none';
+                    }
+                });
+
+                // Search students function
+                async function searchStudents(searchTerm) {
+                    try {
+                        const response = await fetch(`/finance/search-students?search=${encodeURIComponent(searchTerm)}`);
+                        const students = await response.json();
+
+                        if (students.length === 0) {
+                            studentDropdown.innerHTML = '<div class="dropdown-item text-muted">No students found</div>';
+                            studentDropdown.style.display = 'block';
+                            return;
+                        }
+
+                        studentDropdown.innerHTML = students.map(student => `
+                <button type="button" class="dropdown-item" data-id="${student._id}" data-text="${student.firstName} ${student.surname} - ${student.email}">
+                    <strong>${student.firstName} ${student.surname}</strong><br>
+                    <small class="text-muted">${student.email}</small>
+                    ${student.studentId ? `<br><small class="text-muted">ID: ${student.studentId}</small>` : ''}
+                </button>
+            `).join('');
+
+                        studentDropdown.style.display = 'block';
+
+                        // Add click listeners to dropdown items
+                        document.querySelectorAll('#studentDropdown .dropdown-item').forEach(item => {
+                            item.addEventListener('click', function () {
+                                const studentId = this.getAttribute('data-id');
+                                const studentText = this.getAttribute('data-text');
+
+                                selectedStudentId.value = studentId;
+                                selectedStudentText.textContent = studentText;
+                                selectedStudentInfo.style.display = 'block';
+                                studentSearch.value = '';
+                                studentDropdown.style.display = 'none';
+
+                                // Validate form
+                                document.getElementById('paymentForm').reportValidity();
+                            });
+                        });
+
+                    } catch (error) {
+                        console.error('Error searching students:', error);
+                        studentDropdown.innerHTML = '<div class="dropdown-item text-danger">Error loading students</div>';
+                        studentDropdown.style.display = 'block';
+                    }
+                }
+
+                // Clear selection
+                clearSelectionBtn.addEventListener('click', function () {
+                    selectedStudentId.value = '';
+                    selectedStudentText.textContent = '';
+                    selectedStudentInfo.style.display = 'none';
+                    studentSearch.value = '';
+                    studentSearch.focus();
+                });
+
+                // Keyboard navigation
+                studentSearch.addEventListener('keydown', function (e) {
+                    const items = studentDropdown.querySelectorAll('.dropdown-item');
+
+                    if (items.length === 0) return;
+
+                    let currentIndex = -1;
+                    items.forEach((item, index) => {
+                        if (item.classList.contains('active')) {
+                            currentIndex = index;
+                        }
+                    });
+
+                    switch (e.key) {
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            if (currentIndex < items.length - 1) {
+                                items[currentIndex + 1].classList.add('active');
+                                if (currentIndex >= 0) items[currentIndex].classList.remove('active');
+                            }
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            if (currentIndex > 0) {
+                                items[currentIndex - 1].classList.add('active');
+                                items[currentIndex].classList.remove('active');
+                            }
+                            break;
+                        case 'Enter':
+                            e.preventDefault();
+                            if (currentIndex >= 0) {
+                                items[currentIndex].click();
+                            }
+                            break;
+                        case 'Escape':
+                            studentDropdown.style.display = 'none';
+                            break;
+                    }
+                });
+            });
+        </script>
+
+        <style>
+            .dropdown-item:hover,
+            .dropdown-item.active {
+                background-color: #f8f9fa;
+                cursor: pointer;
+            }
+
+            .dropdown-item {
+                white-space: normal;
+                padding: 0.5rem 1rem;
+            }
+        </style>
+
+        <%- include('../partials/footer') %>

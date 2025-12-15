@@ -321,6 +321,13 @@ const applicationSchema = new mongoose.Schema(
       uploadedAt: Date,
     },
 
+    receipt: {
+      name: { type: String, default: "Official Payment Receipt" },
+      gcsUrl: String,
+      gcsPath: String,
+      issuedAt: Date,
+    },
+
     // ✅ Payment Info (attached during application)
     payment: {
       amount: { type: Number },
@@ -329,6 +336,12 @@ const applicationSchema = new mongoose.Schema(
         enum: ["Manual", "Electronic"],
         default: "Manual",
       },
+      sponsorship: {
+        type: String,
+        enum: ["Self Sponsored", "CDF Sponsored"],
+        default: "Self Sponsored",
+      },
+
       reference: { type: String },
       proofUrl: { type: String },
       paidAt: Date,

@@ -27,8 +27,13 @@ exports.showApplicationForm = async (req, res) => {
 
 exports.submitApplication = async (req, res) => {
   try {
-    const { firstChoice, secondChoice, paymentMethod, paymentAmount } =
-      req.body;
+    const {
+      firstChoice,
+      secondChoice,
+      paymentMethod,
+      paymentAmount,
+      paymentDescription,
+    } = req.body;
     // Default paymentAmount → 0
     const amountToSave = paymentAmount ? parseFloat(paymentAmount) : 0;
     const applicationYear = new Date().getFullYear();
@@ -65,6 +70,7 @@ exports.submitApplication = async (req, res) => {
       documents: gcsDocs,
       payment: {
         amount: amountToSave,
+        description: paymentDescription || "Application Fee",
         method: paymentMethod,
         status: "Pending",
       },
@@ -152,4 +158,18 @@ exports.viewAcceptanceLetter = async (req, res) => {
     req.flash("error_msg", "Failed to get letter.");
     return res.redirect("back");
   }
+};
+
+// veiw/download my receipt
+
+exports.viewReceipt = async (req, res) => {
+  const app = await Application.findById(req.params.id);
+
+  if (!app?.receipt?.gcsPath) {
+    req.flash("error_msg", "Receipt not available.");
+    return res.redirect("back");
+  }
+
+  const signedUrl = await generateSignedUrl(app.receipt.gcsPath);
+  return res.redirect(signedUrl);
 };

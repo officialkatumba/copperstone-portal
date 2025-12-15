@@ -1,0 +1,278 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold" style="color: var(--primary-purple)">
+                    All Payments
+                </h2>
+                <p class="text-muted">
+                    View and manage all student payment records.
+                </p>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-wallet fa-2x mb-3" style="color: var(--primary-purple)"></i>
+                            <h4 class="fw-bold mb-0">
+                                <% let totalAmount=0; payments.forEach(p=> totalAmount += p.amount);
+                                    %>
+                                    ZMW <%= totalAmount.toFixed(2) %>
+                            </h4>
+                            <p class="text-muted mb-0">Total Amount</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-check-circle fa-2x mb-3 text-success"></i>
+                            <h4 class="fw-bold mb-0">
+                                <%= payments.filter(p=> p.status === 'Verified').length %>
+                            </h4>
+                            <p class="text-muted mb-0">Verified Payments</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fa-2x mb-3 text-warning"></i>
+                            <h4 class="fw-bold mb-0">
+                                <%= payments.filter(p=> p.status === 'Pending').length %>
+                            </h4>
+                            <p class="text-muted mb-0">Pending Payments</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <% if (payments.length===0) { %>
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No payments found yet.
+                </div>
+                <% } else { %>
+                    <div class="table-responsive shadow-sm rounded-3">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Student</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% payments.forEach((payment, index)=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= index + 1 %>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <%= payment.student.firstName %>
+                                                    <%= payment.student.surname %>
+                                            </strong><br />
+                                            <small class="text-muted">
+                                                <%= payment.student.email %>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <%= payment.category %>
+                                        </td>
+                                        <td>
+                                            <strong style="color: var(--primary-purple)">ZMW <%=
+                                                    payment.amount.toFixed(2) %></strong>
+                                        </td>
+                                        <td>
+                                            <%= payment.method %>
+                                        </td>
+                                        <td>
+                                            <% if (payment.status==='Verified' ) { %>
+                                                <span class="badge bg-success">Verified</span>
+                                                <% } else if (payment.status==='Pending' ) { %>
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                    <% } else if (payment.status==='Cancelled' ) { %>
+                                                        <span class="badge bg-danger">Cancelled</span>
+                                                        <% } else { %>
+                                                            <span class="badge bg-secondary">
+                                                                <%= payment.status %>
+                                                            </span>
+                                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                <%= payment.createdAt.toLocaleDateString() %>
+                                            </small><br />
+                                            <small class="text-muted">
+                                                <%= payment.createdAt.toLocaleTimeString([], {hour: '2-digit' ,
+                                                    minute:'2-digit'}) %>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" data-bs-toggle="modal"
+                                                    data-bs-target="#paymentModal<%= payment._id %>">
+                                                    <i class="fas fa-eye me-1"></i> View
+                                                </button>
+                                                <% if (payment.receipt && payment.receipt.gcsUrl) { %>
+                                                    <a href="<%= payment.receipt.gcsUrl %>" target="_blank"
+                                                        class="btn btn-outline-success">
+                                                        <i class="fas fa-receipt"></i>
+                                                    </a>
+                                                    <% } %>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Payment Details Modal -->
+                                    <div class="modal fade" id="paymentModal<%= payment._id %>" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold">Payment Details</h5>
+                                                    <button type="button" class="btn-close"
+                                                        data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <!-- Student Info -->
+                                                    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3"
+                                                            style="width: 50px; height: 50px;">
+                                                            <i class="fas fa-user-graduate text-primary"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0">
+                                                                <%= payment.student.firstName %>
+                                                                    <%= payment.student.surname %>
+                                                            </h6>
+                                                            <p class="text-muted mb-0">
+                                                                <%= payment.student.email %>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Payment Details -->
+                                                    <div class="row mb-3">
+                                                        <div class="col-6 mb-2">
+                                                            <small class="text-muted d-block">Payment ID</small>
+                                                            <small class="text-muted">
+                                                                <%= payment._id %>
+                                                            </small>
+                                                        </div>
+                                                        <div class="col-6 mb-2">
+                                                            <small class="text-muted d-block">Category</small>
+                                                            <span class="fw-bold">
+                                                                <%= payment.category %>
+                                                            </span>
+                                                        </div>
+                                                        <div class="col-12 mb-2">
+                                                            <small class="text-muted d-block">Description</small>
+                                                            <span>
+                                                                <%= payment.description %>
+                                                            </span>
+                                                        </div>
+                                                        <div class="col-6 mb-2">
+                                                            <small class="text-muted d-block">Amount</small>
+                                                            <span class="fw-bold"
+                                                                style="color: var(--primary-purple)">ZMW <%=
+                                                                    payment.amount.toFixed(2) %></span>
+                                                        </div>
+                                                        <div class="col-6 mb-2">
+                                                            <small class="text-muted d-block">Method</small>
+                                                            <span>
+                                                                <%= payment.method %>
+                                                            </span>
+                                                        </div>
+                                                        <% if (payment.semester) { %>
+                                                            <div class="col-6 mb-2">
+                                                                <small class="text-muted d-block">Semester</small>
+                                                                <span>Semester <%= payment.semester %></span>
+                                                            </div>
+                                                            <% } %>
+                                                                <% if (payment.academicYear) { %>
+                                                                    <div class="col-6 mb-2">
+                                                                        <small class="text-muted d-block">Academic
+                                                                            Year</small>
+                                                                        <span>
+                                                                            <%= payment.academicYear %>
+                                                                        </span>
+                                                                    </div>
+                                                                    <% } %>
+                                                                        <div class="col-6 mb-2">
+                                                                            <small
+                                                                                class="text-muted d-block">Status</small>
+                                                                            <% if (payment.status==='Verified' ) { %>
+                                                                                <span
+                                                                                    class="badge bg-success">Verified</span>
+                                                                                <% } else if (payment.status==='Pending'
+                                                                                    ) { %>
+                                                                                    <span
+                                                                                        class="badge bg-warning text-dark">Pending</span>
+                                                                                    <% } else { %>
+                                                                                        <span
+                                                                                            class="badge bg-secondary">
+                                                                                            <%= payment.status %>
+                                                                                        </span>
+                                                                                        <% } %>
+                                                                        </div>
+                                                    </div>
+
+                                                    <!-- Receipt Section -->
+                                                    <% if (payment.receipt && payment.receipt.gcsUrl) { %>
+                                                        <div class="alert alert-info d-flex align-items-center">
+                                                            <i class="fas fa-file-pdf me-3"></i>
+                                                            <div>
+                                                                <small class="text-muted d-block">Official
+                                                                    Receipt</small>
+                                                                <a href="<%= payment.receipt.gcsUrl %>" target="_blank"
+                                                                    class="btn btn-sm btn-primary mt-1">
+                                                                    <i class="fas fa-download me-1"></i> Download
+                                                                    Receipt
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                        <% } %>
+
+                                                            <!-- Dates -->
+                                                            <div class="small text-muted pt-3 border-top">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <span>Created: <%=
+                                                                            payment.createdAt.toLocaleString() %></span>
+                                                                    <% if (payment.verifiedAt) { %>
+                                                                        <span>Verified: <%=
+                                                                                payment.verifiedAt.toLocaleDateString()
+                                                                                %></span>
+                                                                        <% } %>
+                                                                </div>
+                                                            </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Close</button>
+                                                    <% if (payment.receipt && payment.receipt.gcsUrl) { %>
+                                                        <a href="<%= payment.receipt.gcsUrl %>" target="_blank"
+                                                            class="btn btn-primary">
+                                                            <i class="fas fa-print me-1"></i> Print
+                                                        </a>
+                                                        <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } %>
+        </div>
+
+        <%- include('../partials/footer') %>

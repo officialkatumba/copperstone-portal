@@ -13,6 +13,7 @@ const {
   submitApplication,
   getMyApplications, // ✅ add this
   viewAcceptanceLetter, // ← Make sure this line exists and is spelled correctly
+  viewReceipt,
 } = require("../controllers/applicationController");
 
 // GET → Display the application form
@@ -27,6 +28,8 @@ router.post(
   multerUpload.array("documents", 5),
   submitApplication
 );
+
+router.get("/applications/:id/receipt", viewReceipt);
 
 // My applications
 router.get(

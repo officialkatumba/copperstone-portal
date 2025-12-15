@@ -93,6 +93,38 @@
                                 <% } %>
                         </p>
 
+                        <!-- Receipt -->
+                        <div class="mb-4">
+                          <h5 class="fw-bold text-success mb-3">
+                            <i class="fas fa-receipt me-2"></i> Receipt
+                          </h5>
+
+                          <% if (application.receipt && application.receipt.gcsPath) { %>
+                            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                              <div>
+                                <i class="fas fa-check-circle me-2"></i>
+                                Receipt Generated
+                                <br />
+                                <small class="text-muted">
+                                  Issued on:
+                                  <%= new Date(application.receipt.generatedAt).toLocaleDateString() %>
+                                </small>
+                              </div>
+
+                              <a href="/applications/<%= application._id %>/receipt" target="_blank"
+                                class="btn btn-success btn-sm">
+                                <i class="fas fa-download me-1"></i> View Receipt
+                              </a>
+                            </div>
+                            <% } else { %>
+                              <div class="alert alert-secondary">
+                                <i class="fas fa-clock me-2"></i>
+                                Receipt not generated yet
+                              </div>
+                              <% } %>
+                        </div>
+
+
                         <!-- Show verification details if already verified -->
                         <% if (application.payment?.status==="Verified" && application.payment?.verifiedAt) { %>
                           <div class="mt-2 p-2 bg-light rounded">
