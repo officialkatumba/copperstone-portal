@@ -259,17 +259,38 @@ exports.verifyPayment = async (req, res) => {
   }
 };
 
-// View / download receipt
-exports.viewReceipt = async (req, res) => {
-  const app = await Application.findById(req.params.id);
+// // View / download receipt
+// exports.viewReceipt = async (req, res) => {
+//   const app = await Application.findById(req.params.id);
 
-  if (!app?.receipt?.gcsPath) {
-    req.flash("error_msg", "Receipt not available.");
+//   if (!app?.receipt?.gcsPath) {
+//     req.flash("error_msg", "Receipt not available.");
+//     return res.redirect("back");
+//   }
+
+//   const signedUrl = await generateSignedUrl(app.receipt.gcsPath);
+//   return res.redirect(signedUrl);
+// };
+
+// View / download receipt (Application)
+exports.viewReceipt = async (req, res) => {
+  try {
+    const app = await Application.findById(req.params.id);
+
+    if (!app || !app.receipt || !app.receipt.gcsPath) {
+      req.flash("error_msg", "Receipt not available.");
+      return res.redirect("back");
+    }
+
+    // Generate a fresh signed URL every time
+    const signedUrl = await generateSignedUrl(app.receipt.gcsPath);
+
+    return res.redirect(signedUrl);
+  } catch (err) {
+    console.error("❌ VIEW RECEIPT ERROR:", err);
+    req.flash("error_msg", "Unable to access receipt.");
     return res.redirect("back");
   }
-
-  const signedUrl = await generateSignedUrl(app.receipt.gcsPath);
-  return res.redirect(signedUrl);
 };
 
 // ===============================
@@ -499,32 +520,56 @@ exports.listPayments = async (req, res) => {
 // ===============================
 // VIEW PAYMENT RECEIPT - FIXED
 // ===============================
+// exports.viewPaymentReceipt = async (req, res) => {
+//   try {
+//     const payment = await Payment.findById(req.params.id);
+
+//     if (!payment?.receipt?.gcsPath) {
+//       req.flash("error_msg", "Receipt not available.");
+//       return res.redirect("back");
+//     }
+
+//     // ✅ Always generate fresh signed URL when accessed
+//     const signedUrl = await generateSignedUrl(payment.receipt.gcsPath);
+
+//     // Option A: Redirect to signed URL (browser downloads)
+//     return res.redirect(signedUrl);
+
+//     // OR Option B: Stream the file directly (better)
+//     // const bucket = storage.bucket(process.env.GCS_BUCKET_NAME);
+//     // const file = bucket.file(payment.receipt.gcsPath);
+//     // const [exists] = await file.exists();
+//     // if (!exists) {
+//     //   req.flash("error_msg", "Receipt file not found.");
+//     //   return res.redirect("back");
+//     // }
+//     // res.setHeader('Content-Type', 'application/pdf');
+//     // res.setHeader('Content-Disposition', `attachment; filename="payment_receipt_${payment._id}.pdf"`);
+//     // file.createReadStream().pipe(res);
+//   } catch (error) {
+//     console.error("View payment receipt error:", error);
+//     req.flash("error_msg", "Failed to access receipt.");
+//     return res.redirect("back");
+//   }
+// };
+
+// ===============================
+// VIEW PAYMENT RECEIPT (OPTION A)
+// ===============================
 exports.viewPaymentReceipt = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);
 
-    if (!payment?.receipt?.gcsPath) {
+    if (!payment || !payment.receipt || !payment.receipt.gcsPath) {
       req.flash("error_msg", "Receipt not available.");
       return res.redirect("back");
     }
 
-    // ✅ Always generate fresh signed URL when accessed
+    // ✅ Generate a fresh signed URL every time
     const signedUrl = await generateSignedUrl(payment.receipt.gcsPath);
 
-    // Option A: Redirect to signed URL (browser downloads)
+    // ✅ Redirect browser to GCS (download / view)
     return res.redirect(signedUrl);
-
-    // OR Option B: Stream the file directly (better)
-    // const bucket = storage.bucket(process.env.GCS_BUCKET_NAME);
-    // const file = bucket.file(payment.receipt.gcsPath);
-    // const [exists] = await file.exists();
-    // if (!exists) {
-    //   req.flash("error_msg", "Receipt file not found.");
-    //   return res.redirect("back");
-    // }
-    // res.setHeader('Content-Type', 'application/pdf');
-    // res.setHeader('Content-Disposition', `attachment; filename="payment_receipt_${payment._id}.pdf"`);
-    // file.createReadStream().pipe(res);
   } catch (error) {
     console.error("View payment receipt error:", error);
     req.flash("error_msg", "Failed to access receipt.");

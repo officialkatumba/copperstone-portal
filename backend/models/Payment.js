@@ -237,14 +237,28 @@ const paymentSchema = new mongoose.Schema(
     // ==========================
     // RECEIPT
     // ==========================
+    // receipt: {
+    //   name: {
+    //     type: String,
+    //     default: "Official Payment Receipt",
+    //   },
+    //   gcsUrl: String,
+    //   gcsPath: String,
+    //   issuedAt: Date,
+    // },
     receipt: {
       name: {
         type: String,
         default: "Official Payment Receipt",
       },
-      gcsUrl: String,
-      gcsPath: String,
-      issuedAt: Date,
+      gcsPath: {
+        type: String,
+        required: false,
+      },
+      issuedAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
   },
   { timestamps: true }
