@@ -370,6 +370,7 @@ const applicationRoutes = require("./routes/applicationRoutes");
 const financeRoutes = require("./routes/financeRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
 const deanRoutes = require("./routes/deanRoutes");
+// const vcRoutes = require("./routes/vcRoutes");
 const vcRoutes = require("./routes/vcRoutes");
 
 // Skills
@@ -402,7 +403,7 @@ app.use("/", registrationRoutes);
 app.use("/", deanRoutes);
 
 // ----- VC -----
-app.use("/", vcRoutes);
+app.use("/vc", vcRoutes);
 
 // ----- SKILLS -----
 // Student
