@@ -14,6 +14,7 @@ const {
   getMyApplications, // ✅ add this
   viewAcceptanceLetter, // ← Make sure this line exists and is spelled correctly
   viewReceipt,
+  viewApplicationDetails,
 } = require("../controllers/applicationController");
 
 // GET → Display the application form
@@ -46,5 +47,11 @@ router.get(
 );
 
 // router.get("/programs/applications/:id/letter", viewAcceptanceLetter);
+
+router.get(
+  "/applications/:id",
+  // isAuthenticated,
+  viewApplicationDetails
+);
 
 module.exports = router;

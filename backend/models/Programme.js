@@ -12,7 +12,14 @@ const programmeSchema = new mongoose.Schema(
     // ✅ Level of degree
     level: {
       type: String,
-      enum: ["Certificate", "Diploma", "Bachelor", "Masters"],
+      enum: [
+        "Certificate",
+        "Diploma",
+        "Bachelor",
+        "Masters",
+        "Postgraduate Diploma",
+        "PhD",
+      ],
       required: true,
     },
 

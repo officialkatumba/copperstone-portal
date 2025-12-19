@@ -3,57 +3,78 @@
 
         <div class="container my-5">
             <div class="text-center mb-4">
-                <h2 class="fw-bold" style="color: var(--primary-purple)">
-                    All Payments
-                </h2>
-                <p class="text-muted">
-                    View and manage all student payment records.
-                </p>
+                <h2 class="fw-bold" style="color: var(--primary-purple)">All Payments</h2>
+                <p class="text-muted">View and manage all student payment records.</p>
             </div>
 
             <!-- Summary Cards -->
             <div class="row mb-4">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body text-center">
-                            <i class="fas fa-wallet fa-2x mb-3" style="color: var(--primary-purple)"></i>
-                            <h4 class="fw-bold mb-0">
-                                <% let totalAmount=0; payments.forEach(p=> totalAmount += p.amount);
-                                    %>
-                                    ZMW <%= totalAmount.toFixed(2) %>
-                            </h4>
-                            <p class="text-muted mb-0">Total Amount</p>
+                            <i class="fas fa-calendar-day fa-2x mb-3 text-primary"></i>
+                            <h5 class="fw-bold mb-0">ZMW <%= totalToday.toFixed(2) %>
+                            </h5>
+                            <small class="text-muted">Total Today (<%= today %>)</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body text-center">
-                            <i class="fas fa-check-circle fa-2x mb-3 text-success"></i>
-                            <h4 class="fw-bold mb-0">
-                                <%= payments.filter(p=> p.status === 'Verified').length %>
-                            </h4>
-                            <p class="text-muted mb-0">Verified Payments</p>
+                            <i class="fas fa-calendar-alt fa-2x mb-3 text-success"></i>
+                            <h5 class="fw-bold mb-0">ZMW <%= totalMonth.toFixed(2) %>
+                            </h5>
+                            <small class="text-muted">This Month (<%= monthRange %>)</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body text-center">
-                            <i class="fas fa-clock fa-2x mb-3 text-warning"></i>
-                            <h4 class="fw-bold mb-0">
-                                <%= payments.filter(p=> p.status === 'Pending').length %>
-                            </h4>
-                            <p class="text-muted mb-0">Pending Payments</p>
+                            <i class="fas fa-calendar fa-2x mb-3 text-warning"></i>
+                            <h5 class="fw-bold mb-0">ZMW <%= totalYear.toFixed(2) %>
+                            </h5>
+                            <small class="text-muted">This Year (<%= yearRange %>)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-wallet fa-2x mb-3 text-secondary"></i>
+                            <h5 class="fw-bold mb-0">ZMW <%= totalAll.toFixed(2) %>
+                            </h5>
+                            <small class="text-muted">Total Payments</small>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Search and Limit -->
+            <form class="row mb-4 g-2" method="get" action="/finance/payments">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" name="search" placeholder="Search payments..."
+                        value="<%= search %>">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="limit">
+                        <% [5,10,20,50,100].forEach(n=> { %>
+                            <option value="<%= n %>" <%=n===limit ? 'selected' : '' %>><%= n %> per page</option>
+                            <% }) %>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="/finance/payments" class="btn btn-secondary w-100">Reset</a>
+                </div>
+            </form>
+
             <% if (payments.length===0) { %>
                 <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle me-2"></i>
-                    No payments found yet.
+                    <i class="fas fa-info-circle me-2"></i>No payments found yet.
                 </div>
                 <% } else { %>
                     <div class="table-responsive shadow-sm rounded-3">
@@ -74,13 +95,13 @@
                                 <% payments.forEach((payment, index)=> { %>
                                     <tr>
                                         <td>
-                                            <%= index + 1 %>
+                                            <%= (currentPage - 1) * limit + index + 1 %>
                                         </td>
                                         <td>
                                             <strong>
                                                 <%= payment.student.firstName %>
                                                     <%= payment.student.surname %>
-                                            </strong><br />
+                                            </strong><br>
                                             <small class="text-muted">
                                                 <%= payment.student.email %>
                                             </small>
@@ -88,19 +109,17 @@
                                         <td>
                                             <%= payment.category %>
                                         </td>
-                                        <td>
-                                            <strong style="color: var(--primary-purple)">ZMW <%=
-                                                    payment.amount.toFixed(2) %></strong>
-                                        </td>
+                                        <td><strong style="color: var(--primary-purple)">ZMW <%=
+                                                    payment.amount.toFixed(2) %></strong></td>
                                         <td>
                                             <%= payment.method %>
                                         </td>
                                         <td>
-                                            <% if (payment.status==='Verified' ) { %>
+                                            <% if(payment.status==='Verified' ){ %>
                                                 <span class="badge bg-success">Verified</span>
-                                                <% } else if (payment.status==='Pending' ) { %>
+                                                <% } else if(payment.status==='Pending' ){ %>
                                                     <span class="badge bg-warning text-dark">Pending</span>
-                                                    <% } else if (payment.status==='Cancelled' ) { %>
+                                                    <% } else if(payment.status==='Cancelled' ){ %>
                                                         <span class="badge bg-danger">Cancelled</span>
                                                         <% } else { %>
                                                             <span class="badge bg-secondary">
@@ -111,10 +130,10 @@
                                         <td>
                                             <small>
                                                 <%= payment.createdAt.toLocaleDateString() %>
-                                            </small><br />
+                                            </small><br>
                                             <small class="text-muted">
-                                                <%= payment.createdAt.toLocaleTimeString([], {hour: '2-digit' ,
-                                                    minute:'2-digit'}) %>
+                                                <%= payment.createdAt.toLocaleTimeString([],
+                                                    {hour:'2-digit',minute:'2-digit'}) %>
                                             </small>
                                         </td>
                                         <td>
@@ -123,7 +142,7 @@
                                                     data-bs-target="#paymentModal<%= payment._id %>">
                                                     <i class="fas fa-eye me-1"></i> View
                                                 </button>
-                                                <% if (payment.receipt && payment.receipt.gcsUrl) { %>
+                                                <% if(payment.receipt?.gcsUrl){ %>
                                                     <a href="<%= payment.receipt.gcsUrl %>" target="_blank"
                                                         class="btn btn-outline-success">
                                                         <i class="fas fa-receipt"></i>
@@ -133,7 +152,7 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Payment Details Modal -->
+                                    <!-- Payment Modal -->
                                     <div class="modal fade" id="paymentModal<%= payment._id %>" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content">
@@ -146,7 +165,7 @@
                                                     <!-- Student Info -->
                                                     <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
                                                         <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3"
-                                                            style="width: 50px; height: 50px;">
+                                                            style="width:50px;height:50px;">
                                                             <i class="fas fa-user-graduate text-primary"></i>
                                                         </div>
                                                         <div>
@@ -192,13 +211,13 @@
                                                                 <%= payment.method %>
                                                             </span>
                                                         </div>
-                                                        <% if (payment.semester) { %>
+                                                        <% if(payment.semester){ %>
                                                             <div class="col-6 mb-2">
                                                                 <small class="text-muted d-block">Semester</small>
                                                                 <span>Semester <%= payment.semester %></span>
                                                             </div>
                                                             <% } %>
-                                                                <% if (payment.academicYear) { %>
+                                                                <% if(payment.academicYear){ %>
                                                                     <div class="col-6 mb-2">
                                                                         <small class="text-muted d-block">Academic
                                                                             Year</small>
@@ -210,11 +229,11 @@
                                                                         <div class="col-6 mb-2">
                                                                             <small
                                                                                 class="text-muted d-block">Status</small>
-                                                                            <% if (payment.status==='Verified' ) { %>
+                                                                            <% if(payment.status==='Verified' ){ %>
                                                                                 <span
                                                                                     class="badge bg-success">Verified</span>
-                                                                                <% } else if (payment.status==='Pending'
-                                                                                    ) { %>
+                                                                                <% } else if(payment.status==='Pending'
+                                                                                    ){ %>
                                                                                     <span
                                                                                         class="badge bg-warning text-dark">Pending</span>
                                                                                     <% } else { %>
@@ -226,24 +245,23 @@
                                                                         </div>
                                                     </div>
 
-                                                    <!-- Receipt Section -->
-                                                    <% if (payment.receipt && payment.receipt.gcsPath) { %>
+                                                    <!-- Receipt -->
+                                                    <% if(payment.receipt && payment.receipt.gcsPath){ %>
                                                         <a href="/finance/payments/<%= payment._id %>/receipt"
                                                             target="_blank"
                                                             class="btn btn-sm btn-success d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
-                                                            style="border-radius: 20px;">
+                                                            style="border-radius:20px;">
                                                             <i class="fas fa-file-pdf"></i>
                                                             <span class="fw-semibold">Receipt</span>
                                                         </a>
                                                         <% } %>
-
 
                                                             <!-- Dates -->
                                                             <div class="small text-muted pt-3 border-top">
                                                                 <div class="d-flex justify-content-between">
                                                                     <span>Created: <%=
                                                                             payment.createdAt.toLocaleString() %></span>
-                                                                    <% if (payment.verifiedAt) { %>
+                                                                    <% if(payment.verifiedAt){ %>
                                                                         <span>Verified: <%=
                                                                                 payment.verifiedAt.toLocaleDateString()
                                                                                 %></span>
@@ -254,7 +272,7 @@
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary"
                                                         data-bs-dismiss="modal">Close</button>
-                                                    <% if (payment.receipt && payment.receipt.gcsUrl) { %>
+                                                    <% if(payment.receipt && payment.receipt.gcsUrl){ %>
                                                         <a href="<%= payment.receipt.gcsUrl %>" target="_blank"
                                                             class="btn btn-primary">
                                                             <i class="fas fa-print me-1"></i> Print
@@ -268,6 +286,19 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation" class="mt-3">
+                        <ul class="pagination justify-content-center">
+                            <% for(let i=1;i<=totalPages;i++){ %>
+                                <li class="page-item <%= i===currentPage?'active':'' %>">
+                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&search=<%= search %>">
+                                        <%= i %>
+                                    </a>
+                                </li>
+                                <% } %>
+                        </ul>
+                    </nav>
                     <% } %>
         </div>
 

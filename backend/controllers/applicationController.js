@@ -160,6 +160,37 @@ exports.viewAcceptanceLetter = async (req, res) => {
   }
 };
 
+exports.viewApplicationDetails = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id)
+      .populate("firstChoice")
+      .populate("secondChoice")
+      .lean();
+
+    if (!application) {
+      req.flash("error_msg", "Application not found");
+      return res.redirect("/applications");
+    }
+
+    // Attach signed URLs for documents
+    for (const doc of application.documents) {
+      if (doc.gcsPath) {
+        doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+      }
+    }
+
+    res.render("applications/applicationDetails", {
+      title: "Application Details",
+      application,
+      user: req.user,
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash("error_msg", "Failed to load application details");
+    res.redirect("/applications");
+  }
+};
+
 // veiw/download my receipt
 
 exports.viewReceipt = async (req, res) => {
