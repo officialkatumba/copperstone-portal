@@ -3,10 +3,7 @@
 
         <div class="container my-4">
             <div class="card shadow-lg p-4 mx-auto" style="max-width: 600px">
-                <!-- <h4 class="fw-bold text-center mb-4">Initiate Payment</h4> -->
-
                 <div class="text-center mb-4">
-                    <!-- Main icon and heading -->
                     <div class="mb-3">
                         <i class="fas fa-credit-card fa-3x text-primary"></i>
                     </div>
@@ -17,8 +14,7 @@
                     </p>
                 </div>
 
-                <form action="/finance/payments" method="POST" id="paymentForm">
-
+                <form action="/finance/payments" method="POST" id="paymentForm" enctype="multipart/form-data">
                     <!-- Searchable Student Dropdown -->
                     <div class="mb-3">
                         <label class="fw-semibold">Student</label>
@@ -42,21 +38,29 @@
                         </div>
                     </div>
 
-                    <!-- Rest of the form remains the same -->
+                    <!-- Category with Fee Suggestions -->
                     <div class="mb-3">
                         <label class="fw-semibold">Category</label>
-                        <select name="category" class="form-select" required>
+                        <select name="category" id="category" class="form-select" required
+                            onchange="updateFeeSuggestion()">
                             <option value="">Select Category</option>
-                            <% [ "Application Fee" , "Registration Fee" , "Semester Registration Fee"
-                                , "Tuition Fee (Semester)" , "Tuition Fee (Full Year)" , "Exam Fee"
-                                , "Student Management Fee" , "Medical Fee" , "Library Fee" , "Internet Fee"
-                                , "Maintenance Fee" , "Distance Learning Logistics Fee" , "Research Fee"
-                                , "Graduation Fee" ,"Penalty" , "Other" ].forEach(c=> { %>
-                                <option value="<%= c %>">
-                                    <%= c %>
+                            <% [ {name: "Application Fee" , typicalAmount: 50}, {name: "Registration Fee" ,
+                                typicalAmount: 100}, {name: "Semester Registration Fee" , typicalAmount: 500},
+                                {name: "Tuition Fee (Semester)" , typicalAmount: 5000}, {name: "Tuition Fee (Full Year)"
+                                , typicalAmount: 10000}, {name: "Exam Fee" , typicalAmount: 200},
+                                {name: "Student Management Fee" , typicalAmount: 300}, {name: "Medical Fee" ,
+                                typicalAmount: 150}, {name: "Library Fee" , typicalAmount: 100}, {name: "Internet Fee" ,
+                                typicalAmount: 200}, {name: "Maintenance Fee" , typicalAmount: 250},
+                                {name: "Distance Learning Logistics Fee" , typicalAmount: 500}, {name: "Research Fee" ,
+                                typicalAmount: 1000}, {name: "Graduation Fee" , typicalAmount: 800}, {name: "Penalty" ,
+                                typicalAmount: 100}, {name: "Other" , typicalAmount: 0} ].forEach(c=> { %>
+                                <option value="<%= c.name %>" data-typical="<%= c.typicalAmount %>">
+                                    <%= c.name %>
+                                        <% if (c.typicalAmount> 0) { %>(Typically: ZMW <%= c.typicalAmount %>)<% } %>
                                 </option>
                                 <% }) %>
                         </select>
+                        <div id="feeSuggestion" class="form-text" style="display: none;"></div>
                     </div>
 
                     <div class="mb-3">
@@ -64,9 +68,49 @@
                         <input type="text" name="description" class="form-control" required />
                     </div>
 
+                    <!-- Total Amount Due (Manual Input) -->
                     <div class="mb-3">
-                        <label class="fw-semibold">Amount (ZMW)</label>
-                        <input type="number" name="amount" step="0.01" min="0" class="form-control" required />
+                        <label class="fw-semibold">Total Amount Due (ZMW)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">ZMW</span>
+                            <input type="number" name="totalDue" id="totalDue" step="0.01" min="0" class="form-control"
+                                required oninput="calculateBalance()" />
+                            <button type="button" class="btn btn-outline-secondary" onclick="useTypicalFee()">
+                                Use Typical
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Enter the total amount required for this fee category
+                        </div>
+                    </div>
+
+                    <!-- Payment Amount Being Made Now -->
+                    <div class="mb-3">
+                        <label class="fw-semibold">Payment Amount (ZMW)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">ZMW</span>
+                            <input type="number" name="amount" id="paymentAmount" step="0.01" min="0"
+                                class="form-control" required oninput="calculateBalance()" />
+                            <button type="button" class="btn btn-outline-secondary" onclick="payFullAmount()">
+                                Pay Full Amount
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Enter the payment amount being made now
+                        </div>
+                    </div>
+
+                    <!-- Balance After Payment (Calculated automatically) -->
+                    <div class="mb-3">
+                        <label class="fw-semibold">Balance After This Payment</label>
+                        <div class="input-group">
+                            <span class="input-group-text">ZMW</span>
+                            <input type="number" name="balanceAfterPayment" id="balanceAfterPayment" step="0.01"
+                                class="form-control" readonly style="background-color: #e9ecef; font-weight: bold;" />
+                        </div>
+                        <div id="balanceMessage" class="form-text">
+                            This is calculated automatically: (Total Due - Payment Amount)
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -79,7 +123,15 @@
                         </select>
                     </div>
 
-
+                    <!-- Upload Proof Field -->
+                    <div class="mb-3">
+                        <label class="fw-semibold">Upload Payment Proof</label>
+                        <input type="file" name="paymentProof" class="form-control"
+                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+                        <div class="form-text">
+                            Supported formats: PDF, JPG, JPEG, PNG, DOC, DOCX (Max: 5MB)
+                        </div>
+                    </div>
 
                     <div class="mb-3">
                         <label class="fw-semibold">Semester (optional)</label>
@@ -92,22 +144,23 @@
                                 </option>
                                 <% }) %>
                         </select>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="fw-semibold">Academic Year (optional)</label>
-                            <input type="text" name="academicYear" placeholder="2025/2026" class="form-control" />
-                        </div>
+                    <div class="mb-3">
+                        <label class="fw-semibold">Academic Year (optional)</label>
+                        <input type="text" name="academicYear" placeholder="2025/2026" class="form-control" />
+                    </div>
 
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="fas fa-check-circle me-1"></i> Create Payment
-                        </button>
+                    <!-- Hidden field for typical fee -->
+                    <input type="hidden" id="typicalFee" value="0">
+
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-check-circle me-1"></i> Create Payment
+                    </button>
                 </form>
             </div>
         </div>
 
-        </div>
-
-        <!-- Add this script at the bottom -->
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const studentSearch = document.getElementById('studentSearch');
@@ -117,6 +170,68 @@
                 const selectedStudentText = document.getElementById('selectedStudentText');
                 const clearSelectionBtn = document.getElementById('clearSelection');
                 let searchTimeout;
+
+                // Global calculation function
+                window.calculateBalance = function () {
+                    const totalDue = parseFloat(document.getElementById('totalDue').value) || 0;
+                    const paymentAmount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+                    const balanceAfter = totalDue - paymentAmount;
+
+                    const balanceField = document.getElementById('balanceAfterPayment');
+                    const balanceMessage = document.getElementById('balanceMessage');
+
+                    balanceField.value = balanceAfter.toFixed(2);
+
+                    // Update message color based on balance
+                    if (balanceAfter < 0) {
+                        balanceMessage.innerHTML = '<span class="text-danger">⚠️ Payment exceeds total due! Please check amounts.</span>';
+                        balanceField.style.backgroundColor = '#f8d7da';
+                        balanceField.style.color = '#721c24';
+                    } else if (balanceAfter > 0) {
+                        balanceMessage.innerHTML = '<span class="text-warning">Balance remaining after this payment</span>';
+                        balanceField.style.backgroundColor = '#fff3cd';
+                        balanceField.style.color = '#856404';
+                    } else {
+                        balanceMessage.innerHTML = '<span class="text-success">✓ Full payment - No balance remaining</span>';
+                        balanceField.style.backgroundColor = '#d1e7dd';
+                        balanceField.style.color = '#0f5132';
+                    }
+                };
+
+                // Function to use typical fee for selected category
+                window.useTypicalFee = function () {
+                    const typicalFee = parseFloat(document.getElementById('typicalFee').value) || 0;
+                    if (typicalFee > 0) {
+                        document.getElementById('totalDue').value = typicalFee;
+                        calculateBalance();
+                    }
+                };
+
+                // Function to pay the full amount
+                window.payFullAmount = function () {
+                    const totalDue = parseFloat(document.getElementById('totalDue').value) || 0;
+                    if (totalDue > 0) {
+                        document.getElementById('paymentAmount').value = totalDue;
+                        calculateBalance();
+                    }
+                };
+
+                // Function to update fee suggestion based on category
+                window.updateFeeSuggestion = function () {
+                    const categorySelect = document.getElementById('category');
+                    const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                    const typicalAmount = parseFloat(selectedOption.getAttribute('data-typical')) || 0;
+
+                    const feeSuggestion = document.getElementById('feeSuggestion');
+                    document.getElementById('typicalFee').value = typicalAmount;
+
+                    if (typicalAmount > 0) {
+                        feeSuggestion.innerHTML = `Typical amount for this category: <strong>ZMW ${typicalAmount.toFixed(2)}</strong> <button type="button" class="btn btn-sm btn-link p-0" onclick="useTypicalFee()">Use this amount</button>`;
+                        feeSuggestion.style.display = 'block';
+                    } else {
+                        feeSuggestion.style.display = 'none';
+                    }
+                };
 
                 // Debounced search function
                 studentSearch.addEventListener('input', function () {
@@ -192,6 +307,15 @@
                     selectedStudentText.textContent = '';
                     selectedStudentInfo.style.display = 'none';
                     studentSearch.value = '';
+
+                    // Reset calculation fields
+                    document.getElementById('totalDue').value = '';
+                    document.getElementById('paymentAmount').value = '';
+                    document.getElementById('balanceAfterPayment').value = '';
+                    document.getElementById('balanceMessage').innerHTML = 'This is calculated automatically: (Total Due - Payment Amount)';
+                    document.getElementById('balanceAfterPayment').style.backgroundColor = '#e9ecef';
+                    document.getElementById('balanceAfterPayment').style.color = '';
+
                     studentSearch.focus();
                 });
 
@@ -234,6 +358,9 @@
                             break;
                     }
                 });
+
+                // Initialize calculation
+                calculateBalance();
             });
         </script>
 
@@ -247,6 +374,16 @@
             .dropdown-item {
                 white-space: normal;
                 padding: 0.5rem 1rem;
+            }
+
+            .form-text button.btn-link {
+                text-decoration: none;
+                vertical-align: baseline;
+                padding: 0 0.25rem;
+            }
+
+            #balanceAfterPayment:read-only {
+                cursor: not-allowed;
             }
         </style>
 

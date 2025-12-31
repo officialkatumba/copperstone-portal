@@ -164,6 +164,18 @@ const paymentSchema = new mongoose.Schema(
       min: 0,
     },
 
+    // ADD ONLY THESE 2 NEW FIELDS:
+    totalDue: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    balanceAfterPayment: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
     currency: {
       type: String,
       default: "ZMW",
