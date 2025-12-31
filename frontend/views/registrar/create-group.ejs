@@ -1,0 +1,376 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="fw-bold" style="color: var(--primary-purple)">
+                                <i class="fas fa-plus-circle me-2"></i>Create Academic Group
+                            </h2>
+                            <p class="text-muted">Create a new academic group/class for students</p>
+                        </div>
+                        <a href="/registrar/groups" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Groups
+                        </a>
+                    </div>
+
+                    <!-- Flash Messages -->
+                    <% if (messages.error) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <%= messages.error %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <% } %>
+                            <% if (messages.success) { %>
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <%= messages.success %>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                <% } %>
+
+                                    <!-- Create Group Form -->
+                                    <div class="card shadow-sm border-0">
+                                        <div class="card-body">
+                                            <form method="POST" action="/registrar/groups/create" id="createGroupForm">
+
+                                                <!-- Basic Information -->
+                                                <div class="row mb-4">
+                                                    <div class="col-12">
+                                                        <h5 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                                                            <i class="fas fa-info-circle me-2"></i>Basic Information
+                                                        </h5>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="programme" class="form-label fw-bold">Programme
+                                                            *</label>
+                                                        <select class="form-select" id="programme" name="programme"
+                                                            required>
+                                                            <option value="">Select Programme</option>
+                                                            <% programmes.forEach(programme=> { %>
+                                                                <option value="<%= programme._id %>">
+                                                                    <%= programme.code %> - <%= programme.name %>
+                                                                </option>
+                                                                <% }); %>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="name" class="form-label fw-bold">Group Name
+                                                            *</label>
+                                                        <input type="text" class="form-control" id="name" name="name"
+                                                            placeholder="e.g., Computer Science Year 1 - Group A"
+                                                            required>
+                                                        <div class="form-text">This will be displayed to students and
+                                                            lecturers</div>
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+                                                        <label for="academicYear" class="form-label fw-bold">Academic
+                                                            Year *</label>
+                                                        <input type="text" class="form-control" id="academicYear"
+                                                            name="academicYear" placeholder="e.g., 2024/2025"
+                                                            pattern="\d{4}\/\d{4}" required>
+                                                        <div class="form-text">Format: YYYY/YYYY</div>
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+                                                        <label for="semester" class="form-label fw-bold">Semester
+                                                            *</label>
+                                                        <select class="form-select" id="semester" name="semester"
+                                                            required>
+                                                            <option value="">Select Semester</option>
+                                                            <option value="Semester 1">Semester 1</option>
+                                                            <option value="Semester 2">Semester 2</option>
+                                                            <option value="Semester 3">Semester 3</option>
+                                                            <option value="Semester 4">Semester 4</option>
+                                                            <option value="Semester 5">Semester 5</option>
+                                                            <option value="Semester 6">Semester 6</option>
+                                                            <option value="Semester 7">Semester 7</option>
+                                                            <option value="Semester 8">Semester 8</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+                                                        <label for="yearOfStudy" class="form-label fw-bold">Year of
+                                                            Study *</label>
+                                                        <select class="form-select" id="yearOfStudy" name="yearOfStudy"
+                                                            required>
+                                                            <option value="">Select Year</option>
+                                                            <% for(let i=1; i <=8; i++) { %>
+                                                                <option value="<%= i %>">Year <%= i %>
+                                                                </option>
+                                                                <% } %>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Group Classification -->
+                                                <div class="row mb-4">
+                                                    <div class="col-12">
+                                                        <h5 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                                                            <i class="fas fa-tags me-2"></i>Group Classification
+                                                        </h5>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="groupType" class="form-label fw-bold">Group
+                                                            Type</label>
+                                                        <select class="form-select" id="groupType" name="groupType">
+                                                            <option value="Regular" selected>Regular</option>
+                                                            <option value="Evening">Evening</option>
+                                                            <option value="Weekend">Weekend</option>
+                                                            <option value="Distance">Distance</option>
+                                                            <option value="Part-time">Part-time</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="section" class="form-label fw-bold">Section</label>
+                                                        <select class="form-select" id="section" name="section">
+                                                            <% const sections=['A', 'B' , 'C' , 'D' , 'E' , 'F' , 'G'
+                                                                , 'H' , 'I' , 'J' ]; %>
+                                                                <% sections.forEach(section=> { %>
+                                                                    <option value="<%= section %>" <%=section==='A'
+                                                                        ? 'selected' : '' %>>
+                                                                        Section <%= section %>
+                                                                    </option>
+                                                                    <% }); %>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="capacity"
+                                                            class="form-label fw-bold">Capacity</label>
+                                                        <input type="number" class="form-control" id="capacity"
+                                                            name="capacity" min="1" max="500" value="50">
+                                                        <div class="form-text">Maximum number of students</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Academic Team -->
+                                                <div class="row mb-4">
+                                                    <div class="col-12">
+                                                        <h5 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                                                            <i class="fas fa-chalkboard-teacher me-2"></i>Academic Team
+                                                        </h5>
+                                                    </div>
+
+                                                    <div class="col-12 mb-3">
+                                                        <label for="lecturers"
+                                                            class="form-label fw-bold">Lecturers</label>
+                                                        <select class="form-select" id="lecturers" name="lecturers"
+                                                            multiple size="5">
+                                                            <% lecturers.forEach(lecturer=> { %>
+                                                                <option value="<%= lecturer._id %>">
+                                                                    <%= lecturer.firstName %>
+                                                                        <%= lecturer.surname %>
+                                                                            (<%= lecturer.email %>)
+                                                                                <% if (lecturer.staffProfile &&
+                                                                                    lecturer.staffProfile.department) {
+                                                                                    %>
+                                                                                    - <%=
+                                                                                        lecturer.staffProfile.department
+                                                                                        %>
+                                                                                        <% } %>
+                                                                </option>
+                                                                <% }); %>
+                                                        </select>
+                                                        <div class="form-text">Hold Ctrl/Cmd to select multiple
+                                                            lecturers</div>
+                                                    </div>
+
+                                                    <div class="col-12 mb-3">
+                                                        <label for="coordinator" class="form-label fw-bold">Group
+                                                            Coordinator</label>
+                                                        <select class="form-select" id="coordinator" name="coordinator">
+                                                            <option value="">Select Coordinator (Optional)</option>
+                                                            <% lecturers.forEach(lecturer=> { %>
+                                                                <option value="<%= lecturer._id %>">
+                                                                    <%= lecturer.firstName %>
+                                                                        <%= lecturer.surname %>
+                                                                            (<%= lecturer.email %>)
+                                                                </option>
+                                                                <% }); %>
+                                                        </select>
+                                                        <div class="form-text">Lead lecturer responsible for this group
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Courses -->
+                                                <div class="row mb-4">
+                                                    <div class="col-12">
+                                                        <h5 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                                                            <i class="fas fa-book me-2"></i>Courses
+                                                        </h5>
+                                                    </div>
+
+                                                    <div class="col-12 mb-3">
+                                                        <label for="courses" class="form-label fw-bold">Assigned
+                                                            Courses</label>
+                                                        <select class="form-select" id="courses" name="courses" multiple
+                                                            size="5">
+                                                            <% courses.forEach(course=> { %>
+                                                                <option value="<%= course._id %>">
+                                                                    <%= course.code %> - <%= course.name %>
+                                                                            (<%= course.credits || 0 %> credits)
+                                                                </option>
+                                                                <% }); %>
+                                                        </select>
+                                                        <div class="form-text">Hold Ctrl/Cmd to select multiple courses
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Schedule -->
+                                                <div class="row mb-4">
+                                                    <div class="col-12">
+                                                        <h5 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                                                            <i class="fas fa-calendar-alt me-2"></i>Schedule (Optional)
+                                                        </h5>
+                                                    </div>
+
+                                                    <div class="col-12 mb-3">
+                                                        <label class="form-label fw-bold">Meeting Days</label>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            <% const days=['Monday', 'Tuesday' , 'Wednesday'
+                                                                , 'Thursday' , 'Friday' , 'Saturday' , 'Sunday' ]; %>
+                                                                <% days.forEach(day=> { %>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="checkbox"
+                                                                            id="day<%= day %>" name="meetingDays"
+                                                                            value="<%= day %>">
+                                                                        <label class="form-check-label"
+                                                                            for="day<%= day %>">
+                                                                            <%= day %>
+                                                                        </label>
+                                                                    </div>
+                                                                    <% }); %>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="meetingTimeStart" class="form-label fw-bold">Start
+                                                            Time</label>
+                                                        <input type="time" class="form-control" id="meetingTimeStart"
+                                                            name="meetingTimeStart">
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="meetingTimeEnd" class="form-label fw-bold">End
+                                                            Time</label>
+                                                        <input type="time" class="form-control" id="meetingTimeEnd"
+                                                            name="meetingTimeEnd">
+                                                    </div>
+
+                                                    <div class="col-12 mb-3">
+                                                        <label for="venue" class="form-label fw-bold">Venue</label>
+                                                        <input type="text" class="form-control" id="venue" name="venue"
+                                                            placeholder="e.g., Main Campus, Room 101">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Dates -->
+                                                <div class="row mb-4">
+                                                    <div class="col-12">
+                                                        <h5 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                                                            <i class="fas fa-clock me-2"></i>Dates (Optional)
+                                                        </h5>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="startDate" class="form-label fw-bold">Start
+                                                            Date</label>
+                                                        <input type="date" class="form-control" id="startDate"
+                                                            name="startDate">
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="endDate" class="form-label fw-bold">End Date</label>
+                                                        <input type="date" class="form-control" id="endDate"
+                                                            name="endDate">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Submit Buttons -->
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between">
+                                                            <a href="/registrar/groups"
+                                                                class="btn btn-outline-secondary">
+                                                                <i class="fas fa-times me-1"></i> Cancel
+                                                            </a>
+                                                            <button type="submit" class="btn btn-primary">
+                                                                <i class="fas fa-plus-circle me-1"></i> Create Group
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/footer') %>
+
+            <script>
+                // Form validation
+                document.getElementById('createGroupForm').addEventListener('submit', function (e) {
+                    const academicYear = document.getElementById('academicYear').value;
+                    const yearPattern = /^\d{4}\/\d{4}$/;
+
+                    if (!yearPattern.test(academicYear)) {
+                        e.preventDefault();
+                        alert('Academic year must be in format YYYY/YYYY (e.g., 2024/2025)');
+                        return false;
+                    }
+
+                    // Validate start date is before end date
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+
+                    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                        e.preventDefault();
+                        alert('Start date must be before end date');
+                        return false;
+                    }
+
+                    // Validate meeting times
+                    const startTime = document.getElementById('meetingTimeStart').value;
+                    const endTime = document.getElementById('meetingTimeEnd').value;
+
+                    if (startTime && endTime && startTime >= endTime) {
+                        e.preventDefault();
+                        alert('Start time must be before end time');
+                        return false;
+                    }
+                });
+
+                // Auto-generate group name based on selections
+                function generateGroupName() {
+                    const programmeSelect = document.getElementById('programme');
+                    const yearSelect = document.getElementById('yearOfStudy');
+                    const sectionSelect = document.getElementById('section');
+                    const nameInput = document.getElementById('name');
+
+                    if (programmeSelect.selectedOptions[0] && yearSelect.value && sectionSelect.value) {
+                        const programmeText = programmeSelect.selectedOptions[0].text;
+                        const programmeCode = programmeText.split(' - ')[0];
+                        const year = yearSelect.value;
+                        const section = sectionSelect.value;
+
+                        nameInput.value = `${programmeCode} Year ${year} - Group ${section}`;
+                    }
+                }
+
+                // Attach event listeners
+                document.getElementById('programme').addEventListener('change', generateGroupName);
+                document.getElementById('yearOfStudy').addEventListener('change', generateGroupName);
+                document.getElementById('section').addEventListener('change', generateGroupName);
+            </script>

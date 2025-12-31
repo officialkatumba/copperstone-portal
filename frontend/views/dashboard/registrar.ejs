@@ -1,0 +1,523 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <!-- Header Section -->
+            <div class="text-center mb-5">
+                <h2 class="fw-bold" style="color: var(--primary-purple)">
+                    Registrar's Dashboard
+                </h2>
+                <p class="lead text-muted">
+                    Welcome, <strong>
+                        <%= user.firstName %>
+                            <%= user.surname %>
+                    </strong> —
+                    You are logged in as <strong>University Registrar</strong> (Academic Administration Head).
+                </p>
+                <div class="d-flex justify-content-center align-items-center gap-3">
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-calendar-alt me-1"></i>Last login: <%= new Date().toLocaleDateString() %>
+                    </p>
+                    <span class="badge bg-info fs-6">Academic Administration</span>
+                </div>
+            </div>
+
+            <!-- Quick Stats Row -->
+            <div class="row g-4 justify-content-center mb-5">
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-file-alt fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold">
+                                <%= stats.pendingApplications || 0 %>
+                            </h3>
+                            <p class="text-muted mb-0">Pending Applications</p>
+                            <small class="text-warning">To Review: <%= stats.toReview || 0 %></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-success mb-2">
+                                <i class="fas fa-user-graduate fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold">
+                                <%= stats.totalStudents || 0 %>
+                            </h3>
+                            <p class="text-muted mb-0">Registered Students</p>
+                            <small class="text-info">Active: <%= stats.activeStudents || 0 %></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-graduation-cap fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold">
+                                <%= stats.pendingGraduations || 0 %>
+                            </h3>
+                            <p class="text-muted mb-0">Graduation Pending</p>
+                            <small class="text-danger">To Approve: <%= stats.graduationToApprove || 0 %></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-info mb-2">
+                                <i class="fas fa-chalkboard-teacher fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold">
+                                <%= stats.totalCourses || 0 %>
+                            </h3>
+                            <p class="text-muted mb-0">Academic Courses</p>
+                            <small class="text-success">Active: <%= stats.activeCourses || 0 %></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Section 1: Application & Admission Management -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                        <i class="fas fa-file-signature me-2"></i>Application & Admission Management
+                    </h4>
+                </div>
+            </div>
+
+            <div class="row g-4 justify-content-center mb-5">
+                <!-- Monitor Applications -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clipboard-list fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title fw-bold">Monitor Applications</h5>
+                            <p class="card-text text-muted">
+                                Oversee all student applications and track admission progress.
+                            </p>
+                            <a href="/registrar/applications" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i> View Applications
+                                <span class="badge bg-light text-primary ms-1">
+                                    <%= stats.pendingApplications || 0 %>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Escalate Delayed Applications -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>
+                            <h5 class="card-title fw-bold">Escalate Delayed Cases</h5>
+                            <p class="card-text text-muted">
+                                Review and escalate applications pending beyond reasonable time.
+                            </p>
+                            <a href="/registrar/applications/delayed" class="btn btn-warning text-dark w-100">
+                                <i class="fas fa-clock me-1"></i> Review Delayed
+                                <span class="badge bg-light text-warning ms-1">
+                                    <%= stats.delayedApplications || 0 %>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Academic Groups -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chalkboard-teacher fa-3x mb-3" style="color: #6f42c1;"></i>
+                            <h5 class="card-title fw-bold" style="color: #6f42c1;">Create Academic Groups</h5>
+                            <p class="card-text text-muted">
+                                Create new academic groups for organizing students and courses.
+                            </p>
+                            <a href="/registrar/groups/create" class="btn w-100"
+                                style="background-color: #6f42c1; color: white;">
+                                <i class="fas fa-plus-circle me-1"></i> Create New Group
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Section 2: Student Records Management -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                            <i class="fas fa-user-graduate me-2"></i>Student Records Management
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="row g-4 justify-content-center mb-5">
+                    <!-- Row 1 -->
+
+                    <!-- Student ID Issuance -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-id-card fa-3x mb-3 text-primary"></i>
+                                <h5 class="card-title fw-bold">Student ID Issuance</h5>
+                                <p class="card-text text-muted">
+                                    Issue and manage student identification cards and numbers.
+                                </p>
+                                <a href="/registrar/students/ids" class="btn btn-primary w-100">
+                                    <i class="fas fa-id-badge me-1"></i> Manage IDs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manage Student Records -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-database fa-3x mb-3 text-warning"></i>
+                                <h5 class="card-title fw-bold">Student Records</h5>
+                                <p class="card-text text-muted">
+                                    View, update, and manage all student academic records and profiles.
+                                </p>
+                                <a href="/registrar/students" class="btn btn-warning text-dark w-100">
+                                    <i class="fas fa-users me-1"></i> Manage Students
+                                    <span class="badge bg-light text-warning ms-1">
+                                        <%= stats.totalStudents || 0 %>
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Issue Transcripts -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-alt fa-3x mb-3 text-info"></i>
+                                <h5 class="card-title fw-bold">Issue Transcripts</h5>
+                                <p class="card-text text-muted">
+                                    Generate and issue official academic transcripts and records.
+                                </p>
+                                <a href="/registrar/transcripts" class="btn btn-info text-white w-100">
+                                    <i class="fas fa-print me-1"></i> Issue Transcripts
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2 -->
+
+                    <!-- Issue Certificates -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-award fa-3x mb-3 text-success"></i>
+                                <h5 class="card-title fw-bold">Issue Certificates</h5>
+                                <p class="card-text text-muted">
+                                    Generate and issue degrees, diplomas, and certificates.
+                                </p>
+                                <a href="/registrar/certificates" class="btn btn-success w-100">
+                                    <i class="fas fa-scroll me-1"></i> Issue Certificates
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assign Students to Groups -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-plus fa-3x mb-3 text-primary"></i>
+                                <h5 class="card-title fw-bold">Assign Students to Groups</h5>
+                                <p class="card-text text-muted">
+                                    Enroll students into academic groups/classes.
+                                </p>
+                                <a href="/registrar/groups/assign-students" class="btn btn-primary w-100">
+                                    <i class="fas fa-user-plus me-1"></i> Assign to Groups
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Remove Students from Groups -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-minus fa-3x mb-3 text-danger"></i>
+                                <h5 class="card-title fw-bold">Remove Students from Groups</h5>
+                                <p class="card-text text-muted">
+                                    Withdraw or transfer students from academic groups/classes.
+                                </p>
+                                <a href="/registrar/groups/remove-students" class="btn btn-danger w-100">
+                                    <i class="fas fa-user-minus me-1"></i> Remove from Groups
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Enrollment & Graduation -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                            <i class="fas fa-clipboard-check me-2"></i>Enrollment & Graduation
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="row g-4 justify-content-center mb-5">
+                    <!-- Row 1 -->
+
+                    <!-- Enrollment Statistics -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-pie fa-3x mb-3 text-warning"></i>
+                                <h5 class="card-title fw-bold">Enrollment Statistics</h5>
+                                <p class="card-text text-muted">
+                                    View enrollment trends, program capacities, and student demographics.
+                                </p>
+                                <a href="/registrar/enrollment/stats" class="btn btn-warning text-dark w-100">
+                                    <i class="fas fa-chart-bar me-1"></i> View Statistics
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enrollment Reports -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-export fa-3x mb-3 text-info"></i>
+                                <h5 class="card-title fw-bold">Enrollment Reports</h5>
+                                <p class="card-text text-muted">
+                                    Generate detailed enrollment reports and analytics.
+                                </p>
+                                <a href="/registrar/enrollment/reports" class="btn btn-info text-white w-100">
+                                    <i class="fas fa-file-alt me-1"></i> Generate Reports
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Standing -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-3x mb-3 text-success"></i>
+                                <h5 class="card-title fw-bold">Academic Standing</h5>
+                                <p class="card-text text-muted">
+                                    Monitor academic probation, honors lists, and student performance.
+                                </p>
+                                <a href="/registrar/academic-standing" class="btn btn-success w-100">
+                                    <i class="fas fa-user-chart me-1"></i> Review Standing
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2 -->
+
+                    <!-- Graduation Processing -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-graduation-cap fa-3x mb-3 text-primary"></i>
+                                <h5 class="card-title fw-bold">Graduation Processing</h5>
+                                <p class="card-text text-muted">
+                                    Process graduation applications and approve candidates.
+                                </p>
+                                <a href="/registrar/graduation" class="btn btn-primary w-100">
+                                    <i class="fas fa-user-check me-1"></i> Process Graduation
+                                    <span class="badge bg-light text-primary ms-1">
+                                        <%= stats.pendingGraduations || 0 %>
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Degree Audit -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clipboard-list fa-3x mb-3 text-success"></i>
+                                <h5 class="card-title fw-bold">Degree Audit</h5>
+                                <p class="card-text text-muted">
+                                    Conduct degree audits and verify completion requirements.
+                                </p>
+                                <a href="/registrar/degree-audit" class="btn btn-success w-100">
+                                    <i class="fas fa-check-double me-1"></i> Conduct Audit
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Graduation Ceremony -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-check fa-3x mb-3 text-info"></i>
+                                <h5 class="card-title fw-bold">Graduation Ceremony</h5>
+                                <p class="card-text text-muted">
+                                    Plan and manage graduation ceremonies and events.
+                                </p>
+                                <a href="/registrar/graduation/ceremony" class="btn btn-info text-white w-100">
+                                    <i class="fas fa-calendar-alt me-1"></i> Plan Ceremony
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Section 6: Policy & Compliance -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                            <i class="fas fa-balance-scale me-2"></i>Policy & Compliance
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="row g-4 justify-content-center mb-5">
+                    <!-- Academic Policies -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-book fa-3x mb-3 text-secondary"></i>
+                                <h5 class="card-title fw-bold">Academic Policies</h5>
+                                <p class="card-text text-muted">
+                                    Manage and update academic regulations.
+                                </p>
+                                <a href="/registrar/policies" class="btn btn-secondary w-100">
+                                    <i class="fas fa-gavel me-1"></i> Manage Policies
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compliance Management -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clipboard-check fa-3x mb-3 text-warning"></i>
+                                <h5 class="card-title fw-bold">Compliance Management</h5>
+                                <p class="card-text text-muted">
+                                    Monitor accreditation and regulatory compliance.
+                                </p>
+                                <a href="/registrar/compliance" class="btn btn-warning text-dark w-100">
+                                    <i class="fas fa-shield-alt me-1"></i> Compliance Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Records Management -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-archive fa-3x mb-3 text-info"></i>
+                                <h5 class="card-title fw-bold">Records Management</h5>
+                                <p class="card-text text-muted">
+                                    Archive records and manage retention policies.
+                                </p>
+                                <a href="/registrar/archive" class="btn btn-info text-white w-100">
+                                    <i class="fas fa-database me-1"></i> Manage Records
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 7: Communication & Settings -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                            <i class="fas fa-comments me-2"></i>Communication & Settings
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="row g-4 justify-content-center mb-5">
+                    <!-- View Messages -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-inbox fa-3x mb-3 text-primary"></i>
+                                <h5 class="card-title fw-bold">View Messages</h5>
+                                <p class="card-text text-muted">
+                                    Access your inbox and official communications.
+                                </p>
+                                <a href="/registrar/inbox" class="btn btn-primary w-100">
+                                    <i class="fas fa-envelope me-1"></i> View Inbox
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Send Announcements -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-bullhorn fa-3x mb-3 text-success"></i>
+                                <h5 class="card-title fw-bold">Send Announcements</h5>
+                                <p class="card-text text-muted">
+                                    Broadcast official notices to students and staff.
+                                </p>
+                                <a href="/registrar/communications/send" class="btn btn-success w-100">
+                                    <i class="fas fa-paper-plane me-1"></i> Send Announcements
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Settings -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-cog fa-3x mb-3 text-secondary"></i>
+                                <h5 class="card-title fw-bold">Account Settings</h5>
+                                <p class="card-text text-muted">
+                                    Update profile, security, and notification settings.
+                                </p>
+                                <a href="/profile" class="btn btn-secondary w-100">
+                                    <i class="fas fa-user-cog me-1"></i> Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/footer') %>
+
+            <style>
+                .card {
+                    transition: all 0.3s ease;
+                    border-radius: 10px;
+                }
+
+                .card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                }
+
+                .badge {
+                    font-size: 0.7em;
+                }
+
+                .btn {
+                    border-radius: 5px;
+                }
+
+                h4 {
+                    border-bottom: 2px solid var(--primary-purple);
+                    padding-bottom: 8px;
+                }
+            </style>

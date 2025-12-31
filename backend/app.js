@@ -415,4 +415,12 @@ app.use("/finance/skills", skillFinanceRoutes);
 // Admissions
 app.use("/admissions/skills", skillAdmissionsRoutes);
 
+// Add this after your other route imports
+const lecturerRoutes = require("./routes/lecturer");
+app.use("/", lecturerRoutes);
+
+// Add registrar routes
+const registrarRoutes = require("./routes/registrarRoutes");
+app.use("/registrar", registrarRoutes);
+
 module.exports = app;

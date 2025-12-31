@@ -174,7 +174,7 @@ const paymentSchema = new mongoose.Schema(
     // ==========================
     method: {
       type: String,
-      enum: ["Cash", "Electronic", "Online", "CDF"],
+      enum: ["Cash", "Electronic", "Online", "CDF", "Manual"],
       required: true,
     },
 

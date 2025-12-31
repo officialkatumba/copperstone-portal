@@ -1,0 +1,704 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold" style="color: var(--primary-purple)">
+                        <i class="fas fa-users me-2"></i>Group Details: <%= group.name %>
+                    </h2>
+                    <p class="text-muted">
+                        <%= group.academicYear %> • <%= group.semester %> • <%= group.groupType %>
+                    </p>
+                </div>
+                <div class="btn-group">
+                    <a href="/registrar/groups" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Groups
+                    </a>
+                    <a href="/registrar/groups/create" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-1"></i> Create New
+                    </a>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            <% if (messages.error) { %>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <%= messages.error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <% } %>
+                    <% if (messages.success) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <%= messages.success %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <% } %>
+                            <% if (messages.warning) { %>
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <%= messages.warning %>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                <% } %>
+
+                                    <div class="row">
+                                        <!-- Left Column: Group Information -->
+                                        <div class="col-lg-8">
+                                            <!-- Group Information Card -->
+                                            <div class="card shadow-sm border-0 mb-4">
+                                                <div
+                                                    class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                                                    <h5 class="fw-bold mb-0" style="color: var(--primary-purple)">
+                                                        <i class="fas fa-info-circle me-2"></i>Group Information
+                                                    </h5>
+                                                    <div class="btn-group">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                                            data-bs-toggle="modal" data-bs-target="#editGroupModal">
+                                                            <i class="fas fa-edit me-1"></i> Edit
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            data-bs-toggle="modal" data-bs-target="#deleteGroupModal">
+                                                            <i class="fas fa-archive me-1"></i> Archive
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <table class="table table-sm table-borderless">
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <th width="40%">Programme:</th>
+                                                                        <td>
+                                                                            <% if (group.programme) { %>
+                                                                                <strong>
+                                                                                    <%= group.programme.code %>
+                                                                                </strong> - <%= group.programme.name %>
+                                                                                    <% } else { %>
+                                                                                        <span class="text-muted">Not
+                                                                                            assigned</span>
+                                                                                        <% } %>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Academic Year:</th>
+                                                                        <td>
+                                                                            <%= group.academicYear %>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Semester:</th>
+                                                                        <td>
+                                                                            <%= group.semester %>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Year of Study:</th>
+                                                                        <td>Year <%= group.yearOfStudy %>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Group Type:</th>
+                                                                        <td>
+                                                                            <span class="badge bg-secondary">
+                                                                                <%= group.groupType %>
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Section:</th>
+                                                                        <td>Section <%= group.section %>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <table class="table table-sm table-borderless">
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <th width="40%">Capacity:</th>
+                                                                        <td>
+                                                                            <span
+                                                                                class="badge bg-<%= group.currentEnrollment >= group.capacity ? 'danger' : 'success' %>">
+                                                                                <%= group.currentEnrollment %> / <%=
+                                                                                        group.capacity %> students
+                                                                            </span>
+                                                                            <% if (group.availableSpots> 0) { %>
+                                                                                <small class="text-muted d-block">
+                                                                                    (<%= group.availableSpots %> spots
+                                                                                        available)
+                                                                                </small>
+                                                                                <% } %>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Status:</th>
+                                                                        <td>
+                                                                            <form method="POST"
+                                                                                action="/registrar/groups/<%= group._id %>/status"
+                                                                                class="d-inline">
+                                                                                <select name="status"
+                                                                                    class="form-select form-select-sm d-inline w-auto"
+                                                                                    onchange="this.form.submit()">
+                                                                                    <option value="Draft"
+                                                                                        <%=group.status==='Draft'
+                                                                                        ? 'selected' : '' %>>Draft
+                                                                                    </option>
+                                                                                    <option value="Active"
+                                                                                        <%=group.status==='Active'
+                                                                                        ? 'selected' : '' %>>Active
+                                                                                    </option>
+                                                                                    <option value="Inactive"
+                                                                                        <%=group.status==='Inactive'
+                                                                                        ? 'selected' : '' %>>Inactive
+                                                                                    </option>
+                                                                                    <option value="Completed"
+                                                                                        <%=group.status==='Completed'
+                                                                                        ? 'selected' : '' %>>Completed
+                                                                                    </option>
+                                                                                    <option value="Archived"
+                                                                                        <%=group.status==='Archived'
+                                                                                        ? 'selected' : '' %>>Archived
+                                                                                    </option>
+                                                                                </select>
+                                                                            </form>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Created By:</th>
+                                                                        <td>
+                                                                            <% if (group.createdBy) { %>
+                                                                                <%= group.createdBy.firstName %>
+                                                                                    <%= group.createdBy.surname %>
+                                                                                        <% } else { %>
+                                                                                            <span
+                                                                                                class="text-muted">Unknown</span>
+                                                                                            <% } %>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Created On:</th>
+                                                                        <td>
+                                                                            <%= group.createdAt.toLocaleDateString() %>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Schedule:</th>
+                                                                        <td>
+                                                                            <% if (group.meetingDays &&
+                                                                                group.meetingDays.length> 0) { %>
+                                                                                <%= group.meetingDays.join(', ') %>
+                                                <% if (group.meetingTime.start) { %>
+                                                    | <%= group.meetingTime.start %> - <%= group.meetingTime.end %>
+                                                <% } %>
+                                            <% } else { %>
+                                                <span class="text-muted">Not set</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Venue:</th>
+                                        <td><%= group.venue || ' Not specified' %>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Schedule Dates -->
+                                                    <% if (group.startDate || group.endDate) { %>
+                                                        <div class="mt-3 pt-3 border-top">
+                                                            <h6 class="fw-bold">Academic Dates</h6>
+                                                            <div class="row">
+                                                                <% if (group.startDate) { %>
+                                                                    <div class="col-md-6">
+                                                                        <small class="text-muted">Start Date:</small>
+                                                                        <div>
+                                                                            <%= new
+                                                                                Date(group.startDate).toLocaleDateString()
+                                                                                %>
+                                                                        </div>
+                                                                    </div>
+                                                                    <% } %>
+                                                                        <% if (group.endDate) { %>
+                                                                            <div class="col-md-6">
+                                                                                <small class="text-muted">End
+                                                                                    Date:</small>
+                                                                                <div>
+                                                                                    <%= new
+                                                                                        Date(group.endDate).toLocaleDateString()
+                                                                                        %>
+                                                                                </div>
+                                                                            </div>
+                                                                            <% } %>
+                                                            </div>
+                                                        </div>
+                                                        <% } %>
+                                                </div>
+                                            </div>
+
+                                            <!-- Courses Card -->
+                                            <div class="card shadow-sm border-0 mb-4">
+                                                <div class="card-header bg-white border-0">
+                                                    <h5 class="fw-bold mb-0" style="color: var(--primary-purple)">
+                                                        <i class="fas fa-book me-2"></i>Assigned Courses
+                                                        <span class="badge bg-info ms-2">
+                                                            <%= group.courses.length %>
+                                                        </span>
+                                                    </h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <% if (group.courses.length===0) { %>
+                                                        <div class="text-center py-4">
+                                                            <i class="fas fa-book-open fa-2x text-muted mb-3"></i>
+                                                            <p class="text-muted">No courses assigned to this group</p>
+                                                            <p class="small text-muted">Courses can be assigned by the
+                                                                Dean</p>
+                                                        </div>
+                                                        <% } else { %>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Code</th>
+                                                                            <th>Course Name</th>
+                                                                            <th>Credits</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <% group.courses.forEach(course=> { %>
+                                                                            <tr>
+                                                                                <td><strong>
+                                                                                        <%= course.code %>
+                                                                                    </strong></td>
+                                                                                <td>
+                                                                                    <%= course.name %>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <%= course.credits || 0 %> credits
+                                                                                </td>
+                                                                            </tr>
+                                                                            <% }); %>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <% } %>
+                                                </div>
+                                            </div>
+
+                                            <!-- Lecturers Card -->
+                                            <div class="card shadow-sm border-0 mb-4">
+                                                <div class="card-header bg-white border-0">
+                                                    <h5 class="fw-bold mb-0" style="color: var(--primary-purple)">
+                                                        <i class="fas fa-chalkboard-teacher me-2"></i>Academic Team
+                                                        <span class="badge bg-info ms-2">
+                                                            <%= group.lecturers.length %>
+                                                        </span>
+                                                    </h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <% if (group.lecturers.length===0) { %>
+                                                        <div class="text-center py-4">
+                                                            <i class="fas fa-user-tie fa-2x text-muted mb-3"></i>
+                                                            <p class="text-muted">No lecturers assigned to this group
+                                                            </p>
+                                                            <p class="small text-muted">Lecturers can be assigned by the
+                                                                Dean</p>
+                                                        </div>
+                                                        <% } else { %>
+                                                            <div class="row">
+                                                                <% if (group.coordinator) { %>
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <div class="card border border-primary">
+                                                                            <div class="card-body">
+                                                                                <h6 class="fw-bold text-primary">
+                                                                                    <i
+                                                                                        class="fas fa-crown me-1"></i>Group
+                                                                                    Coordinator
+                                                                                </h6>
+                                                                                <div class="d-flex align-items-center">
+                                                                                    <div class="flex-grow-1">
+                                                                                        <strong>
+                                                                                            <%= group.coordinator.firstName
+                                                                                                %>
+                                                                                                <%= group.coordinator.surname
+                                                                                                    %>
+                                                                                        </strong>
+                                                                                        <div class="small text-muted">
+                                                                                            <%= group.coordinator.email
+                                                                                                %>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <% } %>
+
+                                                                        <% group.lecturers.forEach(lecturer=> {
+                                                                            if (!group.coordinator ||
+                                                                            lecturer._id.toString() !==
+                                                                            group.coordinator._id.toString()) { %>
+                                                                            <div class="col-md-6 mb-3">
+                                                                                <div class="card border">
+                                                                                    <div class="card-body">
+                                                                                        <div
+                                                                                            class="d-flex align-items-center">
+                                                                                            <div class="flex-grow-1">
+                                                                                                <strong>
+                                                                                                    <%= lecturer.firstName
+                                                                                                        %>
+                                                                                                        <%= lecturer.surname
+                                                                                                            %>
+                                                                                                </strong>
+                                                                                                <div
+                                                                                                    class="small text-muted">
+                                                                                                    <%= lecturer.email
+                                                                                                        %>
+                                                                                                        <% if
+                                                                                                            (lecturer.staffProfile
+                                                                                                            &&
+                                                                                                            lecturer.staffProfile.staffId)
+                                                                                                            { %>
+                                                                                                            • ID: <%=
+                                                                                                                lecturer.staffProfile.staffId
+                                                                                                                %>
+                                                                                                                <% } %>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <% } }); %>
+                                                            </div>
+                                                            <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Right Column: Students -->
+                                        <div class="col-lg-4">
+                                            <!-- Students Card -->
+                                            <div class="card shadow-sm border-0 mb-4">
+                                                <div
+                                                    class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                                                    <h5 class="fw-bold mb-0" style="color: var(--primary-purple)">
+                                                        <i class="fas fa-user-graduate me-2"></i>Students
+                                                        <span
+                                                            class="badge bg-<%= group.currentEnrollment >= group.capacity ? 'danger' : 'success' %> ms-2">
+                                                            <%= group.currentEnrollment %>
+                                                        </span>
+                                                    </h5>
+                                                    <% if (group.currentEnrollment < group.capacity) { %>
+                                                        <button type="button" class="btn btn-sm btn-primary"
+                                                            data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                                                            <i class="fas fa-user-plus me-1"></i> Add Student
+                                                        </button>
+                                                        <% } %>
+                                                </div>
+                                                <div class="card-body">
+                                                    <% if (group.students.length===0) { %>
+                                                        <div class="text-center py-4">
+                                                            <i class="fas fa-user-graduate fa-2x text-muted mb-3"></i>
+                                                            <p class="text-muted">No students enrolled in this group</p>
+                                                            <button type="button" class="btn btn-sm btn-primary"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#addStudentModal">
+                                                                <i class="fas fa-user-plus me-1"></i> Add First Student
+                                                            </button>
+                                                        </div>
+                                                        <% } else { %>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Name</th>
+                                                                            <th>Student ID</th>
+                                                                            <th>Action</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <% group.students.forEach(student=> { %>
+                                                                            <tr>
+                                                                                <td>
+                                                                                    <%= student.firstName %>
+                                                                                        <%= student.surname %>
+                                                                                            <div
+                                                                                                class="small text-muted">
+                                                                                                <%= student.email %>
+                                                                                            </div>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <%= student.studentId || 'N/A' %>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <form method="POST"
+                                                                                        action="/registrar/groups/<%= group._id %>/remove-student/<%= student._id %>"
+                                                                                        class="d-inline"
+                                                                                        onsubmit="return confirm('Remove this student from the group?')">
+                                                                                        <button type="submit"
+                                                                                            class="btn btn-sm btn-outline-danger">
+                                                                                            <i
+                                                                                                class="fas fa-user-minus"></i>
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <% }); %>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <% } %>
+                                                </div>
+                                            </div>
+
+                                            <!-- Quick Stats Card -->
+                                            <div class="card shadow-sm border-0">
+                                                <div class="card-header bg-white border-0">
+                                                    <h5 class="fw-bold mb-0" style="color: var(--primary-purple)">
+                                                        <i class="fas fa-chart-pie me-2"></i>Group Statistics
+                                                    </h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <div class="d-flex justify-content-between mb-1">
+                                                            <small>Enrollment Progress</small>
+                                                            <small>
+                                                                <%= Math.round((group.currentEnrollment /
+                                                                    group.capacity) * 100) %>%
+                                                            </small>
+                                                        </div>
+                                                        <div class="progress" style="height: 8px;">
+                                                            <div class="progress-bar bg-success"
+                                                                style="width: <%= Math.min(100, (group.currentEnrollment / group.capacity) * 100) %>%">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row text-center">
+                                                        <div class="col-6">
+                                                            <div class="border rounded p-2">
+                                                                <div class="fw-bold text-primary">
+                                                                    <%= group.courses.length %>
+                                                                </div>
+                                                                <small class="text-muted">Courses</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="border rounded p-2">
+                                                                <div class="fw-bold text-success">
+                                                                    <%= group.lecturers.length %>
+                                                                </div>
+                                                                <small class="text-muted">Lecturers</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6 mt-2">
+                                                            <div class="border rounded p-2">
+                                                                <div class="fw-bold text-warning">
+                                                                    <%= group.currentEnrollment %>
+                                                                </div>
+                                                                <small class="text-muted">Students</small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6 mt-2">
+                                                            <div class="border rounded p-2">
+                                                                <div class="fw-bold text-info">
+                                                                    <%= group.availableSpots %>
+                                                                </div>
+                                                                <small class="text-muted">Available Spots</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+        </div>
+
+        <!-- Modals -->
+
+        <!-- Add Student Modal -->
+        <div class="modal fade" id="addStudentModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Student to Group</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="/registrar/groups/<%= group._id %>/add-student">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Select Student</label>
+                                <select name="studentId" class="form-select" required>
+                                    <option value="">Choose a student...</option>
+                                    <% availableStudents.forEach(student=> { %>
+                                        <option value="<%= student._id %>">
+                                            <%= student.firstName %>
+                                                <%= student.surname %>
+                                                    (<%= student.studentId || 'No ID' %>)
+                                        </option>
+                                        <% }); %>
+                                </select>
+                                <% if (availableStudents.length===0) { %>
+                                    <div class="alert alert-warning mt-2">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        No available students found. All students may already be enrolled in groups.
+                                    </div>
+                                    <% } %>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Adding a student will automatically enroll them in all group courses.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" <%=availableStudents.length===0 ? 'disabled'
+                                : '' %>>Add Student</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Group Modal -->
+        <div class="modal fade" id="editGroupModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Group Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="/registrar/groups/<%= group._id %>/update">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Group Name</label>
+                                    <input type="text" class="form-control" name="name" value="<%= group.name %>"
+                                        required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Capacity</label>
+                                    <input type="number" class="form-control" name="capacity"
+                                        value="<%= group.capacity %>" min="1" max="500">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Section</label>
+                                    <input type="text" class="form-control" name="section" value="<%= group.section %>">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Group Type</label>
+                                    <select class="form-select" name="groupType">
+                                        <option value="Regular" <%=group.groupType==='Regular' ? 'selected' : '' %>
+                                            >Regular</option>
+                                        <option value="Evening" <%=group.groupType==='Evening' ? 'selected' : '' %>
+                                            >Evening</option>
+                                        <option value="Weekend" <%=group.groupType==='Weekend' ? 'selected' : '' %>
+                                            >Weekend</option>
+                                        <option value="Distance" <%=group.groupType==='Distance' ? 'selected' : '' %>
+                                            >Distance</option>
+                                        <option value="Part-time" <%=group.groupType==='Part-time' ? 'selected' : '' %>
+                                            >Part-time</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Venue</label>
+                                    <input type="text" class="form-control" name="venue"
+                                        value="<%= group.venue || '' %>" placeholder="e.g., Main Campus, Room 101">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Start Time</label>
+                                    <input type="time" class="form-control" name="meetingTimeStart"
+                                        value="<%= group.meetingTime.start || '' %>">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">End Time</label>
+                                    <input type="time" class="form-control" name="meetingTimeEnd"
+                                        value="<%= group.meetingTime.end || '' %>">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Meeting Days</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <% const days=['Monday', 'Tuesday' , 'Wednesday' , 'Thursday' , 'Friday'
+                                            , 'Saturday' , 'Sunday' ]; %>
+                                            <% days.forEach(day=> { %>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="editDay<%= day %>" name="meetingDays" value="<%= day %>"
+                                                        <%=group.meetingDays && group.meetingDays.includes(day)
+                                                        ? 'checked' : '' %>>
+                                                    <label class="form-check-label" for="editDay<%= day %>">
+                                                        <%= day %>
+                                                    </label>
+                                                </div>
+                                                <% }); %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Group Modal -->
+        <div class="modal fade" id="deleteGroupModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Archive Group</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="/registrar/groups/<%= group._id %>/delete">
+                        <div class="modal-body">
+                            <p>Are you sure you want to archive "<strong>
+                                    <%= group.name %>
+                                </strong>"?</p>
+                            <% if (group.currentEnrollment> 0) { %>
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    This group has <strong>
+                                        <%= group.currentEnrollment %>
+                                    </strong> enrolled students.
+                                    You must remove all students before archiving.
+                                </div>
+                                <% } else { %>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Archiving will mark this group as inactive. It can be restored later if needed.
+                                    </div>
+                                    <% } %>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger" <%=group.currentEnrollment> 0 ? 'disabled' : ''
+                                %>>Archive Group</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/footer') %>
+
+            <script>
+                // Validate meeting times
+                document.querySelector('#editGroupModal form').addEventListener('submit', function (e) {
+                    const startTime = this.querySelector('[name="meetingTimeStart"]').value;
+                    const endTime = this.querySelector('[name="meetingTimeEnd"]').value;
+
+                    if (startTime && endTime && startTime >= endTime) {
+                        e.preventDefault();
+                        alert('Start time must be before end time');
+                        return false;
+                    }
+                });
+            </script>

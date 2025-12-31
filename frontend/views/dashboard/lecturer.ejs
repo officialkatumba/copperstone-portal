@@ -1,0 +1,318 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold" style="color: var(--primary-purple)">Lecturer Dashboard</h2>
+                <p class="lead text-muted">
+                    Welcome, Dr. <%= user.firstName %>
+                        <%= user.surname %> —
+                            You are logged in as <strong>Lecturer</strong>.
+                </p>
+                <div class="badge bg-info fs-6">Academic Staff</div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row g-4 justify-content-center mb-5">
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-book fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold">
+                                <%= stats.coursesTeaching || 0 %>
+                            </h3>
+                            <p class="text-muted mb-0">Courses Teaching</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-users fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold">
+                                <%= stats.totalStudents || 0 %>
+                            </h3>
+                            <p class="text-muted mb-0">Total Students</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-success mb-2">
+                                <i class="fas fa-check-circle fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold">
+                                <%= stats.gradesSubmitted || 0 %>
+                            </h3>
+                            <p class="text-muted mb-0">Grades Submitted</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-info mb-2">
+                                <i class="fas fa-clock fa-3x"></i>
+                            </div>
+                            <h3 class="fw-bold">
+                                <%= stats.pendingGrades || 0 %>
+                            </h3>
+                            <p class="text-muted mb-0">Pending Grades</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Cards -->
+            <div class="row g-4 justify-content-center">
+
+                <!-- My Courses -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chalkboard-teacher fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title fw-bold">My Courses</h5>
+                            <p class="card-text text-muted">
+                                View and manage all courses assigned to you for teaching.
+                            </p>
+                            <a href="/lecturer/courses" class="btn btn-primary w-100">
+                                <i class="fas fa-list me-1"></i> View Courses
+                                <span class="badge bg-light text-primary ms-1">
+                                    <%= stats.coursesTeaching || 0 %>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload & Manage Grades -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-upload fa-3x mb-3 text-success"></i>
+                            <h5 class="card-title fw-bold">Upload Grades</h5>
+                            <p class="card-text text-muted">
+                                Upload student grades via CSV/Excel or manual entry.
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/lecturer/grades/upload" class="btn btn-success">
+                                    <i class="fas fa-upload me-1"></i> Upload Grades
+                                </a>
+                                <a href="/lecturer/grades/manual" class="btn btn-outline-success">
+                                    <i class="fas fa-edit me-1"></i> Manual Entry
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View Class Lists -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-3x mb-3 text-info"></i>
+                            <h5 class="card-title fw-bold">Class Lists</h5>
+                            <p class="card-text text-muted">
+                                View student lists for your courses with their current grades.
+                            </p>
+                            <a href="/lecturer/class-lists" class="btn btn-info text-white w-100">
+                                <i class="fas fa-user-graduate me-1"></i> View Classes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade Approvals -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-check-double fa-3x mb-3 text-warning"></i>
+                            <h5 class="card-title fw-bold">Grade Approvals</h5>
+                            <p class="card-text text-muted">
+                                Submit grades for Dean's approval and track approval status.
+                            </p>
+                            <a href="/lecturer/grades/approvals" class="btn btn-warning text-dark w-100">
+                                <i class="fas fa-paper-plane me-1"></i> Submit for Approval
+                                <span class="badge bg-light text-warning ms-1">
+                                    <%= stats.pendingApprovals || 0 %>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Materials -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-folder fa-3x mb-3" style="color: #7952b3;"></i>
+                            <h5 class="card-title fw-bold" style="color: #7952b3;">Course Materials</h5>
+                            <p class="card-text text-muted">
+                                Upload lecture notes, assignments, and other teaching materials.
+                            </p>
+                            <a href="/lecturer/materials" class="btn" style="background-color: #7952b3; color: white;">
+                                <i class="fas fa-file-alt me-1"></i> Manage Materials
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Management -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-calendar-check fa-3x mb-3 text-danger"></i>
+                            <h5 class="card-title fw-bold">Attendance</h5>
+                            <p class="card-text text-muted">
+                                Take and manage student attendance for your classes.
+                            </p>
+                            <a href="/lecturer/attendance" class="btn btn-danger w-100">
+                                <i class="fas fa-clipboard-list me-1"></i> Manage Attendance
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Calendar -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-calendar-alt fa-3x mb-3 text-secondary"></i>
+                            <h5 class="card-title fw-bold">Academic Calendar</h5>
+                            <p class="card-text text-muted">
+                                View important academic dates, deadlines, and exam schedules.
+                            </p>
+                            <a href="/lecturer/calendar" class="btn btn-secondary w-100">
+                                <i class="fas fa-clock me-1"></i> View Calendar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teaching Schedule -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title fw-bold">Teaching Schedule</h5>
+                            <p class="card-text text-muted">
+                                View your weekly teaching timetable and room assignments.
+                            </p>
+                            <a href="/lecturer/schedule" class="btn btn-primary w-100">
+                                <i class="fas fa-calendar-day me-1"></i> View Schedule
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade History -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-history fa-3x mb-3 text-info"></i>
+                            <h5 class="card-title fw-bold">Grade History</h5>
+                            <p class="card-text text-muted">
+                                View previously submitted grades and approval history.
+                            </p>
+                            <a href="/lecturer/grades/history" class="btn btn-info text-white w-100">
+                                <i class="fas fa-archive me-1"></i> View History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Performance -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fa-3x mb-3 text-success"></i>
+                            <h5 class="card-title fw-bold">Performance Analytics</h5>
+                            <p class="card-text text-muted">
+                                Analyze student performance, grade distribution, and trends.
+                            </p>
+                            <a href="/lecturer/analytics" class="btn btn-success w-100">
+                                <i class="fas fa-chart-bar me-1"></i> View Analytics
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Settings -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user-cog fa-3x mb-3 text-secondary"></i>
+                            <h5 class="card-title fw-bold">Profile Settings</h5>
+                            <p class="card-text text-muted">
+                                Update your personal information and change your password.
+                            </p>
+                            <a href="/profile" class="btn btn-secondary w-100">
+                                <i class="fas fa-user-edit me-1"></i> Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Recent Activities</h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (recentActivities && recentActivities.length> 0) { %>
+                                <div class="list-group list-group-flush">
+                                    <% recentActivities.forEach(activity=> { %>
+                                        <div class="list-group-item border-0">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <i
+                                                        class="fas fa-<%= activity.icon %> text-<%= activity.type === 'grade' ? 'success' : activity.type === 'upload' ? 'primary' : 'warning' %> me-2"></i>
+                                                    <span>
+                                                        <%= activity.description %>
+                                                    </span>
+                                                </div>
+                                                <small class="text-muted">
+                                                    <%= activity.time %>
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <% }); %>
+                                </div>
+                                <% } else { %>
+                                    <p class="text-center text-muted mb-0">No recent activities</p>
+                                    <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/footer') %>
+
+            <style>
+                .card {
+                    transition: all 0.3s ease;
+                    border-radius: 10px;
+                }
+
+                .card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                }
+
+                .badge {
+                    font-size: 0.7em;
+                }
+
+                .btn {
+                    border-radius: 5px;
+                }
+            </style>

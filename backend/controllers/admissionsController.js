@@ -201,6 +201,164 @@ exports.viewApplicationDetail = async (req, res) => {
 // // Update application status (approve/reject)
 
 // Update application status (approve/reject)
+// exports.updateApplicationStatus = async (req, res) => {
+//   try {
+//     const { status, remarks, selectedChoice, startDate } = req.body;
+
+//     const app = await Application.findById(req.params.id)
+//       .populate("applicant", "firstName surname email mobile")
+//       .populate("firstChoice")
+//       .populate("secondChoice");
+
+//     if (!app) {
+//       req.flash("error_msg", "Application not found.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     // ✅ Enhanced email validation
+//     let recipientEmail = app.applicant?.email || app.applicantEmail;
+
+//     // If still no email, try to get it from the User model directly
+//     if (!recipientEmail && app.applicant) {
+//       const user = await User.findById(app.applicant._id).select("email");
+//       recipientEmail = user?.email;
+//     }
+
+//     // Final validation - if no email, fail early
+//     if (!recipientEmail) {
+//       console.error(`❌ No valid email found for application ${app._id}`);
+//       req.flash(
+//         "error_msg",
+//         "Applicant has no valid email address. Cannot send notification."
+//       );
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     // Validate email format
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(recipientEmail)) {
+//       console.error(`❌ Invalid email format: ${recipientEmail}`);
+//       req.flash("error_msg", "Applicant email address is invalid.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     console.log(`📧 Sending email to: ${recipientEmail}`);
+
+//     // ✅ Sync applicant email for consistency
+//     if (app.applicant && app.applicant.email) {
+//       app.applicantEmail = app.applicant.email;
+//     }
+
+//     app.status = status;
+//     app.remarks = remarks || "";
+//     app.reviewedAt = new Date();
+
+//     const applicant = app.applicant;
+
+//     if (status === "Approved") {
+//       const chosenProgramme =
+//         selectedChoice === "second" ? app.secondChoice : app.firstChoice;
+
+//       if (!chosenProgramme) {
+//         req.flash("error_msg", "No programme selected for approval.");
+//         return res.redirect("/admissions/applications");
+//       }
+
+//       // Update user record with approved programme
+//       await User.findByIdAndUpdate(applicant._id, {
+//         $push: {
+//           approvedCourses: {
+//             programme: chosenProgramme._id,
+//             approvalDate: new Date(),
+//             startDate: startDate || null,
+//           },
+//         },
+//       });
+
+//       // 1️⃣ Generate PDF
+//       const pdfPath = await generateAcceptancePDF(
+//         app,
+//         chosenProgramme,
+//         startDate
+//       );
+
+//       // 2️⃣ Upload PDF to GCS
+//       const destPath = `applications/Acceptance_${app._id}_${Date.now()}.pdf`;
+//       await uploadFile(pdfPath, destPath);
+
+//       // ✅ SAVE ACCEPTANCE LETTER USING THE SCHEMA STRUCTURE
+//       app.acceptanceLetter = {
+//         name: "Official Acceptance Letter",
+//         gcsUrl: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${destPath}`,
+//         gcsPath: destPath,
+//         uploadedAt: new Date(),
+//       };
+
+//       await app.save();
+
+//       console.log(
+//         "✅ Acceptance letter saved to database:",
+//         app.acceptanceLetter
+//       );
+
+//       // 3️⃣ Generate signed URL using the same function as documents
+//       const signedUrl = await generateSignedUrl(destPath);
+
+//       // 4️⃣ Send email
+//       await sendEmail({
+//         to: recipientEmail,
+//         subject: "🎓 Admission Offer - Copperstone University",
+//         html: `
+//           <p>Dear ${applicant.firstName || "Applicant"},</p>
+//           <p>Congratulations! Your application to <strong>${
+//             chosenProgramme.name
+//           }</strong> has been <strong>approved</strong>.</p>
+//           <p>Your programme is scheduled to start on <strong>${new Date(
+//             startDate
+//           ).toLocaleDateString()}</strong>.</p>
+//           <p>You can download your official acceptance letter here: <a href="${signedUrl}">Download acceptance letter</a></p>
+//           <br/>
+//           <p>Warm regards,<br/>Copperstone University Admissions Office</p>
+//         `,
+//         attachments: [{ filename: "Acceptance_Letter.pdf", path: pdfPath }],
+//       });
+
+//       // Clean up local temp file
+//       try {
+//         fs.unlinkSync(pdfPath);
+//       } catch (e) {
+//         console.warn("⚠️ Failed to remove temporary PDF:", e.message);
+//       }
+//     } else if (status === "Rejected") {
+//       await sendEmail({
+//         to: recipientEmail,
+//         subject: "🎓 Application Update - Copperstone University",
+//         html: `
+//           <p>Dear ${applicant.firstName || "Applicant"},</p>
+//           <p>We regret to inform you that your application was not successful at this time.</p>
+//           <p><strong>Remarks:</strong> ${
+//             remarks || "We encourage you to apply again next intake."
+//           }</p>
+//           <p>Sincerely,<br/>Admissions Office</p>
+//         `,
+//       });
+
+//       await app.save();
+//     }
+
+//     req.flash(
+//       "success_msg",
+//       `Application ${status.toLowerCase()} successfully. Email sent to ${recipientEmail}.`
+//     );
+//     res.redirect("/admissions/applications");
+//   } catch (err) {
+//     console.error("❌ Error updating application status:", err);
+//     req.flash("error_msg", "Failed to update application.");
+//     res.redirect("/admissions/applications");
+//   }
+// };
+
+// Update application status (approve/reject)
 exports.updateApplicationStatus = async (req, res) => {
   try {
     const { status, remarks, selectedChoice, startDate } = req.body;
@@ -264,7 +422,7 @@ exports.updateApplicationStatus = async (req, res) => {
         return res.redirect("/admissions/applications");
       }
 
-      // Update user record with approved programme
+      // ✅ FIXED: Update user record with approved programme AND set main programme field
       await User.findByIdAndUpdate(applicant._id, {
         $push: {
           approvedCourses: {
@@ -273,6 +431,9 @@ exports.updateApplicationStatus = async (req, res) => {
             startDate: startDate || null,
           },
         },
+        // ✅ ADDED THESE TWO LINES TO SET THE MAIN PROGRAMME FIELD:
+        programme: chosenProgramme._id, // Set the main programme field
+        level: chosenProgramme.level || "Certificate", // Set the level based on programme
       });
 
       // 1️⃣ Generate PDF

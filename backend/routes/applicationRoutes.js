@@ -15,6 +15,8 @@ const {
   viewAcceptanceLetter, // ← Make sure this line exists and is spelled correctly
   viewReceipt,
   viewApplicationDetails,
+  viewMyCourses,
+  generateResultsCard,
 } = require("../controllers/applicationController");
 
 // GET → Display the application form
@@ -52,6 +54,19 @@ router.get(
   "/applications/:id",
   // isAuthenticated,
   viewApplicationDetails
+);
+
+router.get(
+  "/student/courses",
+  // ensureAuthenticated,
+  viewMyCourses
+);
+
+// In your student routes
+router.get(
+  "/student/results/:semester/:year",
+  // ensureAuthenticated,
+  generateResultsCard
 );
 
 module.exports = router;

@@ -1,0 +1,530 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <!-- Header Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="fw-bold" style="color: var(--primary-purple)">
+                            <i class="fas fa-graduation-cap me-2"></i>My Academic Record
+                        </h2>
+                        <div class="text-end">
+                            <span class="badge bg-primary fs-6">Semester: <%= currentSemester || 1 %></span>
+                            <span
+                                class="badge bg-<%= academicStatus === 'Active' ? 'success' : academicStatus === 'Probation' ? 'warning' : 'danger' %> ms-2 fs-6">
+                                <%= academicStatus %>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Academic Summary Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h5 class="card-title">Academic Programme</h5>
+                                    <p class="lead">
+                                        <% if (programme) { %>
+                                            <strong>
+                                                <%= programme.name %>
+                                            </strong><br>
+                                            <small class="text-muted">Code: <%= programme.code %></small>
+                                            <% } else { %>
+                                                <span class="text-muted">Not assigned to a programme</span>
+                                                <% } %>
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="card-title">Academic Progress</h5>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="fw-bold text-primary">
+                                                <%= creditsEarned %>
+                                            </div>
+                                            <small class="text-muted">Credits Earned</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold text-info">
+                                                <%= creditsAttempted %>
+                                            </div>
+                                            <small class="text-muted">Credits Attempted</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold text-success">
+                                                <%= currentSemester || 1 %>
+                                            </div>
+                                            <small class="text-muted">Current Semester</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="card-title">Cumulative GPA</h5>
+                                    <div class="text-center">
+                                        <div class="display-5 fw-bold"
+                                            style="color: <%= gpa >= 3.0 ? 'green' : gpa >= 2.0 ? 'orange' : 'red' %>">
+                                            <%= gpa.toFixed(2) %>
+                                        </div>
+                                        <small class="text-muted">on a 4.0 scale</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4" id="academicTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="current-tab" data-bs-toggle="tab" data-bs-target="#current"
+                        type="button" role="tab">
+                        <i class="fas fa-book-open me-1"></i> Current Courses
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button"
+                        role="tab">
+                        <i class="fas fa-history me-1"></i> Past Semesters
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results"
+                        type="button" role="tab">
+                        <i class="fas fa-file-alt me-1"></i> Results Cards
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="academicTabsContent">
+
+                <!-- Tab 1: Current Courses -->
+                <div class="tab-pane fade show active" id="current" role="tabpanel">
+                    <% if (allCurrentSemesters.length===0) { %>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No courses have been assigned to you for the current semester.
+                        </div>
+                        <% } else { %>
+                            <% allCurrentSemesters.forEach(semester=> { %>
+                                <div class="card shadow-sm mb-4">
+                                    <div class="card-header bg-light">
+                                        <h4 class="mb-0">
+                                            <i class="fas fa-calendar-alt me-2"></i>
+                                            Semester <%= semester %>
+                                                <% if (semester===currentSemester) { %>
+                                                    <span class="badge bg-primary ms-2">Current</span>
+                                                    <% } %>
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Course Code</th>
+                                                        <th>Course Name</th>
+                                                        <th>Credits</th>
+                                                        <th>Start Date</th>
+                                                        <th>End Date</th>
+                                                        <th>Status</th>
+                                                        <th>Grade</th>
+                                                        <th>Credits Earned</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% currentCoursesBySemester[semester].forEach(course=> { %>
+                                                        <tr>
+                                                            <td><strong>
+                                                                    <%= course.course.code %>
+                                                                </strong></td>
+                                                            <td>
+                                                                <%= course.course.name %>
+                                                                    <% if (course.course.description) { %>
+                                                                        <br><small class="text-muted">
+                                                                            <%= course.course.description %>
+                                                                        </small>
+                                                                        <% } %>
+                                                            </td>
+                                                            <td>
+                                                                <%= course.course.credits || 3 %>
+                                                            </td>
+                                                            <td>
+                                                                <%= course.startDate ?
+                                                                    course.startDate.toLocaleDateString() : 'N/A' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= course.endDate ? course.endDate.toLocaleDateString()
+                                                                    : 'N/A' %>
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="badge bg-<%= course.status === 'Active' ? 'success' : course.status === 'Completed' ? 'info' : course.status === 'Dropped' ? 'warning' : 'danger' %>">
+                                                                    <%= course.status %>
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <% if (course.grade) { %>
+                                                                    <span class="fw-bold text-<%= 
+                              course.grade === 'A' ? 'success' : 
+                              course.grade === 'B' ? 'primary' : 
+                              course.grade === 'C' ? 'warning' : 
+                              course.grade === 'D' ? 'orange' : 
+                              'danger' 
+                            %>">
+                                                                        <%= course.grade %>
+                                                                    </span>
+                                                                    <% } else { %>
+                                                                        <span class="text-muted">Pending</span>
+                                                                        <% } %>
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="fw-bold <%= course.creditsEarned > 0 ? 'text-success' : 'text-muted' %>">
+                                                                    <%= course.creditsEarned || 0 %>
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        <% }) %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Semester Summary -->
+                                        <div class="row mt-4">
+                                            <div class="col-md-8">
+                                                <h6>Semester Summary</h6>
+                                                <div class="row text-center">
+                                                    <div class="col-3">
+                                                        <div class="fw-bold">
+                                                            <%= currentCoursesBySemester[semester].length %>
+                                                        </div>
+                                                        <small class="text-muted">Courses</small>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <div class="fw-bold">
+                                                            <%= currentCoursesBySemester[semester].reduce((sum, c)=> sum
+                                                                + (c.course.credits || 3), 0) %>
+                                                        </div>
+                                                        <small class="text-muted">Total Credits</small>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <div class="fw-bold text-success">
+                                                            <%= currentCoursesBySemester[semester].reduce((sum, c)=> sum
+                                                                + (c.creditsEarned || 0), 0) %>
+                                                        </div>
+                                                        <small class="text-muted">Earned Credits</small>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <div class="fw-bold">
+                                                            <%= currentCoursesBySemester[semester].filter(c=>
+                                                                c.grade).length %>/<%=
+                                                                    currentCoursesBySemester[semester].length %>
+                                                        </div>
+                                                        <small class="text-muted">Graded</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <small class="text-muted">
+                                                    Semester Progress:
+                                                    <span class="fw-bold">
+                                                        <%= Math.round((currentCoursesBySemester[semester].filter(c=>
+                                                            c.status === 'Completed').length /
+                                                            currentCoursesBySemester[semester].length) * 100) %>%
+                                                    </span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% }) %>
+                                    <% } %>
+                </div>
+
+                <!-- Tab 2: Past Semesters -->
+                <div class="tab-pane fade" id="past" role="tabpanel">
+                    <% if (pastSemesters.length===0) { %>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No past semester records available.
+                        </div>
+                        <% } else { %>
+                            <% pastSemesters.forEach(semester=> { %>
+                                <div class="card shadow-sm mb-4">
+                                    <div class="card-header bg-light">
+                                        <h4 class="mb-0">
+                                            <i class="fas fa-calendar-check me-2"></i>
+                                            Semester <%= semester.semester %> - <%= semester.academicYear %>
+                                                    <% if (semester.semesterGPA) { %>
+                                                        <span class="badge bg-info ms-2">GPA: <%=
+                                                                semester.semesterGPA.toFixed(2) %></span>
+                                                        <% } %>
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-4">
+                                                <small class="text-muted">
+                                                    <i class="far fa-calendar me-1"></i>
+                                                    <%= semester.startDate ? semester.startDate.toLocaleDateString()
+                                                        : 'N/A' %>
+                                                        to <%= semester.endDate ? semester.endDate.toLocaleDateString()
+                                                            : 'N/A' %>
+                                                </small>
+                                            </div>
+                                            <div class="col-md-4 text-center">
+                                                <span class="badge bg-primary">
+                                                    Credits Attempted: <%= semester.creditsAttempted || 0 %>
+                                                </span>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <span class="badge bg-success">
+                                                    Credits Earned: <%= semester.creditsEarned || 0 %>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <% if (semester.courses && semester.courses.length> 0) { %>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Course Code</th>
+                                                            <th>Course Name</th>
+                                                            <th>Credits</th>
+                                                            <th>Grade</th>
+                                                            <th>Points</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% semester.courses.forEach(course=> { %>
+                                                            <tr>
+                                                                <td>
+                                                                    <%= course.course?.code || 'N/A' %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= course.course?.name || 'N/A' %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= course.credits || 3 %>
+                                                                </td>
+                                                                <td>
+                                                                    <span class="fw-bold text-<%= 
+                              course.grade === 'A' ? 'success' : 
+                              course.grade === 'B' ? 'primary' : 
+                              course.grade === 'C' ? 'warning' : 
+                              course.grade === 'D' ? 'orange' : 
+                              'danger' 
+                            %>">
+                                                                        <%= course.grade || 'N/A' %>
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <% const gradePoints={ 'A' : 4.0, 'B' : 3.0, 'C' :
+                                                                        2.0, 'D' : 1.0, 'F' : 0.0 }; const
+                                                                        points=gradePoints[course.grade] || 0; const
+                                                                        totalPoints=points * (course.credits || 3); %>
+                                                                        <%= totalPoints.toFixed(1) %>
+                                                                </td>
+                                                            </tr>
+                                                            <% }) %>
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr class="table-light">
+                                                            <td colspan="4" class="text-end fw-bold">Semester GPA:</td>
+                                                            <td class="fw-bold">
+                                                                <% if (semester.semesterGPA) { %>
+                                                                    <%= semester.semesterGPA.toFixed(2) %>
+                                                                        <% } else if (semester.creditsAttempted> 0) {
+                                                                            // Calculate GPA if not stored
+                                                                            let totalQualityPoints = 0;
+                                                                            let totalCredits = 0;
+                                                                            semester.courses.forEach(c => {
+                                                                            const gradePoints = {
+                                                                            'A': 4.0, 'B': 3.0, 'C': 2.0, 'D': 1.0, 'F':
+                                                                            0.0
+                                                                            };
+                                                                            const points = gradePoints[c.grade] || 0;
+                                                                            const credits = c.credits || 3;
+                                                                            totalQualityPoints += points * credits;
+                                                                            totalCredits += credits;
+                                                                            });
+                                                                            const calculatedGPA = totalCredits > 0 ?
+                                                                            (totalQualityPoints /
+                                                                            totalCredits).toFixed(2) : '0.00';
+                                                                            %>
+                                                                            <%= calculatedGPA %>
+                                                                                <% } else { %>
+                                                                                    0.00
+                                                                                    <% } %>
+                                                            </td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                            <% } else { %>
+                                                <p class="text-muted text-center">No course details available for this
+                                                    semester.</p>
+                                                <% } %>
+                                    </div>
+                                </div>
+                                <% }) %>
+                                    <% } %>
+                </div>
+
+                <!-- Tab 3: Results Cards -->
+                <div class="tab-pane fade" id="results" role="tabpanel">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Official results cards are generated at the end of each semester. You can download them
+                                here when available.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Cards List -->
+                    <div class="row">
+                        <!-- Example Results Card - You would loop through actual results here -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-file-pdf text-danger me-2"></i>
+                                        Semester 1 Results - 2024
+                                    </h5>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            <i class="far fa-calendar me-1"></i>Generated: December 15, 2024<br>
+                                            <i class="fas fa-graduation-cap me-1"></i>GPA: 3.45<br>
+                                            <i class="fas fa-star me-1"></i>Status: Passed
+                                        </small>
+                                    </p>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i> Preview
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-download me-1"></i> Download PDF
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Another Example -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-file-pdf text-danger me-2"></i>
+                                        Semester 2 Results - 2024
+                                    </h5>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            <i class="far fa-calendar me-1"></i>Generated: May 20, 2024<br>
+                                            <i class="fas fa-graduation-cap me-1"></i>GPA: 3.67<br>
+                                            <i class="fas fa-star me-1"></i>Status: Passed with Distinction
+                                        </small>
+                                    </p>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i> Preview
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-download me-1"></i> Download PDF
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Official Transcript Section -->
+                    <div class="card shadow-sm mt-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-scroll me-2"></i>
+                                Official Transcript
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Request an official transcript of your complete academic record.</p>
+                            <div class="d-grid gap-2 col-md-6 mx-auto">
+                                <button class="btn btn-warning">
+                                    <i class="fas fa-file-contract me-1"></i> Request Transcript
+                                </button>
+                                <button class="btn btn-outline-secondary">
+                                    <i class="fas fa-question-circle me-1"></i> View Transcript Fees
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/footer') %>
+
+            <style>
+                .table th {
+                    background-color: #f8f9fa;
+                    border-top: none;
+                }
+
+                .card-header {
+                    background-color: #f8f9fa !important;
+                    border-bottom: 1px solid #dee2e6;
+                }
+
+                .badge {
+                    padding: 0.4em 0.8em;
+                    font-weight: 500;
+                }
+
+                .nav-tabs .nav-link {
+                    color: var(--primary-purple);
+                    font-weight: 500;
+                }
+
+                .nav-tabs .nav-link.active {
+                    background-color: var(--primary-purple);
+                    color: white;
+                    border-color: var(--primary-purple);
+                }
+
+                .tab-content {
+                    padding-top: 20px;
+                }
+            </style>
+
+            <script>
+                // Tab functionality
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Initialize tooltips
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+
+                    // Store active tab in localStorage
+                    var academicTabs = document.querySelectorAll('#academicTabs button[data-bs-toggle="tab"]');
+                    academicTabs.forEach(function (tab) {
+                        tab.addEventListener('shown.bs.tab', function (event) {
+                            localStorage.setItem('activeAcademicTab', event.target.id);
+                        });
+                    });
+
+                    // Restore active tab on page load
+                    var activeTab = localStorage.getItem('activeAcademicTab');
+                    if (activeTab) {
+                        var triggerEl = document.querySelector('#' + activeTab);
+                        if (triggerEl) {
+                            bootstrap.Tab.getInstance(triggerEl).show();
+                        }
+                    }
+                });
+            </script>

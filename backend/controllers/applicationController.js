@@ -2,6 +2,7 @@
 const Programme = require("../models/Programme");
 const Application = require("../models/Application");
 const { uploadToGCS } = require("../config/gcsUpload");
+const User = require("../models/User");
 
 /**
  * Render the application form
@@ -204,3 +205,235 @@ exports.viewReceipt = async (req, res) => {
   const signedUrl = await generateSignedUrl(app.receipt.gcsPath);
   return res.redirect(signedUrl);
 };
+
+// // controllers/applicationController.js
+// exports.viewMyCourses = async (req, res) => {
+//   try {
+//     // Get student with assigned courses populated
+//     const student = await User.findById(req.user._id)
+//       .populate({
+//         path: "assignedCourses.course",
+//         model: "Course",
+//         select: "code name credits description",
+//       })
+//       .populate("programme", "name code")
+//       .lean();
+
+//     if (!student) {
+//       req.flash("error_msg", "Student not found.");
+//       return res.redirect("/dashboard/student");
+//     }
+
+//     // Separate courses by semester
+//     const coursesBySemester = {};
+//     const allSemesters = [];
+
+//     student.assignedCourses.forEach((assignment) => {
+//       const semester = assignment.semester;
+//       if (!coursesBySemester[semester]) {
+//         coursesBySemester[semester] = [];
+//         allSemesters.push(semester);
+//       }
+
+//       // Add course with assignment details
+//       coursesBySemester[semester].push({
+//         course: assignment.course,
+//         assignmentId: assignment._id,
+//         semester: assignment.semester,
+//         startDate: assignment.startDate,
+//         endDate: assignment.endDate,
+//         status: assignment.status,
+//         grade: assignment.grade,
+//         creditsEarned: assignment.creditsEarned,
+//         assignedAt: assignment.assignedAt,
+//       });
+//     });
+
+//     // Sort semesters
+//     allSemesters.sort((a, b) => a - b);
+
+//     // Calculate GPA if available
+//     const gpa = student.academicProgress?.cumulativeGPA || 0;
+//     const creditsEarned = student.academicProgress?.totalCreditsEarned || 0;
+//     const creditsAttempted =
+//       student.academicProgress?.totalCreditsAttempted || 0;
+
+//     res.render("students/courses", {
+//       title: "My Courses",
+//       user: student,
+//       coursesBySemester,
+//       allSemesters,
+//       currentSemester: student.currentSemester,
+//       academicStatus: student.academicProgress?.status || "Active",
+//       gpa,
+//       creditsEarned,
+//       creditsAttempted,
+//       programme: student.programme,
+//     });
+//   } catch (error) {
+//     console.error("Error loading student courses:", error);
+//     req.flash("error_msg", "Failed to load your courses.");
+//     res.redirect("/dashboard/student");
+//   }
+// };
+
+exports.viewMyCourses = async (req, res) => {
+  try {
+    // Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      req.flash("error_msg", "Please log in to view your courses.");
+      return res.redirect("/login");
+    }
+
+    // Get student with ALL academic data populated
+    const student = await User.findById(req.user._id)
+      .populate({
+        path: "assignedCourses.course",
+        model: "Course",
+        select: "code name credits description",
+      })
+      .populate("programme", "name code")
+      .populate("approvedCourses.programme", "name code")
+      .populate("semesterHistory.courses.course", "code name credits") // Add this for past semesters
+      .lean();
+
+    if (!student) {
+      req.flash("error_msg", "Student not found.");
+      return res.redirect("/dashboard/student");
+    }
+
+    // Check if student has an approved programme
+    let currentProgramme = null;
+    if (student.programme && typeof student.programme === "object") {
+      currentProgramme = student.programme;
+    } else if (student.approvedCourses && student.approvedCourses.length > 0) {
+      // Use the latest approved programme if programme field is not set
+      const latestApproval =
+        student.approvedCourses[student.approvedCourses.length - 1];
+      currentProgramme = latestApproval.programme;
+    }
+
+    // Separate current courses by semester
+    const currentCoursesBySemester = {};
+    const allCurrentSemesters = [];
+
+    if (student.assignedCourses && student.assignedCourses.length > 0) {
+      student.assignedCourses.forEach((assignment) => {
+        const semester = assignment.semester;
+        if (!currentCoursesBySemester[semester]) {
+          currentCoursesBySemester[semester] = [];
+          allCurrentSemesters.push(semester);
+        }
+
+        // Add course with assignment details
+        currentCoursesBySemester[semester].push({
+          course: assignment.course,
+          assignmentId: assignment._id,
+          semester: assignment.semester,
+          startDate: assignment.startDate,
+          endDate: assignment.endDate,
+          status: assignment.status,
+          grade: assignment.grade,
+          creditsEarned: assignment.creditsEarned,
+          assignedAt: assignment.assignedAt,
+        });
+      });
+    }
+
+    // Sort current semesters
+    allCurrentSemesters.sort((a, b) => a - b);
+
+    // Process past semesters from semesterHistory
+    const pastSemesters = [];
+    if (student.semesterHistory && student.semesterHistory.length > 0) {
+      student.semesterHistory.forEach((history) => {
+        pastSemesters.push({
+          semester: history.semester,
+          academicYear: history.academicYear,
+          semesterGPA: history.semesterGPA,
+          creditsAttempted: history.creditsAttempted,
+          creditsEarned: history.creditsEarned,
+          courses: history.courses,
+          startDate: history.startDate,
+          endDate: history.endDate,
+        });
+      });
+
+      // Sort past semesters by semester number
+      pastSemesters.sort((a, b) => a.semester - b.semester);
+    }
+
+    // Calculate GPA if available
+    const gpa = student.academicProgress?.cumulativeGPA || 0;
+    const creditsEarned = student.academicProgress?.totalCreditsEarned || 0;
+    const creditsAttempted =
+      student.academicProgress?.totalCreditsAttempted || 0;
+
+    res.render("students/courses", {
+      title: "My Academic Record",
+      user: student,
+      currentCoursesBySemester,
+      allCurrentSemesters,
+      pastSemesters,
+      currentSemester: student.currentSemester || 1,
+      academicStatus: student.academicProgress?.status || "Active",
+      gpa,
+      creditsEarned,
+      creditsAttempted,
+      programme: currentProgramme,
+    });
+  } catch (error) {
+    console.error("Error loading student courses:", error);
+    req.flash("error_msg", "Failed to load your academic record.");
+    res.redirect("/dashboard/student");
+  }
+};
+
+// In a new controller file or add to studentController.js
+exports.generateResultsCard = async (req, res) => {
+  try {
+    const { semester, academicYear } = req.params;
+
+    // Get student data for the specified semester
+    const student = await User.findById(req.user._id)
+      .populate("programme", "name code")
+      .populate({
+        path: "semesterHistory.courses.course",
+        model: "Course",
+        select: "code name credits",
+      })
+      .lean();
+
+    // Find the specific semester
+    const targetSemester = student.semesterHistory.find(
+      (s) => s.semester == semester && s.academicYear === academicYear
+    );
+
+    if (!targetSemester) {
+      req.flash("error_msg", "No results found for the specified semester.");
+      return res.redirect("/student/courses");
+    }
+
+    // Generate PDF results card
+    const pdfBuffer = await generateResultsPDF(student, targetSemester);
+
+    // Send PDF as download
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="Results_Semester_${semester}_${academicYear}.pdf"`,
+      "Content-Length": pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error generating results card:", error);
+    req.flash("error_msg", "Failed to generate results card.");
+    res.redirect("/student/courses");
+  }
+};
+
+// Helper function to generate PDF (you'll need to implement this)
+async function generateResultsPDF(student, semesterData) {
+  // Use a PDF library like pdfkit, puppeteer, or html-pdf
+  // This is a placeholder - implement based on your PDF generation setup
+  return Buffer.from("PDF generation would go here");
+}
