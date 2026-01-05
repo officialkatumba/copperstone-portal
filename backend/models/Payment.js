@@ -216,6 +216,10 @@ const paymentSchema = new mongoose.Schema(
         "Semester 6",
         "Semester 7",
         "Semester 8",
+        "Semester 9",
+        "Semester 10",
+        "Semester 11",
+        "Semester 12",
       ],
     },
 
