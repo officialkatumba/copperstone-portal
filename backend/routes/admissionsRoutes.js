@@ -13,28 +13,28 @@
 // // Admissions dashboard
 // router.get(
 //   "/dashboard",
-//   // ensureAuthenticated,
+// ensureAuthenticated,
 //   showAdmissionsDashboard
 // );
 
 // // View all applications
 // router.get(
 //   "/applications",
-//   // ensureAuthenticated,
+// ensureAuthenticated,
 //   listApplications
 // );
 
 // // View single application detail
 // router.get(
 //   "/applications/:id",
-//   // ensureAuthenticated,
+// ensureAuthenticated,
 //   viewApplicationDetail
 // );
 
 // // Update application status (approve/reject/under review)
 // router.post(
 //   "/applications/:id/status",
-//   // ensureAuthenticated,
+// ensureAuthenticated,
 //   updateApplicationStatus
 // );
 
@@ -45,7 +45,7 @@
 // // Show acceptance letter link (students and admissions staff can view)
 // // router.get(
 // //   "/applications/:id/letter",
-// //   // ensureAuthenticated,
+//   // ensureAuthenticated,
 // //   async (req, res) => {
 // //     try {
 // //       const app = await Application.findById(req.params.id).populate(
@@ -93,40 +93,41 @@ const {
   viewAcceptanceLetter, // ADD THIS IMPORT
 } = require("../controllers/admissionsController");
 
-// const { ensureAuthenticated } = require("../middleware/auth");
+const { ensureAuthenticated } = require("../middleware/auth");
+// const { ensureAuthenticated, ensureRole } = require("../middleware/auth");
 
 // Admissions dashboard
 router.get(
   "/dashboard",
-  // ensureAuthenticated,
+  ensureAuthenticated,
+
   showAdmissionsDashboard
 );
 
 // View all applications
-router.get(
-  "/applications",
-  // ensureAuthenticated,
-  listApplications
-);
+router.get("/applications", ensureAuthenticated, listApplications);
 
 // View single application detail
 router.get(
   "/applications/:id",
-  // ensureAuthenticated,
+  ensureAuthenticated,
+
   viewApplicationDetail
 );
 
 // Update application status (approve/reject/under review)
 router.post(
   "/applications/:id/status",
-  // ensureAuthenticated,
+  ensureAuthenticated,
+
   updateApplicationStatus
 );
 
 // ✅ ADD THIS: View acceptance letter
 router.get(
   "/applications/:id/letter",
-  // ensureAuthenticated,
+
+  ensureAuthenticated,
   viewAcceptanceLetter // USE THE CONTROLLER FUNCTION
 );
 

@@ -1,29 +1,46 @@
+// backend/controllers/registrarController.js
+
 const Group = require("../models/Group");
 const Programme = require("../models/Programme");
 const Course = require("../models/Course");
 const User = require("../models/User");
 
 // Get create group page
-exports.getCreateGroup = async (req, res) => {
-  try {
-    const programmes = await Programme.find({ isActive: true });
-    const courses = await Course.find({ isActive: true });
-    const lecturers = await User.find({
-      role: "Lecturer",
-      isActive: true,
-    }).select("firstName surname email staffProfile.department");
+// exports.getCreateGroup = async (req, res) => {
+//   try {
+//     const programmes = await Programme.find({ isActive: true });
+//     const courses = await Course.find({ isActive: true });
+//     const lecturers = await User.find({
+//       role: "Lecturer",
+//       isActive: true,
+//     }).select("firstName surname email staffProfile.department");
 
+//     res.render("registrar/create-group", {
+//       title: "Create Academic Group",
+//       programmes,
+//       courses,
+//       lecturers,
+//       user: req.user,
+//     });
+//   } catch (error) {
+//     console.error("Error loading create group page:", error);
+//     req.flash("error", "Error loading create group page");
+//     res.redirect("/registrar/dashboard");
+//   }
+// };
+
+// controllers/registrarController.js
+
+exports.getCreateGroup = (req, res) => {
+  try {
+    console.log("route hit");
     res.render("registrar/create-group", {
-      title: "Create Academic Group",
-      programmes,
-      courses,
-      lecturers,
+      title: "Create Academic Group (Test)",
       user: req.user,
     });
   } catch (error) {
-    console.error("Error loading create group page:", error);
-    req.flash("error", "Error loading create group page");
-    res.redirect("/registrar/dashboard");
+    console.error("Simple create-group error:", error);
+    res.send("Create group page failed");
   }
 };
 

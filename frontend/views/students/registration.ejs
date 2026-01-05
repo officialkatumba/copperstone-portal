@@ -1,139 +1,128 @@
 <%- include('../partials/header') %> <%- include('../partials/navbar') %>
 
-<div class="container my-5">
-  <div class="text-center mb-4">
-    <h2 class="fw-bold" style="color: var(--primary-purple)">
-      Student Registration Form
-    </h2>
-    <p class="text-muted">Complete your student profile below.</p>
-  </div>
+    <div class="container my-5">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold" style="color: var(--primary-purple)">
+          Student Registration Form
+        </h2>
+        <p class="text-muted">Complete your student profile below.</p>
+      </div>
 
-  <form
-    action="/student/register"
-    method="POST"
-    enctype="multipart/form-data"
-    class="shadow p-4 rounded bg-light"
-  >
-    <!-- Personal Info -->
-    <h5 class="fw-bold text-primary mb-3">
-      <i class="fas fa-user me-2"></i>Personal Information
-    </h5>
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label class="form-label">Date of Birth</label>
-        <input type="date" name="dateOfBirth" class="form-control" required />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Gender</label>
-        <select name="gender" class="form-select" required>
-          <option value="">Select...</option>
-          <option>Male</option>
-          <option>Female</option>
-          <option>Other</option>
-        </select>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Nationality</label>
-        <input type="text" name="nationality" class="form-control" />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">National ID Number</label>
-        <input type="text" name="nationalIdNumber" class="form-control" />
-      </div>
+      <form action="/registration/student/register" method="POST" enctype="multipart/form-data"
+        class="shadow p-4 rounded bg-light">
+        <!-- Personal Info -->
+        <h5 class="fw-bold text-primary mb-3">
+          <i class="fas fa-user me-2"></i>Personal Information
+        </h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" name="dateOfBirth" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-select" required>
+              <option value="">Select...</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Nationality</label>
+            <input type="text" name="nationality" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">National ID Number</label>
+            <input type="text" name="nationalIdNumber" class="form-control" />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Contact Address -->
+        <h5 class="fw-bold text-success mb-3">
+          <i class="fas fa-home me-2"></i>Contact Address
+        </h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Street</label>
+            <input type="text" name="street" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Province</label>
+            <input type="text" name="province" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Postal Code</label>
+            <input type="text" name="postalCode" class="form-control" />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Emergency Contact -->
+        <h5 class="fw-bold text-danger mb-3">
+          <i class="fas fa-phone-alt me-2"></i>Emergency Contact
+        </h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="emergencyFullName" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Relation</label>
+            <input type="text" name="emergencyRelation" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input type="text" name="emergencyPhone" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" name="emergencyEmail" class="form-control" />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Education -->
+        <h5 class="fw-bold text-info mb-3">
+          <i class="fas fa-graduation-cap me-2"></i>Previous Education
+        </h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Institution</label>
+            <input type="text" name="institution" class="form-control" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Qualification</label>
+            <input type="text" name="qualification" class="form-control" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Year</label>
+            <input type="number" name="yearCompleted" class="form-control" />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Profile Picture -->
+        <div class="mb-3">
+          <label class="form-label fw-bold"><i class="fas fa-image me-2"></i>Upload Profile Picture</label>
+          <input type="file" name="profilePicture" accept="image/*" class="form-control" />
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save me-1"></i> Submit Registration
+          </button>
+        </div>
+      </form>
     </div>
 
-    <hr class="my-4" />
-
-    <!-- Contact Address -->
-    <h5 class="fw-bold text-success mb-3">
-      <i class="fas fa-home me-2"></i>Contact Address
-    </h5>
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label class="form-label">Street</label>
-        <input type="text" name="street" class="form-control" />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">City</label>
-        <input type="text" name="city" class="form-control" />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Province</label>
-        <input type="text" name="province" class="form-control" />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Postal Code</label>
-        <input type="text" name="postalCode" class="form-control" />
-      </div>
-    </div>
-
-    <hr class="my-4" />
-
-    <!-- Emergency Contact -->
-    <h5 class="fw-bold text-danger mb-3">
-      <i class="fas fa-phone-alt me-2"></i>Emergency Contact
-    </h5>
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label class="form-label">Full Name</label>
-        <input type="text" name="emergencyFullName" class="form-control" />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Relation</label>
-        <input type="text" name="emergencyRelation" class="form-control" />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Phone</label>
-        <input type="text" name="emergencyPhone" class="form-control" />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Email</label>
-        <input type="email" name="emergencyEmail" class="form-control" />
-      </div>
-    </div>
-
-    <hr class="my-4" />
-
-    <!-- Education -->
-    <h5 class="fw-bold text-info mb-3">
-      <i class="fas fa-graduation-cap me-2"></i>Previous Education
-    </h5>
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label class="form-label">Institution</label>
-        <input type="text" name="institution" class="form-control" />
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Qualification</label>
-        <input type="text" name="qualification" class="form-control" />
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Year</label>
-        <input type="number" name="yearCompleted" class="form-control" />
-      </div>
-    </div>
-
-    <hr class="my-4" />
-
-    <!-- Profile Picture -->
-    <div class="mb-3">
-      <label class="form-label fw-bold"
-        ><i class="fas fa-image me-2"></i>Upload Profile Picture</label
-      >
-      <input
-        type="file"
-        name="profilePicture"
-        accept="image/*"
-        class="form-control"
-      />
-    </div>
-
-    <div class="d-grid mt-4">
-      <button type="submit" class="btn btn-primary btn-lg">
-        <i class="fas fa-save me-1"></i> Submit Registration
-      </button>
-    </div>
-  </form>
-</div>
-
-<%- include('../partials/footer') %>
+    <%- include('../partials/footer') %>

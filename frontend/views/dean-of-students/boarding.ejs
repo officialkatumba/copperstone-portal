@@ -1,0 +1,149 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+
+
+
+
+        <div class="container my-4">
+            <h3 class="fw-bold mb-4 text-center">Boarding Management</h3>
+
+            <form method="POST" action="/dean-of-students/boarding/create-beds"
+                onsubmit="return confirm('This will DELETE all existing beds and create 256 new ones. Continue?')">
+
+                <div class="text-center mb-4">
+                    <button class="btn btn-danger">
+                        <i class="fas fa-database me-1"></i>
+                        Create / Reset 256 Bed Spaces
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <select id="wingFilter" class="form-select">
+                        <option value="">All Wings</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <select id="statusFilter" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="available">Available</option>
+                        <option value="occupied">Occupied</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bed Grid -->
+            <div class="row" id="bedGrid">
+                <% bedSpaces.forEach(bed=> { %>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4 bed-card" data-wing="<%= bed.wing %>"
+                        data-status="<%= bed.status %>">
+
+                        <div class="card shadow-sm border-<%= bed.status === 'occupied' ? 'danger' : 'success' %>">
+                            <div class="card-body">
+
+                                <div class="d-flex justify-content-between">
+                                    <strong>
+                                        <%= bed.bedCode %>
+                                    </strong>
+                                    <span class="badge bg-<%= bed.status === 'occupied' ? 'danger' : 'success' %>">
+                                        <%= bed.status %>
+                                    </span>
+                                </div>
+
+                                <p class="mb-1">Wing: <strong>
+                                        <%= bed.wing %>
+                                    </strong></p>
+
+                                <% if (bed.studentName) { %>
+                                    <p class="mb-1">Student: <strong>
+                                            <%= bed.studentName %>
+                                        </strong></p>
+                                    <p class="mb-1">Payment: <%= bed.paymentStatus %>
+                                    </p>
+                                    <% } %>
+
+                                        <div class="d-grid gap-2 mt-3">
+                                            <button
+                                                class="btn btn-<%= bed.wing === 'Male' ? 'primary' : 'pink' %> btn-sm"
+                                                disabled>
+                                                <%= bed.wing %> Wing
+                                            </button>
+
+                                            <% if (bed.status==="available" ) { %>
+                                                <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#allocateModal" data-id="<%= bed._id %>">
+                                                    Allocate
+                                                </button>
+                                                <% } else { %>
+                                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                                        data-bs-target="#paymentModal" data-id="<%= bed._id %>">
+                                                        Mark Paid
+                                                    </button>
+
+                                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                        data-bs-target="#vacateModal" data-id="<%= bed._id %>">
+                                                        Vacate
+                                                    </button>
+                                                    <% } %>
+                                        </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+        </div>
+
+        <!-- Allocate Modal -->
+        <div class="modal fade" id="allocateModal">
+            <div class="modal-dialog">
+                <form method="POST" action="/dean-of-students/boarding/allocate">
+                    <input type="hidden" name="bedSpaceId" id="allocateBedId">
+
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5>Allocate Bed</h5>
+                        </div>
+                        <div class="modal-body">
+                            <input class="form-control mb-2" name="studentName" placeholder="Student Name" required>
+                            <select class="form-select" name="feeType">
+                                <option value="full-time">Full Time</option>
+                                <option value="part-time">Part Time</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-success">Confirm</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- JS -->
+        <script>
+            document.querySelectorAll("[data-bs-target='#allocateModal']").forEach(btn => {
+                btn.onclick = () => document.getElementById("allocateBedId").value = btn.dataset.id;
+            });
+
+            function applyFilters() {
+                document.querySelectorAll(".bed-card").forEach(card => {
+                    const wingOk = !wingFilter.value || card.dataset.wing === wingFilter.value;
+                    const statusOk = !statusFilter.value || card.dataset.status === statusFilter.value;
+                    card.style.display = wingOk && statusOk ? "block" : "none";
+                });
+            }
+
+            wingFilter.onchange = applyFilters;
+            statusFilter.onchange = applyFilters;
+        </script>
+
+        <%- include('../partials/footer') %>

@@ -456,7 +456,6 @@
       </div>
     </div>
   </div>
-
   <!-- Navigation -->
   <nav class="navbar navbar-expand-lg navbar-light sticky-top">
     <div class="container">
@@ -490,7 +489,7 @@
               Admissions
             </a>
             <div class="dropdown-menu" aria-labelledby="admissionsDropdown">
-              <a class="dropdown-item" href="/register">Apply Now</a>
+              <a class="dropdown-item" href="/auth/register">Apply Now</a>
               <a class="dropdown-item" href="#">Undergraduate</a>
               <a class="dropdown-item" href="#">Graduate</a>
               <a class="dropdown-item" href="#">International</a>
@@ -531,8 +530,8 @@
             <a class="nav-link" href="#">Research</a>
           </li>
           <!-- <li class="nav-item">
-            <a class="nav-link" href="#">Contact</a>
-          </li> -->
+          <a class="nav-link" href="#">Contact</a>
+        </li> -->
           <li class="nav-item">
             <a class="nav-link whatsapp-nav-link"
               href="https://wa.me/260768004340?text=Hello%20Copperstone%20University%20team,%20I%20am%20interested%20in%20learning%20more%20about%20your%20programs."
@@ -548,20 +547,20 @@
 
           <% if (!user) { %>
             <!-- Guest sees Join Us -->
-            <a href="/register" class="btn apply-btn">Register</a>
+            <a href="/auth/register" class="btn apply-btn">Register</a>
             <!-- <a class="btn apply-btn" href="/login">Login</a> -->
             <!-- <a href="/register" class="btn home-register-btn">Register</a> -->
-            <a href="/login" class="btn home-login-btn">Login</a>
+            <a href="/auth/login" class="btn home-login-btn">Login</a>
 
 
             <% } else { %>
               <!-- Logged-in user sees Dashboard -->
               <!-- <a href="/dashboard" class="btn apply-btn">Dashboard</a>
-              <a class="btn apply-btn" href="/logout">Logout</a> -->
+            <a class="btn apply-btn" href="/logout">Logout</a> -->
 
               <!-- Logged-in user sees Dashboard -->
               <!-- <a href="/dashboard" class="btn dashboard-btn">Dashboard</a>
-              <a href="/logout" class="btn logout-btn">Logout</a> -->
+            <a href="/logout" class="btn logout-btn">Logout</a> -->
 
               <% const dashboardLink=user.role==='Admin' ? '/dashboard/admin' : user.role==='AdmissionsOfficer'
                 ? '/dashboard/admissions' : user.role==='FinanceOfficer' ? '/dashboard/finance' :
@@ -571,7 +570,7 @@
 
                 <!-- Role-based Dashboard -->
                 <a href="<%= dashboardLink %>" class="btn dashboard-btn">Dashboard</a>
-                <a href="/logout" class="btn logout-btn">Logout</a>
+                <a href="/auth/logout" class="btn logout-btn">Logout</a>
 
 
                 <% } %>

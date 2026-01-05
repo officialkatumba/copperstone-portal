@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Copperstone</a>
+            <span class="navbar-text text-white ms-auto">
+                <%= user.firstName %> (<%= user.role %>)
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="text-primary">
+            <%= title %>
+        </h1>
+        <p class="text-muted">TEST PAGE - Working version</p>
+
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            This page is loading successfully!
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Quick Stats</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Total Beds: <strong>
+                                <%= stats.totalBeds %>
+                            </strong></p>
+                        <p>Occupied: <strong>
+                                <%= stats.occupiedBeds %>
+                            </strong></p>
+                        <p>Available: <strong>
+                                <%= stats.availableBeds %>
+                            </strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Sample Bed Spaces</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <% bedSpaces.forEach(bed=> { %>
+                                <li class="list-group-item">
+                                    <i class="fas fa-bed me-2"></i>
+                                    <%= bed.bedCode %> -
+                                        <span
+                                            class="badge <%= bed.status === 'available' ? 'bg-success' : 'bg-danger' %>">
+                                            <%= bed.status %>
+                                        </span>
+                                        (<%= bed.hostel %>)
+                                </li>
+                                <% }) %>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a href="/dashboard/dean-of-students" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <a href="/dean-of-students/test-simple" class="btn btn-info ms-2">
+                <i class="fas fa-test me-1"></i> Test Route
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,165 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold" style="color: var(--primary-purple)">
+                        <i class="fas fa-bed me-2"></i>Allocate Bed Space
+                    </h2>
+                    <p class="text-muted">
+                        Assign hostel accommodation to students
+                    </p>
+                </div>
+                <a href="/dashboard/student-affairs" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Flash Messages -->
+            <% if (success_msg && success_msg.length> 0) { %>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <%= success_msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <% } %>
+                    <% if (error_msg && error_msg.length> 0) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <%= error_msg %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <% } %>
+
+                            <!-- Allocation Form -->
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-plus-circle me-2"></i>Bed Allocation Form
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <form>
+                                        <div class="row">
+                                            <!-- Student Information -->
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Student Name</label>
+                                                <input type="text" class="form-control"
+                                                    placeholder="Enter student name">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Student ID</label>
+                                                <input type="text" class="form-control" placeholder="Enter student ID">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Program</label>
+                                                <select class="form-select">
+                                                    <option value="">Select Program</option>
+                                                    <option>Computer Science</option>
+                                                    <option>Business Administration</option>
+                                                    <option>Engineering</option>
+                                                    <option>Medicine</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Year of Study</label>
+                                                <select class="form-select">
+                                                    <option value="">Select Year</option>
+                                                    <option>Year 1</option>
+                                                    <option>Year 2</option>
+                                                    <option>Year 3</option>
+                                                    <option>Year 4</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-4">
+
+                                        <h5 class="mb-3"><i class="fas fa-building me-2"></i>Hostel Details</h5>
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Hostel</label>
+                                                <select class="form-select">
+                                                    <option value="">Select Hostel</option>
+                                                    <option>Copperstone Hall</option>
+                                                    <option>Victory Hall</option>
+                                                    <option>Unity Hall</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Block</label>
+                                                <select class="form-select">
+                                                    <option value="">Select Block</option>
+                                                    <option>A</option>
+                                                    <option>B</option>
+                                                    <option>C</option>
+                                                    <option>D</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Room Number</label>
+                                                <input type="text" class="form-control" placeholder="e.g., 101">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Bed Number</label>
+                                                <select class="form-select">
+                                                    <option value="">Select Bed</option>
+                                                    <option>Bed 1</option>
+                                                    <option>Bed 2</option>
+                                                    <option>Bed 3</option>
+                                                    <option>Bed 4</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Academic Year</label>
+                                                <input type="text" class="form-control" value="2025/2026" readonly>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">Semester</label>
+                                                <select class="form-select">
+                                                    <option>Semester 1</option>
+                                                    <option>Semester 2</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Notes (Optional)</label>
+                                            <textarea class="form-control" rows="2"
+                                                placeholder="Any special requirements..."></textarea>
+                                        </div>
+
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button type="reset" class="btn btn-outline-secondary">
+                                                <i class="fas fa-redo me-1"></i>Reset
+                                            </button>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-save me-1"></i>Allocate Bed
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Demo Info -->
+                            <div class="card mt-4">
+                                <div class="card-body">
+                                    <div class="alert alert-info mb-0">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-info-circle me-2"></i>Form Information
+                                        </h6>
+                                        <p class="mb-0 small">
+                                            This is a static demonstration form. In the real system, this will connect
+                                            to the database.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+        </div>
+
+        <%- include('../partials/footer') %>

@@ -25,10 +25,10 @@
         <!-- Conditional Auth Links -->
         <% if (!user) { %>
           <li class="nav-item">
-            <a class="nav-link" href="/login">Login</a>
+            <a class="nav-link" href="/auth/login">Login</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/register">Register</a>
+            <a class="nav-link" href="/auth/register">Register</a>
           </li>
           <% } else { %>
             <li class="nav-item">
@@ -49,10 +49,10 @@
 
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/change-password">Change Password</a>
+              <a class="nav-link" href="/auth/change-password">Change Password</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-danger" href="/logout">Logout</a>
+              <a class="nav-link text-danger" href="/auth/logout">Logout</a>
             </li>
             <% } %>
       </ul>

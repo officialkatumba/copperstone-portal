@@ -1,0 +1,60 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold" style="color: var(--primary-purple)">
+                    Student Affairs Dashboard
+                </h2>
+                <p class="text-muted">
+                    Manage student accommodations and records
+                </p>
+                <div class="alert alert-warning d-inline-block">
+                    <small>
+                        <i class="fas fa-flask me-1"></i>
+                        <strong>TEST MODE:</strong> Using temporary role: <code>StudentAffairs</code>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Two Main Cards -->
+            <div class="row">
+                <!-- Card 1: Allocate Bed Space -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm border-success h-100">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="fas fa-bed fa-4x text-success"></i>
+                            </div>
+                            <h4 class="card-title text-success">Allocate Bed Space</h4>
+                            <p class="card-text text-muted mb-4">
+                                Assign hostel rooms and beds to students
+                            </p>
+                            <a href="/student-affairs/allocate-bed" class="btn btn-success btn-lg">
+                                <i class="fas fa-arrow-right me-2"></i>Go to Form
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: View All Students -->
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm border-primary h-100">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="fas fa-users fa-4x text-primary"></i>
+                            </div>
+                            <h4 class="card-title text-primary">View All Students</h4>
+                            <p class="card-text text-muted mb-4">
+                                Browse and manage student records
+                            </p>
+                            <a href="/student-affairs/view-students" class="btn btn-primary btn-lg">
+                                <i class="fas fa-arrow-right me-2"></i>View Students
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/footer') %>

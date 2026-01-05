@@ -1,87 +1,187 @@
+// // backend/routes/dashboardRoutes.js
+
 // const express = require("express");
 // const router = express.Router();
-// const User = require("../models/User"); // ✅ add this line
-
-// // Middleware to protect routes
-// function ensureAuthenticated(req, res, next) {
-//   if (req.isAuthenticated()) return next();
-//   req.flash("error", "Please log in to access this page.");
-//   res.redirect("/login");
-// }
-
-// // Student Dashboard
-
-// // const User = require("../models/User");
+// const User = require("../models/User");
 // const { generateSignedUrl } = require("../config/gcsUpload");
-// // const { ensureAuthenticated } = require("../middleware/auth");
 
-// router.get("/dashboard/student", ensureAuthenticated, async (req, res) => {
-//   try {
-//     // Load fresh user document with all relations
-//     const dbUser = await User.findById(req.user._id)
-//       .populate("appliedCourses.firstChoice")
-//       .populate("appliedCourses.secondChoice")
-//       .populate("approvedCourses.programme")
-//       .lean(); // lean for faster rendering
+// // ✅ USE AUTH MIDDLEWARE (DO NOT REDEFINE)
+// const { ensureAuthenticated, ensureRole } = require("../middleware/auth");
 
-//     // Default: no image
-//     let profilePicUrl = null;
+// // ================= STUDENT DASHBOARD =================
+// router.get(
+//   "/dashboard/student",
+//   ensureAuthenticated,
+//   ensureRole("Student"),
+//   async (req, res) => {
+//     try {
+//       const dbUser = await User.findById(req.user._id)
+//         .populate("appliedCourses.firstChoice")
+//         .populate("appliedCourses.secondChoice")
+//         .populate("approvedCourses.programme")
+//         .lean();
 
-//     // Generate signed URL if picture exists
-//     if (dbUser?.studentProfile?.profilePicture?.gcsPath) {
-//       profilePicUrl = await generateSignedUrl(
-//         dbUser.studentProfile.profilePicture.gcsPath
-//       );
+//       let profilePicUrl = null;
+//       if (dbUser?.studentProfile?.profilePicture?.gcsPath) {
+//         profilePicUrl = await generateSignedUrl(
+//           dbUser.studentProfile.profilePicture.gcsPath
+//         );
+//       }
+
+//       res.render("dashboard/student", {
+//         title: "Student Dashboard",
+//         user: dbUser,
+//         profilePicUrl,
+//       });
+//     } catch (err) {
+//       console.error("Dashboard load error:", err);
+//       req.flash("error_msg", "Failed to load dashboard.");
+//       res.redirect("/auth/login");
 //     }
+//   }
+// );
 
-//     // Render dashboard with signed URL
-//     res.render("dashboard/student", {
-//       title: "Student Dashboard",
-//       user: dbUser,
-//       profilePicUrl,
+// // ================= ADMIN DASHBOARD =================
+// router.get(
+//   "/dashboard/admin",
+//   ensureAuthenticated,
+//   ensureRole("Admin"),
+//   (req, res) => {
+//     res.render("dashboard/admin", { user: req.user });
+//   }
+// );
+
+// // ================= ADMISSIONS DASHBOARD =================
+// router.get(
+//   "/dashboard/admissions",
+//   ensureAuthenticated,
+//   ensureRole("AdmissionsOfficer"),
+//   (req, res) => {
+//     res.render("dashboard/admissions", {
+//       title: "Admissions Dashboard",
+//       user: req.user,
 //     });
-//   } catch (err) {
-//     console.error("Dashboard load error:", err);
-//     req.flash("error_msg", "Failed to load dashboard.");
-//     res.redirect("/login");
 //   }
-// });
+// );
 
-// // Admin Dashboard
-// router.get("/dashboard/admin", ensureAuthenticated, (req, res) => {
-//   res.render("dashboard/admin", { user: req.user });
-// });
-
-// // Admissions Officer Dashboard
-// router.get("/dashboard/admissions", ensureAuthenticated, (req, res) => {
-//   res.render("dashboard/admissions", {
-//     title: "Admissions Dashboard",
-//     user: req.user,
-//   });
-// });
-
-// // Dean Dashboard
-// router.get("/dashboard/dean", ensureAuthenticated, (req, res) => {
-//   if (req.user.role !== "Dean") {
-//     req.flash("error_msg", "Access denied.");
-//     return res.redirect("/login");
+// // ================= DEAN DASHBOARD =================
+// router.get(
+//   "/dashboard/dean",
+//   ensureAuthenticated,
+//   ensureRole("Dean"),
+//   (req, res) => {
+//     res.render("dashboard/dean", {
+//       title: "Dean Dashboard",
+//       user: req.user,
+//     });
 //   }
+// );
 
-//   res.render("dashboard/dean", {
-//     title: "Dean Dashboard",
-//     user: req.user,
-//   });
-// });
+// // ================= FINANCE DASHBOARD =================
+// router.get(
+//   "/dashboard/finance",
+//   ensureAuthenticated,
+//   ensureRole("FinanceOfficer"),
+//   (req, res) => {
+//     res.render("dashboard/finance", {
+//       title: "Finance Dashboard",
+//       user: req.user,
+//     });
+//   }
+// );
 
-// // Finance Officer Dashboard
-// router.get("/dashboard/finance", ensureAuthenticated, (req, res) => {
-//   res.render("dashboard/finance", {
-//     title: "Finance Dashboard",
-//     user: req.user,
-//   });
-// });
+// // ================= DEAN OF STUDENTS DASHBOARD =================
+// router.get(
+//   "/dashboard/dean-of-students",
+//   ensureAuthenticated,
+//   ensureRole("DeanOfStudents"),
+//   (req, res) => {
+//     console.log("LOGGED IN ROLE =", req.user.role);
+//     res.render("dashboard/dean-of-students", {
+//       title: "Dean of Students Dashboard",
+//       user: req.user,
+//     });
+//   }
+// );
 
-// // VC Dashboard
+// // ================= REGISTRAR DASHBOARD =================
+// router.get(
+//   "/dashboard/registrar",
+//   ensureAuthenticated,
+//   ensureRole("Registrar"),
+//   async (req, res) => {
+//     try {
+//       const totalStudents = await User.countDocuments({ role: "Student" });
+//       const activeStudents = await User.countDocuments({
+//         role: "Student",
+//         "studentProfile.registrationStatus": "Registered",
+//       });
+
+//       const Application = require("../models/Application");
+
+//       const pendingApplications = await Application.countDocuments({
+//         status: { $in: ["Pending", "Under Review"] },
+//       });
+
+//       const approvedApplications = await Application.countDocuments({
+//         status: "Approved",
+//       });
+
+//       const certificateStudents = await User.countDocuments({
+//         role: "Student",
+//         level: "Certificate",
+//       });
+
+//       const diplomaStudents = await User.countDocuments({
+//         role: "Student",
+//         level: "Diploma",
+//       });
+
+//       const bachelorStudents = await User.countDocuments({
+//         role: "Student",
+//         level: "Bachelor",
+//       });
+
+//       const mastersStudents = await User.countDocuments({
+//         role: "Student",
+//         level: "Masters",
+//       });
+
+//       res.render("dashboard/registrar", {
+//         title: "Registrar Dashboard - Copperstone University",
+//         user: req.user,
+//         stats: {
+//           totalStudents,
+//           activeStudents,
+//           pendingApplications,
+//           approvedApplications,
+//           certificateStudents,
+//           diplomaStudents,
+//           bachelorStudents,
+//           mastersStudents,
+//           totalProgrammes:
+//             certificateStudents +
+//             diplomaStudents +
+//             bachelorStudents +
+//             mastersStudents,
+//           newApplications: Math.floor(pendingApplications * 0.3),
+//           toReview: Math.floor(pendingApplications * 0.5),
+//           pendingGraduations: 45,
+//           graduationToApprove: 12,
+//           totalCourses: 156,
+//           activeCourses: 120,
+//         },
+//       });
+//     } catch (err) {
+//       console.error("Registrar Dashboard error:", err);
+//       req.flash("error_msg", "Failed to load Registrar dashboard");
+//       res.redirect("/dashboard");
+//     }
+//   }
+// );
+
+// // ================= VC DASHBOARD =================
+
 // router.get("/dashboard/vc", ensureAuthenticated, async (req, res) => {
 //   if (req.user.role !== "VC") {
 //     req.flash("error_msg", "Access denied. VC privileges required.");
@@ -185,225 +285,146 @@
 
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User"); // ✅ add this line
-
-// Middleware to protect routes
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) return next();
-  req.flash("error", "Please log in to access this page.");
-  res.redirect("/login");
-}
-
-// Student Dashboard
-
-// const User = require("../models/User");
+const User = require("../models/User");
 const { generateSignedUrl } = require("../config/gcsUpload");
-// const { ensureAuthenticated } = require("../middleware/auth");
 
-router.get("/dashboard/student", ensureAuthenticated, async (req, res) => {
-  try {
-    // Load fresh user document with all relations
-    const dbUser = await User.findById(req.user._id)
-      .populate("appliedCourses.firstChoice")
-      .populate("appliedCourses.secondChoice")
-      .populate("approvedCourses.programme")
-      .lean(); // lean for faster rendering
+const { ensureAuthenticated, ensureRole } = require("../middleware/auth");
 
-    // Default: no image
-    let profilePicUrl = null;
+// ================= STUDENT DASHBOARD =================
+router.get(
+  "/student",
+  ensureAuthenticated,
+  ensureRole("Student"),
+  async (req, res) => {
+    try {
+      const dbUser = await User.findById(req.user._id)
+        .populate("appliedCourses.firstChoice")
+        .populate("appliedCourses.secondChoice")
+        .populate("approvedCourses.programme")
+        .lean();
 
-    // Generate signed URL if picture exists
-    if (dbUser?.studentProfile?.profilePicture?.gcsPath) {
-      profilePicUrl = await generateSignedUrl(
-        dbUser.studentProfile.profilePicture.gcsPath
-      );
+      let profilePicUrl = null;
+      if (dbUser?.studentProfile?.profilePicture?.gcsPath) {
+        profilePicUrl = await generateSignedUrl(
+          dbUser.studentProfile.profilePicture.gcsPath
+        );
+      }
+
+      res.render("dashboard/student", {
+        title: "Student Dashboard",
+        user: dbUser,
+        profilePicUrl,
+      });
+    } catch (err) {
+      console.error("Dashboard load error:", err);
+      req.flash("error_msg", "Failed to load dashboard.");
+      res.redirect("/auth/login");
     }
-
-    // Render dashboard with signed URL
-    res.render("dashboard/student", {
-      title: "Student Dashboard",
-      user: dbUser,
-      profilePicUrl,
-    });
-  } catch (err) {
-    console.error("Dashboard load error:", err);
-    req.flash("error_msg", "Failed to load dashboard.");
-    res.redirect("/login");
   }
-});
+);
 
-// Admin Dashboard
-router.get("/dashboard/admin", ensureAuthenticated, (req, res) => {
+// ================= ADMIN DASHBOARD =================
+router.get("/admin", ensureAuthenticated, ensureRole("Admin"), (req, res) => {
   res.render("dashboard/admin", { user: req.user });
 });
 
-// Admissions Officer Dashboard
-router.get("/dashboard/admissions", ensureAuthenticated, (req, res) => {
-  res.render("dashboard/admissions", {
-    title: "Admissions Dashboard",
-    user: req.user,
-  });
-});
-
-// Dean Dashboard
-router.get("/dashboard/dean", ensureAuthenticated, (req, res) => {
-  if (req.user.role !== "Dean") {
-    req.flash("error_msg", "Access denied.");
-    return res.redirect("/login");
+// ================= ADMISSIONS DASHBOARD =================
+router.get(
+  "/admissions",
+  ensureAuthenticated,
+  ensureRole("AdmissionsOfficer"),
+  (req, res) => {
+    res.render("dashboard/admissions", {
+      title: "Admissions Dashboard",
+      user: req.user,
+    });
   }
+);
 
+// ================= DEAN DASHBOARD =================
+router.get("/dean", ensureAuthenticated, ensureRole("Dean"), (req, res) => {
   res.render("dashboard/dean", {
     title: "Dean Dashboard",
     user: req.user,
   });
 });
 
-// Finance Officer Dashboard
-router.get("/dashboard/finance", ensureAuthenticated, (req, res) => {
-  res.render("dashboard/finance", {
-    title: "Finance Dashboard",
-    user: req.user,
-  });
-});
-
-// ============= REGISTRAR DASHBOARD =============
-router.get("/dashboard/registrar", ensureAuthenticated, async (req, res) => {
-  // Check if user is Registrar
-  if (req.user.role !== "Registrar") {
-    req.flash("error_msg", "Access denied. Registrar privileges required.");
-    return res.redirect("/login");
-  }
-
-  try {
-    // Get statistics for Registrar dashboard
-    const totalStudents = await User.countDocuments({ role: "Student" });
-    const activeStudents = await User.countDocuments({
-      role: "Student",
-      "studentProfile.registrationStatus": "Registered",
-    });
-
-    // Count pending applications (you might need to adjust this based on your Application model)
-    // Assuming you have an Application model for student applications
-    const Application = require("../models/Application");
-    const pendingApplications = await Application.countDocuments({
-      status: { $in: ["Pending", "Under Review"] },
-    });
-
-    const approvedApplications = await Application.countDocuments({
-      status: "Approved",
-    });
-
-    // Count students by level
-    const certificateStudents = await User.countDocuments({
-      role: "Student",
-      level: "Certificate",
-    });
-
-    const diplomaStudents = await User.countDocuments({
-      role: "Student",
-      level: "Diploma",
-    });
-
-    const bachelorStudents = await User.countDocuments({
-      role: "Student",
-      level: "Bachelor",
-    });
-
-    const mastersStudents = await User.countDocuments({
-      role: "Student",
-      level: "Masters",
-    });
-
-    // Sample inbox for Registrar (you can populate with real data)
-    const inbox = [
-      {
-        from: "Admissions Office",
-        subject: "New Applications for Review",
-        date: new Date(),
-        priority: "High",
-      },
-      {
-        from: "Academic Affairs",
-        subject: "Academic Calendar Approval",
-        date: new Date(),
-        priority: "Medium",
-      },
-      {
-        from: "Student Records",
-        subject: "Graduation List Verification",
-        date: new Date(),
-        priority: "High",
-      },
-    ];
-
-    // Sample recent activities
-    const activities = [
-      {
-        type: "approval",
-        icon: "check-circle",
-        description: "Approved 15 student registrations",
-        time: "3 hours ago",
-      },
-      {
-        type: "info",
-        icon: "file-signature",
-        description: "Updated academic policies",
-        time: "1 day ago",
-      },
-      {
-        type: "review",
-        icon: "eye",
-        description: "Reviewed 25 new applications",
-        time: "2 days ago",
-      },
-    ];
-
-    res.render("dashboard/registrar", {
-      title: "Registrar Dashboard - Copperstone University",
+// ================= FINANCE DASHBOARD =================
+router.get(
+  "/finance",
+  ensureAuthenticated,
+  ensureRole("FinanceOfficer"),
+  (req, res) => {
+    res.render("dashboard/finance", {
+      title: "Finance Dashboard",
       user: req.user,
-      stats: {
-        totalStudents,
-        activeStudents,
-        pendingApplications,
-        approvedApplications,
-        certificateStudents,
-        diplomaStudents,
-        bachelorStudents,
-        mastersStudents,
-        totalProgrammes:
-          certificateStudents +
-          diplomaStudents +
-          bachelorStudents +
-          mastersStudents,
-        newApplications: Math.floor(pendingApplications * 0.3), // Example: 30% of pending are new
-        toReview: Math.floor(pendingApplications * 0.5), // Example: 50% need review
-        pendingGraduations: 45, // Example number
-        graduationToApprove: 12, // Example number
-        totalCourses: 156, // Example number
-        activeCourses: 120, // Example number
-      },
-      inbox,
-      activities,
     });
-  } catch (err) {
-    console.error("Registrar Dashboard error:", err);
-    req.flash("error_msg", "Failed to load Registrar dashboard");
-    res.redirect("/dashboard");
   }
-});
+);
 
-// VC Dashboard
-router.get("/dashboard/vc", ensureAuthenticated, async (req, res) => {
+// ================= DEAN OF STUDENTS =================
+router.get(
+  "/dean-of-students",
+  ensureAuthenticated,
+  ensureRole("DeanOfStudents"),
+  (req, res) => {
+    res.render("dashboard/dean-of-students", {
+      title: "Dean of Students Dashboard",
+      user: req.user,
+    });
+  }
+);
+
+// ================= REGISTRAR DASHBOARD =================
+router.get(
+  "/registrar",
+  ensureAuthenticated,
+  ensureRole("Registrar"),
+  async (req, res) => {
+    try {
+      const totalStudents = await User.countDocuments({ role: "Student" });
+      const activeStudents = await User.countDocuments({
+        role: "Student",
+        "studentProfile.registrationStatus": "Registered",
+      });
+
+      res.render("dashboard/registrar", {
+        title: "Registrar Dashboard",
+        user: req.user,
+        stats: { totalStudents, activeStudents },
+      });
+    } catch (err) {
+      console.error("Registrar Dashboard error:", err);
+      req.flash("error_msg", "Failed to load Registrar dashboard");
+      res.redirect("/dashboard/registrar");
+    }
+  }
+);
+
+// ================= VC DASHBOARD =================
+// router.get("/vc", ensureAuthenticated, async (req, res) => {
+//   if (req.user.role !== "VC") {
+//     req.flash("error_msg", "Access denied. VC privileges required.");
+//     return res.redirect("/auth/login");
+//   }
+
+//   res.render("dashboard/vc", {
+//     title: "Vice-Chancellor Dashboard",
+//     user: req.user,
+//   });
+// });
+
+// ================= VC DASHBOARD =================
+
+router.get("/vc", ensureAuthenticated, async (req, res) => {
   if (req.user.role !== "VC") {
     req.flash("error_msg", "Access denied. VC privileges required.");
-    return res.redirect("/login");
+    return res.redirect("/auth/login"); // fixed auth namespace
   }
 
   try {
-    // Get statistics for VC dashboard
     const User = require("../models/User");
 
-    // Get counts
     const totalStudents = await User.countDocuments({ role: "Student" });
     const activeStudents = await User.countDocuments({
       role: "Student",
@@ -421,7 +442,6 @@ router.get("/dashboard/vc", ensureAuthenticated, async (req, res) => {
     const totalHODs = await User.countDocuments({ role: "HOD" });
     const totalDVCs = await User.countDocuments({ role: "DVC" });
 
-    // Sample data for inbox and activities (you would fetch these from actual models)
     const inbox = [
       {
         from: "University Registrar",
@@ -491,5 +511,7 @@ router.get("/dashboard/vc", ensureAuthenticated, async (req, res) => {
     res.redirect("/dashboard");
   }
 });
+
+// router.get("/dashboard/lecturer", lecturerController.showLecturerDashboard);
 
 module.exports = router;

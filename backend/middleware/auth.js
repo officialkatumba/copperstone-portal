@@ -8,7 +8,7 @@ const ensureAuthenticated = (req, res, next) => {
     return next();
   }
   req.flash("error", "Please log in to access this page");
-  res.redirect("/login");
+  return res.redirect("auth/login");
 };
 
 /**
@@ -36,6 +36,8 @@ const ensureNotAuthenticated = (req, res, next) => {
       return res.redirect("/dashboard/vc");
     case "Dean":
       return res.redirect("/dashboard/dean");
+    case "DeanOfStudents":
+      return res.redirect("/dashboard/dean-of-students");
     default:
       return res.redirect("/dashboard");
   }
@@ -48,13 +50,12 @@ const ensureRole = (...roles) => {
   return (req, res, next) => {
     if (!req.isAuthenticated()) {
       req.flash("error", "Please log in to access this page");
-      return res.redirect("/login");
+      return res.redirect("auth/login");
     }
 
     if (!roles.includes(req.user.role)) {
       req.flash("error", "You do not have permission to access this page");
 
-      // Redirect based on actual role
       switch (req.user.role) {
         case "Student":
           return res.redirect("/dashboard/student");
@@ -72,11 +73,14 @@ const ensureRole = (...roles) => {
           return res.redirect("/dashboard/vc");
         case "Dean":
           return res.redirect("/dashboard/dean");
+        case "DeanOfStudents":
+          return res.redirect("/dashboard/dean-of-students");
         default:
           return res.redirect("/dashboard");
       }
     }
-    next();
+
+    return next();
   };
 };
 
@@ -89,7 +93,7 @@ const setUserLocals = (req, res, next) => {
   next();
 };
 
-// Role-specific helpers (using ensureRole)
+// Role-specific helpers (optional, still valid)
 const ensureStudent = ensureRole("Student");
 const ensureLecturer = ensureRole("Lecturer");
 const ensureFinanceOfficer = ensureRole("FinanceOfficer");
@@ -106,7 +110,9 @@ const ensureAdmin = ensureRole(
   "VC",
   "Dean"
 );
+
 const ensureAcademicStaff = ensureRole("Lecturer", "Dean", "Registrar", "VC");
+
 const ensureAdministrativeStaff = ensureRole(
   "Admin",
   "AdmissionsOfficer",
@@ -141,7 +147,7 @@ const ensureAdmissionApproved = (req, res, next) => {
   next();
 };
 
-// ✅ SINGLE EXPORT - No duplicates
+// ✅ SINGLE EXPORT
 module.exports = {
   ensureAuthenticated,
   ensureNotAuthenticated,
@@ -152,7 +158,7 @@ module.exports = {
   ensureAdmin,
   ensureDean,
   ensureVC,
-  ensureRegistrar, // Use this for Registrar routes
+  ensureRegistrar,
   ensureAdmissionsOfficer,
   ensureFinanceOfficer,
   ensureAcademicStaff,

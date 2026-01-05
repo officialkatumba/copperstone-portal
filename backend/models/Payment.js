@@ -228,7 +228,16 @@ const paymentSchema = new mongoose.Schema(
     // ==========================
     status: {
       type: String,
-      enum: ["Pending", "Verified", "Rejected"],
+      // enum: ["Pending", "Verified", "Rejected"],
+      enum: [
+        "Pending",
+        "Verified",
+        "Partially Paid",
+        "Fully Paid",
+        "Cancelled",
+        "Rejected",
+      ],
+
       default: "Pending",
     },
 

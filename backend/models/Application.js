@@ -278,6 +278,101 @@
 // module.exports = mongoose.model("Application", applicationSchema);
 
 // backend/models/Application.js
+// const mongoose = require("mongoose");
+
+// const applicationSchema = new mongoose.Schema(
+//   {
+//     applicant: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//       required: true,
+//     },
+
+//     applicantEmail: {
+//       type: String,
+//       required: false,
+//     },
+
+//     // ✅ Programme Choices
+//     firstChoice: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Programme",
+//       required: true,
+//     },
+//     secondChoice: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Programme",
+//     },
+
+//     // ✅ Supporting Documents
+//     documents: [
+//       {
+//         name: String,
+//         gcsUrl: String,
+//         gcsPath: String,
+//       },
+//     ],
+
+//     // ✅ Acceptance Letter (same structure as documents)
+//     acceptanceLetter: {
+//       name: { type: String, default: "Official Acceptance Letter" },
+//       gcsUrl: String,
+//       gcsPath: String,
+//       uploadedAt: Date,
+//     },
+
+//     receipt: {
+//       name: { type: String, default: "Official Payment Receipt" },
+//       gcsUrl: String,
+//       gcsPath: String,
+//       issuedAt: Date,
+//     },
+
+//     // ✅ Payment Info (attached during application)
+//     payment: {
+//       amount: { type: Number },
+//       method: {
+//         type: String,
+//         enum: ["Manual", "Electronic"],
+//         default: "Manual",
+//       },
+//       sponsorship: {
+//         type: String,
+//         enum: ["Self Sponsored", "CDF Sponsored"],
+//         default: "Self Sponsored",
+//       },
+
+//       reference: { type: String },
+//       proofUrl: { type: String },
+//       paidAt: Date,
+//       status: {
+//         type: String,
+//         enum: ["Pending", "Verified", "Rejected"],
+//         default: "Pending",
+//       },
+//       remarks: String,
+//       verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+//       verifiedAt: Date,
+//       invoice: { type: mongoose.Schema.Types.ObjectId, ref: "Invoice" },
+//     },
+
+//     // ✅ Application progress (Admissions)
+//     status: {
+//       type: String,
+//       enum: ["Pending", "Under Review", "Approved", "Rejected"],
+//       default: "Pending",
+//     },
+//     remarks: String,
+
+//     submittedAt: { type: Date, default: Date.now },
+//     reviewedAt: Date,
+//   },
+//   { timestamps: true }
+// );
+
+// module.exports = mongoose.model("Application", applicationSchema);
+
+// backend/models/Application.js
 const mongoose = require("mongoose");
 
 const applicationSchema = new mongoose.Schema(
@@ -304,6 +399,12 @@ const applicationSchema = new mongoose.Schema(
       ref: "Programme",
     },
 
+    // ✅ Payment Reference (instead of embedded payment)
+    payment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
+    },
+
     // ✅ Supporting Documents
     documents: [
       {
@@ -313,7 +414,7 @@ const applicationSchema = new mongoose.Schema(
       },
     ],
 
-    // ✅ Acceptance Letter (same structure as documents)
+    // ✅ Acceptance Letter
     acceptanceLetter: {
       name: { type: String, default: "Official Acceptance Letter" },
       gcsUrl: String,
@@ -321,42 +422,7 @@ const applicationSchema = new mongoose.Schema(
       uploadedAt: Date,
     },
 
-    receipt: {
-      name: { type: String, default: "Official Payment Receipt" },
-      gcsUrl: String,
-      gcsPath: String,
-      issuedAt: Date,
-    },
-
-    // ✅ Payment Info (attached during application)
-    payment: {
-      amount: { type: Number },
-      method: {
-        type: String,
-        enum: ["Manual", "Electronic"],
-        default: "Manual",
-      },
-      sponsorship: {
-        type: String,
-        enum: ["Self Sponsored", "CDF Sponsored"],
-        default: "Self Sponsored",
-      },
-
-      reference: { type: String },
-      proofUrl: { type: String },
-      paidAt: Date,
-      status: {
-        type: String,
-        enum: ["Pending", "Verified", "Rejected"],
-        default: "Pending",
-      },
-      remarks: String,
-      verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      verifiedAt: Date,
-      invoice: { type: mongoose.Schema.Types.ObjectId, ref: "Invoice" },
-    },
-
-    // ✅ Application progress (Admissions)
+    // ✅ Application progress
     status: {
       type: String,
       enum: ["Pending", "Under Review", "Approved", "Rejected"],

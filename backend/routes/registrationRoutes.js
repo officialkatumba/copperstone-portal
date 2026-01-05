@@ -14,7 +14,7 @@ const upload = multer({ dest: "uploads/" });
 function ensureApprovedStudent(req, res, next) {
   if (!req.isAuthenticated() || req.user.role !== "Student") {
     req.flash("error_msg", "Access denied.");
-    return res.redirect("/login");
+    return res.redirect("auth/login");
   }
 
   if (req.user.studentProfile?.admissionStatus !== "Approved") {

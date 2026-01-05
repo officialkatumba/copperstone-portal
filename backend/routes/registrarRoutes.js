@@ -82,11 +82,56 @@
 
 // module.exports = router;
 
+// const express = require("express");
+// const router = express.Router();
+// const { ensureRegistrar } = require("../middleware/auth");
+// const Programme = require("../models/Programme");
+
+// const {
+//   getCreateGroup,
+//   createGroup,
+//   listGroups,
+//   viewGroup,
+//   updateGroup,
+//   addStudentToGroup,
+//   removeStudentFromGroup,
+//   changeGroupStatus,
+//   deleteGroup,
+// } = require("../controllers/registrarController");
+
+// // 🔐 Protect all registrar routes
+// // router.use(ensureRegistrar);
+
+// router.use((req, res, next) => {
+//   console.log("AUTH CHECK:", {
+//     isAuth: req.isAuthenticated(),
+//     user: req.user?.role,
+//   });
+//   next();
+// });
+
+// // Group Management
+// router.get("/groups/create", getCreateGroup);
+// router.post("/groups/create", createGroup);
+// router.get("/groups", listGroups);
+// router.get("/groups/:id", viewGroup);
+// router.post("/groups/:id/update", updateGroup);
+// router.post("/groups/:id/add-student", addStudentToGroup);
+// router.post("/groups/:id/remove-student/:studentId", removeStudentFromGroup);
+// router.post("/groups/:id/status", changeGroupStatus);
+// router.post("/groups/:id/delete", deleteGroup);
+
+// module.exports = router;
+
+console.log("📌 registrarRoutes loaded");
+
 const express = require("express");
 const router = express.Router();
-const { ensureRegistrar } = require("../middleware/auth");
-const Programme = require("../models/Programme");
 
+// 🔐 Auth middleware
+const { ensureRegistrar } = require("../middleware/auth");
+
+// 🎯 Registrar controller
 const {
   getCreateGroup,
   createGroup,
@@ -99,26 +144,33 @@ const {
   deleteGroup,
 } = require("../controllers/registrarController");
 
-// 🔐 Protect all registrar routes
-// router.use(ensureRegistrar);
+// 🔐 Protect ALL registrar routes
 
-router.use((req, res, next) => {
-  console.log("AUTH CHECK:", {
-    isAuth: req.isAuthenticated(),
-    user: req.user?.role,
-  });
-  next();
-});
+// ===============================
+// 📚 Academic Groups
+// ===============================
 
-// Group Management
+// Create group
 router.get("/groups/create", getCreateGroup);
 router.post("/groups/create", createGroup);
+
+// List all groups
 router.get("/groups", listGroups);
+
+// View single group
 router.get("/groups/:id", viewGroup);
+
+// Update group
 router.post("/groups/:id/update", updateGroup);
+
+// Manage students in group
 router.post("/groups/:id/add-student", addStudentToGroup);
 router.post("/groups/:id/remove-student/:studentId", removeStudentFromGroup);
+
+// Change group status (active / inactive)
 router.post("/groups/:id/status", changeGroupStatus);
+
+// Delete group
 router.post("/groups/:id/delete", deleteGroup);
 
 module.exports = router;

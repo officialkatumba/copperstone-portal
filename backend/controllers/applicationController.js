@@ -3,6 +3,11 @@ const Programme = require("../models/Programme");
 const Application = require("../models/Application");
 const { uploadToGCS } = require("../config/gcsUpload");
 const User = require("../models/User");
+// Add this with your other imports at the top:
+const Payment = require("../models/Payment");
+const { sendEmail } = require("../utils/mailer");
+
+const { generateSignedUrl } = require("../config/gcsUpload");
 
 /**
  * Render the application form
@@ -24,7 +29,7 @@ exports.showApplicationForm = async (req, res) => {
 
 /**
  * Handle application submission
-//  */
+ */
 
 exports.submitApplication = async (req, res) => {
   try {
@@ -35,6 +40,7 @@ exports.submitApplication = async (req, res) => {
       paymentAmount,
       paymentDescription,
     } = req.body;
+
     // Default paymentAmount → 0
     const amountToSave = paymentAmount ? parseFloat(paymentAmount) : 0;
     const applicationYear = new Date().getFullYear();
@@ -64,47 +70,131 @@ exports.submitApplication = async (req, res) => {
       });
     }
 
-    await Application.create({
+    // ✅ 1. FIRST create the application WITHOUT payment
+    const application = await Application.create({
       applicant: req.user._id,
       firstChoice,
       secondChoice: secondChoice || null,
       documents: gcsDocs,
-      payment: {
-        amount: amountToSave,
-        description: paymentDescription || "Application Fee",
-        method: paymentMethod,
-        status: "Pending",
-      },
+      // NO payment field here - it will be added after creating Payment record
     });
+
+    // ✅ 2. CREATE PAYMENT RECORD if amount > 0
+    if (amountToSave > 0) {
+      const payment = await Payment.create({
+        student: req.user._id,
+        application: application._id, // Link to application
+        programme: firstChoice,
+        category: "Application Fee",
+        description: paymentDescription || "Application Fee",
+        amount: amountToSave,
+        totalDue: amountToSave, // For application fee, total = amount
+        balanceAfterPayment: 0, // Application fee is paid in full
+        method: paymentMethod,
+        currency: "ZMW",
+        reference: `APP-${Date.now().toString().slice(-8)}`,
+        status: "Pending", // Student payments need verification
+        remarks: "Submitted with application - pending verification",
+        // Use first document as proof if exists
+        proofOfPayment:
+          gcsDocs.length > 0
+            ? {
+                gcsUrl: gcsDocs[0].gcsUrl,
+                gcsPath: gcsDocs[0].gcsPath,
+                uploadedAt: new Date(),
+                name: gcsDocs[0].name,
+              }
+            : undefined,
+      });
+
+      // ✅ 3. LINK PAYMENT TO APPLICATION
+      application.payment = payment._id;
+      await application.save();
+    }
+
+    // ✅ Send confirmation email
+    if (req.user.email) {
+      await sendEmail({
+        to: req.user.email,
+        subject: "📄 Application Submitted Successfully",
+        html: `
+          <p>Dear ${req.user.firstName},</p>
+          <p>Your application has been <strong>submitted successfully</strong>.</p>
+          <p><strong>Application ID:</strong> ${application._id}</p>
+          <p><strong>Programme:</strong> ${programme.name}</p>
+          ${
+            amountToSave > 0
+              ? `<p><strong>Application Fee:</strong> ZMW ${amountToSave.toFixed(
+                  2
+                )} (Pending Verification)</p>`
+              : ""
+          }
+          <p><strong>Status:</strong> Under Review</p>
+          <p>Regards,<br/>Admissions Office</p>
+        `,
+      });
+    }
 
     req.flash("success_msg", "Application submitted successfully!");
     res.redirect("/dashboard/student");
   } catch (err) {
     console.error("Application Error:", err);
     req.flash("error_msg", "Failed to submit application.");
-    // res.redirect("back");
     res.redirect("/applications/apply");
   }
 };
-// view my aplplications
+// // view my applications
 
-const { generateSignedUrl } = require("../config/gcsUpload");
+// exports.getMyApplications = async (req, res) => {
+//   try {
+//     let applications = await Application.find({ applicant: req.user._id })
+//       .populate("firstChoice")
+//       .populate("secondChoice")
+//       .sort({ createdAt: -1 })
+//       .lean();
 
+//     for (const app of applications) {
+//       for (const doc of app.documents) {
+//         if (doc.gcsPath) {
+//           // ✅ New secure way
+//           doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+//         } else if (doc.gcsUrl) {
+//           // fallback for old records
+//           doc.signedUrl = doc.gcsUrl;
+//         }
+//       }
+//     }
+
+//     res.render("applications/myApplications", {
+//       title: "My Applications",
+//       applications,
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("Error loading applications:", err);
+//     req.flash("error_msg", "Failed to load your applications.");
+//     res.redirect("/dashboard/student");
+//   }
+// };
+
+// view my applications
 exports.getMyApplications = async (req, res) => {
   try {
-    let applications = await Application.find({ applicant: req.user._id })
+    let applications = await Application.find({
+      applicant: req.user._id,
+    })
       .populate("firstChoice")
       .populate("secondChoice")
+      .populate("payment") // ✅ THIS IS THE FIX
       .sort({ createdAt: -1 })
       .lean();
 
+    // Sign document URLs
     for (const app of applications) {
       for (const doc of app.documents) {
         if (doc.gcsPath) {
-          // ✅ New secure way
           doc.signedUrl = await generateSignedUrl(doc.gcsPath);
         } else if (doc.gcsUrl) {
-          // fallback for old records
           doc.signedUrl = doc.gcsUrl;
         }
       }
@@ -163,21 +253,71 @@ exports.viewAcceptanceLetter = async (req, res) => {
 
 exports.viewApplicationDetails = async (req, res) => {
   try {
-    const application = await Application.findById(req.params.id)
+    const { id } = req.params;
+
+    // ✅ Keep this validation but fix the redirect
+    if (id === "apply" || id === "my" || id === "new") {
+      if (id === "apply") {
+        return res.redirect("/programs/apply"); // Correct path
+      } else if (id === "my") {
+        return res.redirect("/dashboard/student"); // Correct path
+      }
+      return res.redirect("/dashboard/student");
+    }
+
+    const mongoose = require("mongoose");
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      req.flash("error_msg", "Invalid application ID");
+      return res.redirect("/dashboard/student"); // Keep this consistent
+    }
+
+    // ✅ Populate payment (new model) but keep it optional
+    const application = await Application.findById(id)
       .populate("firstChoice")
       .populate("secondChoice")
+      .populate({
+        path: "payment",
+        select: "status receipt amount method", // Only select needed fields
+      })
       .lean();
 
     if (!application) {
       req.flash("error_msg", "Application not found");
-      return res.redirect("/applications");
+      return res.redirect("/dashboard/student"); // Consistent redirect
     }
 
-    // Attach signed URLs for documents
+    console.log("DEBUG - Application loaded:", {
+      id: application._id,
+      hasPayment: !!application.payment,
+      paymentStatus: application.payment?.status,
+    });
+
+    // ✅ Generate signed URLs for documents (keep this from old version)
     for (const doc of application.documents) {
       if (doc.gcsPath) {
-        doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+        try {
+          doc.signedUrl = await generateSignedUrl(doc.gcsPath);
+        } catch (error) {
+          console.error("Error generating signed URL:", error);
+          doc.signedUrl = doc.gcsUrl || "#";
+        }
+      } else {
+        doc.signedUrl = doc.gcsUrl || "#";
       }
+    }
+
+    // ✅ Handle BOTH old and new receipt structures
+    // Old: application.receipt directly
+    // New: application.payment.receipt
+    if (!application.receipt && application.payment?.receipt) {
+      application.receipt = application.payment.receipt;
+    }
+
+    // ✅ Set payment status for template
+    if (application.payment) {
+      application.paymentStatus = application.payment.status;
+      application.paymentAmount = application.payment.amount;
+      application.paymentMethod = application.payment.method;
     }
 
     res.render("applications/applicationDetails", {
@@ -186,96 +326,51 @@ exports.viewApplicationDetails = async (req, res) => {
       user: req.user,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error loading application details:", err);
     req.flash("error_msg", "Failed to load application details");
-    res.redirect("/applications");
+    res.redirect("/dashboard/student"); // Consistent redirect
   }
 };
 
 // veiw/download my receipt
 
+// exports.viewReceipt = async (req, res) => {
+//   const app = await Application.findById(req.params.id);
+
+//   if (!app?.receipt?.gcsPath) {
+//     req.flash("error_msg", "Receipt not available.");
+//     return res.redirect("back");
+//   }
+
+//   const signedUrl = await generateSignedUrl(app.receipt.gcsPath);
+//   return res.redirect(signedUrl);
+// };
+
+// controllers/applicationController.js
 exports.viewReceipt = async (req, res) => {
-  const app = await Application.findById(req.params.id);
+  try {
+    const application = await Application.findById(req.params.id)
+      .populate("payment")
+      .lean();
 
-  if (!app?.receipt?.gcsPath) {
-    req.flash("error_msg", "Receipt not available.");
-    return res.redirect("back");
+    if (!application?.payment?.receipt?.gcsPath) {
+      req.flash("error_msg", "Receipt not available.");
+      return res.redirect("/applications/my");
+    }
+
+    const signedUrl = await generateSignedUrl(
+      application.payment.receipt.gcsPath
+    );
+
+    return res.redirect(signedUrl);
+  } catch (err) {
+    console.error("Receipt error:", err);
+    req.flash("error_msg", "Failed to load receipt.");
+    res.redirect("/applications/my");
   }
-
-  const signedUrl = await generateSignedUrl(app.receipt.gcsPath);
-  return res.redirect(signedUrl);
 };
 
-// // controllers/applicationController.js
-// exports.viewMyCourses = async (req, res) => {
-//   try {
-//     // Get student with assigned courses populated
-//     const student = await User.findById(req.user._id)
-//       .populate({
-//         path: "assignedCourses.course",
-//         model: "Course",
-//         select: "code name credits description",
-//       })
-//       .populate("programme", "name code")
-//       .lean();
-
-//     if (!student) {
-//       req.flash("error_msg", "Student not found.");
-//       return res.redirect("/dashboard/student");
-//     }
-
-//     // Separate courses by semester
-//     const coursesBySemester = {};
-//     const allSemesters = [];
-
-//     student.assignedCourses.forEach((assignment) => {
-//       const semester = assignment.semester;
-//       if (!coursesBySemester[semester]) {
-//         coursesBySemester[semester] = [];
-//         allSemesters.push(semester);
-//       }
-
-//       // Add course with assignment details
-//       coursesBySemester[semester].push({
-//         course: assignment.course,
-//         assignmentId: assignment._id,
-//         semester: assignment.semester,
-//         startDate: assignment.startDate,
-//         endDate: assignment.endDate,
-//         status: assignment.status,
-//         grade: assignment.grade,
-//         creditsEarned: assignment.creditsEarned,
-//         assignedAt: assignment.assignedAt,
-//       });
-//     });
-
-//     // Sort semesters
-//     allSemesters.sort((a, b) => a - b);
-
-//     // Calculate GPA if available
-//     const gpa = student.academicProgress?.cumulativeGPA || 0;
-//     const creditsEarned = student.academicProgress?.totalCreditsEarned || 0;
-//     const creditsAttempted =
-//       student.academicProgress?.totalCreditsAttempted || 0;
-
-//     res.render("students/courses", {
-//       title: "My Courses",
-//       user: student,
-//       coursesBySemester,
-//       allSemesters,
-//       currentSemester: student.currentSemester,
-//       academicStatus: student.academicProgress?.status || "Active",
-//       gpa,
-//       creditsEarned,
-//       creditsAttempted,
-//       programme: student.programme,
-//     });
-//   } catch (error) {
-//     console.error("Error loading student courses:", error);
-//     req.flash("error_msg", "Failed to load your courses.");
-//     res.redirect("/dashboard/student");
-//   }
-// };
+// View my courses and academic record
 
 exports.viewMyCourses = async (req, res) => {
   try {

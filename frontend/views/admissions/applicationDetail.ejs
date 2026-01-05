@@ -64,13 +64,13 @@
                   <% }) %>
               </ul>
             </div>
-            <!-- Receipt -->
+            <!-- Receipt Section - UPDATED for payment reference model -->
             <div class="mb-4">
               <h5 class="fw-bold text-success mb-3">
                 <i class="fas fa-receipt me-2"></i> Receipt
               </h5>
 
-              <% if (application.receipt && application.receipt.gcsPath) { %>
+              <% if (application.payment?.receipt && application.payment.receipt.gcsPath) { %>
                 <div class="alert alert-success d-flex justify-content-between align-items-center">
                   <div>
                     <i class="fas fa-check-circle me-2"></i>
@@ -78,20 +78,27 @@
                     <br />
                     <small class="text-muted">
                       Issued on:
-                      <%= new Date(application.receipt.generatedAt).toLocaleDateString() %>
+                      <%= new Date(application.payment.receipt.issuedAt).toLocaleDateString() %>
                     </small>
                   </div>
 
-                  <a href="/applications/<%= application._id %>/receipt" target="_blank" class="btn btn-success btn-sm">
+                  <!-- UPDATED: Link to payment receipt, not application receipt -->
+                  <a href="/finance/payments/<%= application.payment._id %>/receipt" target="_blank"
+                    class="btn btn-success btn-sm">
                     <i class="fas fa-download me-1"></i> View Receipt
                   </a>
                 </div>
-                <% } else { %>
-                  <div class="alert alert-secondary">
-                    <i class="fas fa-clock me-2"></i>
-                    Receipt not generated yet
+                <% } else if (application.payment?.status==='Verified' ) { %>
+                  <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Payment verified but receipt not generated yet.
                   </div>
-                  <% } %>
+                  <% } else { %>
+                    <div class="alert alert-secondary">
+                      <i class="fas fa-clock me-2"></i>
+                      Payment pending verification
+                    </div>
+                    <% } %>
             </div>
 
 

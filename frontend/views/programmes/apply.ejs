@@ -7,7 +7,12 @@
           Programme Application
         </h3>
 
-        <form action="/programs/apply" method="POST" enctype="multipart/form-data">
+        <form action="/applications/apply" method="POST" enctype="multipart/form-data">
+          <!-- ADD THESE HIDDEN FIELDS -->
+          <input type="hidden" name="source" value="student">
+          <input type="hidden" name="category" value="Application Fee">
+          <input type="hidden" name="totalDue" id="totalDueField" value="0">
+          <input type="hidden" name="balanceAfterPayment" value="0">
 
           <div class="mb-3">
             <label class="form-label fw-semibold">First Choice Programme</label>
@@ -45,11 +50,10 @@
 
           <input type="hidden" name="paymentDescription" value="Application Fee">
 
-
           <div class="mb-3" id="amountGroup">
             <label class="form-label fw-semibold">Amount Paid</label>
             <input type="number" id="paymentAmount" name="paymentAmount" class="form-control" min="0" step="0.01"
-              placeholder="Enter amount paid" required />
+              placeholder="Enter amount paid" required oninput="updateTotalDue()" />
           </div>
 
           <div class="mb-3">
@@ -71,18 +75,29 @@
       const paymentMethod = document.getElementById("paymentMethod");
       const amountGroup = document.getElementById("amountGroup");
       const paymentAmount = document.getElementById("paymentAmount");
+      const totalDueField = document.getElementById("totalDueField");
+
+      // Function to update totalDue hidden field
+      function updateTotalDue() {
+        const amount = parseFloat(paymentAmount.value) || 0;
+        totalDueField.value = amount; // For application fee, total due = amount paid
+      }
 
       paymentMethod.addEventListener("change", function () {
         if (this.value === "CDF Sponsored") {
           amountGroup.style.display = "none";
           paymentAmount.required = false;
-          paymentAmount.value = 0; // auto-default to zero
+          paymentAmount.value = 0;
+          updateTotalDue();
         } else {
           amountGroup.style.display = "block";
           paymentAmount.required = true;
           paymentAmount.value = "";
         }
       });
+
+      // Initialize on page load
+      updateTotalDue();
     </script>
 
     <%- include('../partials/footer') %>

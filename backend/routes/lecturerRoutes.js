@@ -18,29 +18,25 @@ router.use(ensureAuthenticated);
 router.use(ensureLecturer);
 
 // Dashboard
-router.get("/dashboard/lecturer", lecturerController.showLecturerDashboard);
 
 // Courses
-router.get("/lecturer/courses", lecturerController.viewMyCourses);
-router.get("/lecturer/class-list/:courseId", lecturerController.viewClassList);
+router.get("/courses", lecturerController.viewMyCourses);
+router.get("/class-list/:courseId", lecturerController.viewClassList);
 
 // Grade Management
-router.get("/lecturer/grades/upload", lecturerController.showGradeUploadForm);
+router.get("/grades/upload", lecturerController.showGradeUploadForm);
 router.post(
-  "/lecturer/grades/upload",
+  "/grades/upload",
   upload.single("gradeFile"),
   lecturerController.uploadGrades
 );
 
-router.get("/lecturer/grades/manual", lecturerController.showManualGradeEntry);
-router.post(
-  "/lecturer/grades/manual/save",
-  lecturerController.saveManualGrades
-);
+router.get("/grades/manual", lecturerController.showManualGradeEntry);
+router.post("/grades/manual/save", lecturerController.saveManualGrades);
 
-router.get("/lecturer/grades/manage", lecturerController.manageGrades);
-router.post("/lecturer/grades/submit", lecturerController.submitForApproval);
-router.get("/lecturer/grades/approvals", lecturerController.viewGradeApprovals);
-router.delete("/lecturer/grades/:gradeId", lecturerController.deleteGrade);
+router.get("/grades/manage", lecturerController.manageGrades);
+router.post("/grades/submit", lecturerController.submitForApproval);
+router.get("/grades/approvals", lecturerController.viewGradeApprovals);
+router.delete("/grades/:gradeId", lecturerController.deleteGrade);
 
 module.exports = router;

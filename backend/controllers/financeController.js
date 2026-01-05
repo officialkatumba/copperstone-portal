@@ -16,12 +16,35 @@ const { generateReceiptPDF } = require("../utils/receiptPDFGenerator");
 const { uploadFile } = require("../utils/gcs");
 
 // List all applications with payments
+// exports.listFinanceApplications = async (req, res) => {
+//   try {
+//     const applications = await Application.find()
+//       .populate("applicant", "firstName surname email mobile")
+//       .populate("firstChoice", "name code level")
+//       .populate("secondChoice", "name code level")
+//       .sort({ createdAt: -1 })
+//       .lean();
+
+//     res.render("finance/applications", {
+//       title: "Finance - Applications & Payments",
+//       applications,
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("Finance list error:", err);
+//     req.flash("error_msg", "Could not load finance applications.");
+//     res.redirect("/dashboard/finance");
+//   }
+// };
+
+// List all applications with payments
 exports.listFinanceApplications = async (req, res) => {
   try {
     const applications = await Application.find()
       .populate("applicant", "firstName surname email mobile")
       .populate("firstChoice", "name code level")
       .populate("secondChoice", "name code level")
+      .populate("payment", "amount method status reference") // Add this line!
       .sort({ createdAt: -1 })
       .lean();
 
@@ -370,70 +393,235 @@ exports.viewFinanceApplicationDetail = async (req, res) => {
 //   }
 // };
 
-exports.verifyPayment = async (req, res) => {
+// exports.verifyPaymentDirect = async (req, res) => {
+//   try {
+//     const { status, remarks } = req.body;
+//     const paymentId = req.params.id;
+
+//     // ===============================
+//     // 1️⃣ LOAD PAYMENT
+//     // ===============================
+//     const payment = await Payment.findById(paymentId)
+//       .populate("student", "firstName surname email")
+//       .populate("verifiedBy", "firstName surname")
+//       .exec();
+
+//     if (!payment) {
+//       req.flash("error_msg", "Payment not found.");
+//       return res.redirect("/finance/payments");
+//     }
+
+//     // ===============================
+//     // 2️⃣ UPDATE PAYMENT STATUS
+//     // ===============================
+//     payment.status = status;
+//     payment.remarks = remarks || "";
+//     payment.verifiedBy = req.user._id;
+//     payment.verifiedAt = new Date();
+
+//     // ===============================
+//     // 3️⃣ ISSUE RECEIPT (ONLY IF VERIFIED)
+//     // ===============================
+//     if (
+//       status === "Verified" &&
+//       (!payment.receipt || !payment.receipt.gcsPath)
+//     ) {
+//       // Generate receipt PDF
+//       const pdfPath = await generateReceiptPDF({
+//         payment: {
+//           _id: payment._id,
+//           reference: payment.reference,
+//           amount: payment.amount,
+//           method: payment.method,
+//           status: "Verified",
+//           verifiedAt: payment.verifiedAt,
+//           category: payment.category,
+//           description: payment.description,
+//           student: payment.student,
+//         },
+//       });
+
+//       // Upload receipt to GCS
+//       const gcsPath = `receipts/Payment_${payment._id}_${Date.now()}.pdf`;
+//       await uploadFile(pdfPath, gcsPath);
+
+//       // Save receipt info
+//       payment.receipt = {
+//         name: "Official Payment Receipt",
+//         gcsPath,
+//         gcsUrl: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${gcsPath}`,
+//         issuedAt: new Date(),
+//       };
+
+//       // Generate signed URL
+//       const signedUrl = await generateSignedUrl(gcsPath);
+
+//       // ===============================
+//       // 📧 SEND EMAILS
+//       // ===============================
+//       const studentEmail = payment.student?.email;
+
+//       if (studentEmail) {
+//         // Student email (PDF attachment)
+//         await sendEmail({
+//           to: studentEmail,
+//           subject: "💳 Payment Verified – Official Receipt",
+//           html: `
+//             <p>Dear ${payment.student.firstName || "Student"},</p>
+//             <p>Your payment has been <strong>successfully verified</strong>.</p>
+//             <p>
+//               Your <strong>official receipt</strong> is attached to this email as a PDF.
+//             </p>
+//             <p>
+//               You may also download it later from the portal:
+//               <br/>
+//               <a href="${signedUrl}">Download Receipt from Portal</a>
+//             </p>
+//             <br/>
+//             <p>Regards,<br/>Finance Office</p>
+//           `,
+//           attachments: [
+//             {
+//               filename: "Official_Payment_Receipt.pdf",
+//               path: pdfPath,
+//               contentType: "application/pdf",
+//             },
+//           ],
+//         });
+
+//         // VC + Registrar email
+//         await sendEmail({
+//           to: ["officialkwina@gmail.com", "annebupe@gmail.com"],
+//           subject: "📄 Payment Verified – Receipt Issued",
+//           html: `
+//             <p>A student payment has been <strong>verified</strong> and an official receipt has been issued.</p>
+//             <p><strong>Student:</strong> ${payment.student.firstName} ${payment.student.surname}</p>
+//             <p><strong>Amount:</strong> ZMW ${payment.amount}</p>
+//             <p><strong>Category:</strong> ${payment.category}</p>
+//             <p>The official receipt is attached to this email.</p>
+//             <p>Portal access: <br/><a href="${signedUrl}">View Receipt in Portal</a></p>
+//           `,
+//           attachments: [
+//             {
+//               filename: `Receipt_${payment._id}.pdf`,
+//               path: pdfPath,
+//               contentType: "application/pdf",
+//             },
+//           ],
+//         });
+
+//         console.log("📧 Receipt emails sent (Student, VC, Registrar)");
+//       } else {
+//         console.warn("⚠️ No student email found. Receipt email skipped.");
+//       }
+//     }
+
+//     // ===============================
+//     // 4️⃣ SAVE & EXIT
+//     // ===============================
+//     await payment.save();
+
+//     req.flash(
+//       "success_msg",
+//       status === "Verified"
+//         ? "Payment verified, receipt issued, and emails sent."
+//         : "Payment status updated successfully."
+//     );
+
+//     return res.redirect("/finance/payments");
+//   } catch (error) {
+//     console.error("❌ VERIFY PAYMENT ERROR:", error);
+//     req.flash("error_msg", "Payment verification failed.");
+//     return res.redirect("/finance/payments");
+//   }
+// };
+
+exports.verifyPaymentDirect = async (req, res) => {
   try {
-    const { status, remarks } = req.body;
+    console.log("🔍 DEBUG - Request body:", req.body); // ADD THIS FOR DEBUGGING
+    const { action, remarks } = req.body; // action will be "Verified", "Rejected", or "Partially Paid"
+    const paymentId = req.params.id;
+
+    console.log("🔍 DEBUG - Payment ID:", paymentId, "Action:", action);
 
     // ===============================
-    // 1️⃣ LOAD APPLICATION
+    // 1️⃣ LOAD PAYMENT
     // ===============================
-    const application = await Application.findById(req.params.id)
-      .populate("applicant")
+    const payment = await Payment.findById(paymentId)
+      .populate("student", "firstName surname email")
+      .populate("verifiedBy", "firstName surname")
       .exec();
 
-    if (!application) {
-      req.flash("error_msg", "Application not found.");
-      return res.redirect("/finance/applications");
+    if (!payment) {
+      req.flash("error_msg", "Payment not found.");
+      return res.redirect("/finance/payments");
     }
 
+    console.log("🔍 DEBUG - Payment before update:", {
+      id: payment._id,
+      currentStatus: payment.status,
+      action: action,
+    });
+
     // ===============================
-    // 2️⃣ ENSURE PAYMENT OBJECT EXISTS
+    // 2️⃣ UPDATE PAYMENT STATUS
     // ===============================
-    if (!application.payment) {
-      application.payment = {};
+    // Validate the action is in our enum
+    const validStatuses = [
+      "Pending",
+      "Verified",
+      "Partially Paid",
+      "Fully Paid",
+      "Cancelled",
+      "Rejected",
+    ];
+    if (!validStatuses.includes(action)) {
+      console.error("❌ Invalid status:", action);
+      req.flash("error_msg", `Invalid status: ${action}`);
+      return res.redirect("/finance/payments");
     }
 
-    // ===============================
-    // 3️⃣ UPDATE PAYMENT STATUS
-    // ===============================
-    application.payment.status = status;
-    application.payment.remarks = remarks || "";
-    application.payment.verifiedBy = req.user._id;
-    application.payment.verifiedAt = new Date();
+    payment.status = action; // Direct assignment since form now sends correct values
+    payment.remarks = remarks || "";
+    payment.verifiedBy = req.user._id;
+    payment.verifiedAt = new Date();
+
+    console.log("🔍 DEBUG - Payment after update (before save):", {
+      status: payment.status,
+      remarks: payment.remarks,
+      verifiedBy: payment.verifiedBy,
+      verifiedAt: payment.verifiedAt,
+    });
 
     // ===============================
-    // 4️⃣ ISSUE RECEIPT (ONLY IF VERIFIED)
+    // 3️⃣ ISSUE RECEIPT (ONLY IF VERIFIED)
     // ===============================
     if (
-      status === "Verified" &&
-      (!application.receipt || !application.receipt.gcsPath)
+      action === "Verified" &&
+      (!payment.receipt || !payment.receipt.gcsPath)
     ) {
-      // Build safe receipt payment payload
-      const receiptPayment = {
-        _id: application.payment._id || application._id,
-        reference: application.payment.reference,
-        amount: application.payment.amount || 0,
-        method: application.payment.method || "Manual",
-        status: "Verified",
-        verifiedAt: application.payment.verifiedAt,
-        category: "Application Fee",
-        description: "Application Payment",
-        student: application.applicant,
-      };
-
+      console.log("🔍 DEBUG - Generating receipt for verified payment");
       // Generate receipt PDF
       const pdfPath = await generateReceiptPDF({
-        payment: receiptPayment,
+        payment: {
+          _id: payment._id,
+          reference: payment.reference,
+          amount: payment.amount,
+          method: payment.method,
+          status: "Verified",
+          verifiedAt: payment.verifiedAt,
+          category: payment.category,
+          description: payment.description,
+          student: payment.student,
+        },
       });
 
       // Upload receipt to GCS
-      const gcsPath = `receipts/Application_${
-        application._id
-      }_${Date.now()}.pdf`;
+      const gcsPath = `receipts/Payment_${payment._id}_${Date.now()}.pdf`;
       await uploadFile(pdfPath, gcsPath);
 
       // Save receipt info
-      application.receipt = {
+      payment.receipt = {
         name: "Official Payment Receipt",
         gcsPath,
         gcsUrl: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${gcsPath}`,
@@ -446,8 +634,7 @@ exports.verifyPayment = async (req, res) => {
       // ===============================
       // 📧 SEND EMAILS
       // ===============================
-      const studentEmail =
-        application.applicant?.email || application.applicantEmail;
+      const studentEmail = payment.student?.email;
 
       if (studentEmail) {
         // Student email (PDF attachment)
@@ -455,20 +642,16 @@ exports.verifyPayment = async (req, res) => {
           to: studentEmail,
           subject: "💳 Payment Verified – Official Receipt",
           html: `
-            <p>Dear ${application.applicant.firstName || "Student"},</p>
-
+            <p>Dear ${payment.student.firstName || "Student"},</p>
             <p>Your payment has been <strong>successfully verified</strong>.</p>
-
             <p>
               Your <strong>official receipt</strong> is attached to this email as a PDF.
             </p>
-
             <p>
               You may also download it later from the portal:
               <br/>
               <a href="${signedUrl}">Download Receipt from Portal</a>
             </p>
-
             <br/>
             <p>Regards,<br/>Finance Office</p>
           `,
@@ -487,30 +670,15 @@ exports.verifyPayment = async (req, res) => {
           subject: "📄 Payment Verified – Receipt Issued",
           html: `
             <p>A student payment has been <strong>verified</strong> and an official receipt has been issued.</p>
-
-            <p>
-              <strong>Student:</strong>
-              ${application.applicant.firstName} ${application.applicant.surname}
-            </p>
-
-            <p>
-              <strong>Amount:</strong>
-              ZMW ${application.payment.amount}
-            </p>
-
-            <p>
-              The official receipt is attached to this email.
-            </p>
-
-            <p>
-              Portal access:
-              <br/>
-              <a href="${signedUrl}">View Receipt in Portal</a>
-            </p>
+            <p><strong>Student:</strong> ${payment.student.firstName} ${payment.student.surname}</p>
+            <p><strong>Amount:</strong> ZMW ${payment.amount}</p>
+            <p><strong>Category:</strong> ${payment.category}</p>
+            <p>The official receipt is attached to this email.</p>
+            <p>Portal access: <br/><a href="${signedUrl}">View Receipt in Portal</a></p>
           `,
           attachments: [
             {
-              filename: `Receipt_${application._id}.pdf`,
+              filename: `Receipt_${payment._id}.pdf`,
               path: pdfPath,
               contentType: "application/pdf",
             },
@@ -524,24 +692,210 @@ exports.verifyPayment = async (req, res) => {
     }
 
     // ===============================
-    // 5️⃣ SAVE & EXIT
+    // 4️⃣ SAVE & EXIT
     // ===============================
-    await application.save();
+    const savedPayment = await payment.save();
+    console.log("🔍 DEBUG - Payment after save:", {
+      id: savedPayment._id,
+      status: savedPayment.status,
+      updatedAt: savedPayment.updatedAt,
+    });
+
+    // Verify the save actually worked
+    const verifySave = await Payment.findById(paymentId);
+    console.log("🔍 DEBUG - Database verification:", {
+      statusInDB: verifySave.status,
+    });
 
     req.flash(
       "success_msg",
-      status === "Verified"
+      action === "Verified"
         ? "Payment verified, receipt issued, and emails sent."
         : "Payment status updated successfully."
     );
 
-    return res.redirect("/finance/applications");
+    return res.redirect("/finance/payments");
   } catch (error) {
-    console.error("❌ VERIFY PAYMENT ERROR:", error);
+    // console.error("❌ VERIFY PAYMENT ERROR:", error);
+    // console.error("❌ Error details:", error.message);
+    // console.error("❌ Error stack:", error.stack);
     req.flash("error_msg", "Payment verification failed.");
-    return res.redirect("/finance/applications");
+    return res.redirect("/finance/payments");
   }
 };
+
+// exports.verifyPayment = async (req, res) => {
+//   try {
+//     const { status, remarks } = req.body;
+
+//     // ===============================
+//     // 1️⃣ LOAD APPLICATION
+//     // ===============================
+//     const application = await Application.findById(req.params.id)
+//       .populate("applicant")
+//       .exec();
+
+//     if (!application) {
+//       req.flash("error_msg", "Application not found.");
+//       return res.redirect("/finance/applications");
+//     }
+
+//     // ===============================
+//     // 2️⃣ ENSURE PAYMENT OBJECT EXISTS
+//     // ===============================
+//     if (!application.payment) {
+//       application.payment = {};
+//     }
+
+//     // ===============================
+//     // 3️⃣ UPDATE PAYMENT STATUS
+//     // ===============================
+//     application.payment.status = status;
+//     application.payment.remarks = remarks || "";
+//     application.payment.verifiedBy = req.user._id;
+//     application.payment.verifiedAt = new Date();
+
+//     // ===============================
+//     // 4️⃣ ISSUE RECEIPT (ONLY IF VERIFIED)
+//     // ===============================
+//     if (
+//       status === "Verified" &&
+//       (!application.receipt || !application.receipt.gcsPath)
+//     ) {
+//       // Build safe receipt payment payload
+//       const receiptPayment = {
+//         _id: application.payment._id || application._id,
+//         reference: application.payment.reference,
+//         amount: application.payment.amount || 0,
+//         method: application.payment.method || "Manual",
+//         status: "Verified",
+//         verifiedAt: application.payment.verifiedAt,
+//         category: "Application Fee",
+//         description: "Application Payment",
+//         student: application.applicant,
+//       };
+
+//       // Generate receipt PDF
+//       const pdfPath = await generateReceiptPDF({
+//         payment: receiptPayment,
+//       });
+
+//       // Upload receipt to GCS
+//       const gcsPath = `receipts/Application_${
+//         application._id
+//       }_${Date.now()}.pdf`;
+//       await uploadFile(pdfPath, gcsPath);
+
+//       // Save receipt info
+//       application.receipt = {
+//         name: "Official Payment Receipt",
+//         gcsPath,
+//         gcsUrl: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${gcsPath}`,
+//         issuedAt: new Date(),
+//       };
+
+//       // Generate signed URL
+//       const signedUrl = await generateSignedUrl(gcsPath);
+
+//       // ===============================
+//       // 📧 SEND EMAILS
+//       // ===============================
+//       const studentEmail =
+//         application.applicant?.email || application.applicantEmail;
+
+//       if (studentEmail) {
+//         // Student email (PDF attachment)
+//         await sendEmail({
+//           to: studentEmail,
+//           subject: "💳 Payment Verified – Official Receipt",
+//           html: `
+//             <p>Dear ${application.applicant.firstName || "Student"},</p>
+
+//             <p>Your payment has been <strong>successfully verified</strong>.</p>
+
+//             <p>
+//               Your <strong>official receipt</strong> is attached to this email as a PDF.
+//             </p>
+
+//             <p>
+//               You may also download it later from the portal:
+//               <br/>
+//               <a href="${signedUrl}">Download Receipt from Portal</a>
+//             </p>
+
+//             <br/>
+//             <p>Regards,<br/>Finance Office</p>
+//           `,
+//           attachments: [
+//             {
+//               filename: "Official_Payment_Receipt.pdf",
+//               path: pdfPath,
+//               contentType: "application/pdf",
+//             },
+//           ],
+//         });
+
+//         // VC + Registrar email
+//         await sendEmail({
+//           to: ["officialkwina@gmail.com", "annebupe@gmail.com"],
+//           subject: "📄 Payment Verified – Receipt Issued",
+//           html: `
+//             <p>A student payment has been <strong>verified</strong> and an official receipt has been issued.</p>
+
+//             <p>
+//               <strong>Student:</strong>
+//               ${application.applicant.firstName} ${application.applicant.surname}
+//             </p>
+
+//             <p>
+//               <strong>Amount:</strong>
+//               ZMW ${application.payment.amount}
+//             </p>
+
+//             <p>
+//               The official receipt is attached to this email.
+//             </p>
+
+//             <p>
+//               Portal access:
+//               <br/>
+//               <a href="${signedUrl}">View Receipt in Portal</a>
+//             </p>
+//           `,
+//           attachments: [
+//             {
+//               filename: `Receipt_${application._id}.pdf`,
+//               path: pdfPath,
+//               contentType: "application/pdf",
+//             },
+//           ],
+//         });
+
+//         console.log("📧 Receipt emails sent (Student, VC, Registrar)");
+//       } else {
+//         console.warn("⚠️ No student email found. Receipt email skipped.");
+//       }
+//     }
+
+//     // ===============================
+//     // 5️⃣ SAVE & EXIT
+//     // ===============================
+//     await application.save();
+
+//     req.flash(
+//       "success_msg",
+//       status === "Verified"
+//         ? "Payment verified, receipt issued, and emails sent."
+//         : "Payment status updated successfully."
+//     );
+
+//     return res.redirect("/finance/applications");
+//   } catch (error) {
+//     console.error("❌ VERIFY PAYMENT ERROR:", error);
+//     req.flash("error_msg", "Payment verification failed.");
+//     return res.redirect("/finance/applications");
+//   }
+// };
 
 // View / download receipt (Application)
 exports.viewReceipt = async (req, res) => {

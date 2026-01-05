@@ -237,7 +237,7 @@
                                                             <span class="fw-bold text-warning">ZMW <%=
                                                                     payment.balanceAfterPayment ?
                                                                     payment.balanceAfterPayment.toFixed(2) : '0.00' %>
-                                                                    </span>
+                                                            </span>
                                                         </div>
 
                                                         <!-- KEEP: Method -->
@@ -294,8 +294,11 @@
 
                                                     <!-- Receipt and Proof of Payment Section -->
                                                     <div class="border-top pt-3 mb-3">
-                                                        <!-- Receipt -->
-                                                        <% if(payment.receipt && payment.receipt.gcsPath){ %>
+                                                        <!-- Receipt - Only show for verified/paid payments -->
+                                                        <% if((payment.status==='Verified' ||
+                                                            payment.status==='Fully Paid' ||
+                                                            payment.status==='Partially Paid' ) && (payment.receipt &&
+                                                            payment.receipt.gcsPath)){ %>
                                                             <div class="mb-2">
                                                                 <small class="text-muted d-block mb-1">Payment
                                                                     Receipt</small>
@@ -338,25 +341,88 @@
                                                     <div class="small text-muted pt-3 border-top">
                                                         <div class="d-flex justify-content-between">
                                                             <span>Created: <%= payment.createdAt.toLocaleString() %>
-                                                                    </span>
+                                                            </span>
                                                             <% if(payment.verifiedAt){ %>
                                                                 <span>Verified: <%=
                                                                         payment.verifiedAt.toLocaleDateString() %>
-                                                                        </span>
+                                                                </span>
                                                                 <% } %>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Close</button>
-                                                    <% if(payment.receipt && payment.receipt.gcsUrl){ %>
-                                                        <a href="<%= payment.receipt.gcsUrl %>" target="_blank"
-                                                            class="btn btn-primary">
-                                                            <i class="fas fa-print me-1"></i> Print
-                                                        </a>
-                                                        <% } %>
-                                                </div>
+
+                                                <!-- Verify Payment Section - Only show for Pending payments -->
+                                                <% if(payment.status==='Pending' ) { %>
+                                                    <div class="border-top pt-3 px-3">
+                                                        <h6 class="fw-bold mb-3" style="color: var(--primary-purple)">
+                                                            Verify Payment</h6>
+
+                                                        <form action="/finance/payments/<%= payment._id %>/verify"
+                                                            method="POST" class="needs-validation" novalidate>
+                                                            <div class="row g-3">
+                                                                <!-- Select Action -->
+                                                                <div class="col-12">
+                                                                    <label for="verifyAction<%= payment._id %>"
+                                                                        class="form-label small fw-semibold">Select
+                                                                        Action</label>
+                                                                    <select class="form-select form-select-sm"
+                                                                        id="verifyAction<%= payment._id %>"
+                                                                        name="action" required>
+                                                                        <option value="" disabled selected>Choose
+                                                                            action...</option>
+                                                                        <option value="Verified">Verify Payment</option>
+                                                                        <option value="Rejected">Reject Payment</option>
+                                                                        <% if(payment.balanceAfterPayment &&
+                                                                            payment.balanceAfterPayment> 0){ %>
+                                                                            <option value="partial">Mark as Partially
+                                                                                Paid</option>
+                                                                            <% } %>
+                                                                    </select>
+                                                                    <div class="invalid-feedback">
+                                                                        Please select an action.
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Remarks Input -->
+                                                                <div class="col-12">
+                                                                    <label for="verifyRemarks<%= payment._id %>"
+                                                                        class="form-label small fw-semibold">Add remarks
+                                                                        (optional)</label>
+                                                                    <textarea class="form-control form-control-sm"
+                                                                        id="verifyRemarks<%= payment._id %>"
+                                                                        name="remarks" rows="3"
+                                                                        placeholder="Add any notes or remarks regarding this verification..."></textarea>
+                                                                    <div class="form-text">Remarks will be recorded in
+                                                                        payment history.</div>
+                                                                </div>
+
+                                                                <!-- Submit Button -->
+                                                                <div class="col-12 mt-2">
+                                                                    <button type="submit" class="btn btn-sm w-100"
+                                                                        style="background-color: var(--primary-purple); color: white;">
+                                                                        <i class="fas fa-check-circle me-1"></i> Submit
+                                                                        Verification
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                    <% } %>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Close</button>
+                                                            <!-- Print button - only show for verified payments with receipt -->
+                                                            <% if((payment.status==='Verified' ||
+                                                                payment.status==='Fully Paid' ||
+                                                                payment.status==='Partially Paid' ) && payment.receipt
+                                                                && payment.receipt.gcsUrl){ %>
+                                                                <a href="<%= payment.receipt.gcsUrl %>" target="_blank"
+                                                                    class="btn btn-primary">
+                                                                    <i class="fas fa-print me-1"></i> Print
+                                                                </a>
+                                                                <% } %>
+                                                        </div>
                                             </div>
                                         </div>
                                     </div>

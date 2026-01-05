@@ -506,6 +506,8 @@ const userSchema = new mongoose.Schema(
         "Registrar",
         "VC",
         "Dean",
+        "DeanOfStudents",
+        "StudentAffairs",
       ],
       default: "Student",
     },

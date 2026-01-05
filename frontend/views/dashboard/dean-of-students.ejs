@@ -1,0 +1,168 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold" style="color: var(--primary-purple)">Dean of Students Dashboard</h2>
+                <p class="lead text-muted">
+                    Welcome, <%= user.firstName %> — You are logged in as
+                        <strong>Dean of Students</strong>.
+                </p>
+            </div>
+
+            <!-- Dashboard Cards - SIMPLIFIED -->
+            <div class="row g-4 justify-content-center">
+                <!-- All Students -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title fw-bold">All Students</h5>
+                            <p class="card-text text-muted">
+                                View and manage all student records
+                            </p>
+                            <a href="/dean-of-students/students" class="btn btn-primary w-100">
+                                <i class="fas fa-user-graduate me-1"></i> Manage Students
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boarding Management (Main Entry Point) -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-bed fa-3x mb-3 text-info"></i>
+                            <h5 class="card-title fw-bold">Boarding Management</h5>
+                            <p class="card-text text-muted">
+                                Manage bed allocation and boarding facilities
+                            </p>
+                            <a href="/dean-of-students/boarding" class="btn btn-info text-white w-100">
+                                <i class="fas fa-home me-1"></i> Manage Boarding
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health & Welfare -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-heartbeat fa-3x mb-3 text-danger"></i>
+                            <h5 class="card-title fw-bold">Student Health</h5>
+                            <p class="card-text text-muted">
+                                Health records and mental health support
+                            </p>
+                            <a href="/dean-of-students/health" class="btn btn-danger w-100">
+                                <i class="fas fa-hospital me-1"></i> Health Services
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Balances -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-wallet fa-3x mb-3 text-warning"></i>
+                            <h5 class="card-title fw-bold">Student Balances</h5>
+                            <p class="card-text text-muted">
+                                View outstanding payments and billing
+                            </p>
+                            <a href="/dean-of-students/balances" class="btn btn-warning text-dark w-100">
+                                <i class="fas fa-money-bill-wave me-1"></i> View Balances
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discipline & Conduct -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-gavel fa-3x mb-3 text-danger"></i>
+                            <h5 class="card-title fw-bold">Discipline</h5>
+                            <p class="card-text text-muted">
+                                Manage student conduct cases
+                            </p>
+                            <a href="/dean-of-students/discipline" class="btn btn-danger w-100">
+                                <i class="fas fa-balance-scale me-1"></i> Cases
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports & Analytics -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fa-3x mb-3 text-success"></i>
+                            <h5 class="card-title fw-bold">Reports</h5>
+                            <p class="card-text text-muted">
+                                Generate reports and analytics
+                            </p>
+                            <a href="/dean-of-students/reports" class="btn btn-success w-100">
+                                <i class="fas fa-chart-pie me-1"></i> View Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Settings -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user-cog fa-3x mb-3 text-secondary"></i>
+                            <h5 class="card-title fw-bold">Profile</h5>
+                            <p class="card-text text-muted">
+                                Update personal information
+                            </p>
+                            <a href="/profile" class="btn btn-secondary w-100">
+                                <i class="fas fa-user-edit me-1"></i> Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Section -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-chart-bar me-2"></i>Quick Statistics</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <h2 class="fw-bold text-primary">1,250</h2>
+                                        <p class="text-muted mb-0">Total Students</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <h2 class="fw-bold text-success">450</h2>
+                                        <p class="text-muted mb-0">Boarding Students</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <h2 class="fw-bold text-warning">85%</h2>
+                                        <p class="text-muted mb-0">Room Occupancy</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <h2 class="fw-bold text-danger">12</h2>
+                                        <p class="text-muted mb-0">Pending Cases</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/footer') %>

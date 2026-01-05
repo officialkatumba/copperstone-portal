@@ -13,24 +13,24 @@ const {
 } = require("../controllers/deanController");
 
 // Reports
-router.get("/dean/reports", ensureDean, (req, res) => {
+router.get("/reports", ensureDean, (req, res) => {
   res.render("dean/reports", { user: req.user });
 });
 
 // Programme approvals
-router.get("/dean/programmes", ensureDean, (req, res) => {
+router.get("/programmes", ensureDean, (req, res) => {
   res.render("dean/programmes", { user: req.user });
 });
 
 // Lecturer performance
-router.get("/dean/lecturers", ensureDean, (req, res) => {
+router.get("/lecturers", ensureDean, (req, res) => {
   res.render("dean/lecturers", { user: req.user });
 });
 
 // NEW ROUTE — Show assign form
-router.get("/dean/assign-courses", ensureDean, showAssignCourses);
+router.get("/assign-courses", ensureDean, showAssignCourses);
 
 // NEW ROUTE — Assign courses
-router.post("/dean/assign-courses", ensureDean, assignCoursesToStudent);
+router.post("/assign-courses", ensureDean, assignCoursesToStudent);
 
 module.exports = router;

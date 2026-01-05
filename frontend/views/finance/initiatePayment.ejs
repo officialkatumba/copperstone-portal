@@ -15,6 +15,8 @@
                 </div>
 
                 <form action="/finance/payments" method="POST" id="paymentForm" enctype="multipart/form-data">
+
+                    <input type="hidden" name="source" value="finance">
                     <!-- Searchable Student Dropdown -->
                     <div class="mb-3">
                         <label class="fw-semibold">Student</label>
@@ -52,8 +54,9 @@
                                 typicalAmount: 150}, {name: "Library Fee" , typicalAmount: 100}, {name: "Internet Fee" ,
                                 typicalAmount: 200}, {name: "Maintenance Fee" , typicalAmount: 250},
                                 {name: "Distance Learning Logistics Fee" , typicalAmount: 500}, {name: "Research Fee" ,
-                                typicalAmount: 1000}, {name: "Graduation Fee" , typicalAmount: 800}, {name: "Penalty" ,
-                                typicalAmount: 100}, {name: "Other" , typicalAmount: 0} ].forEach(c=> { %>
+                                typicalAmount: 1000}, {name: "Graduation Fee" , typicalAmount: 800}, {name: "Boarding" ,
+                                typicalAmount: 1200}, {name: "Penalty" , typicalAmount: 100}, {name: "Other" ,
+                                typicalAmount: 0} ].forEach(c=> { %>
                                 <option value="<%= c.name %>" data-typical="<%= c.typicalAmount %>">
                                     <%= c.name %>
                                         <% if (c.typicalAmount> 0) { %>(Typically: ZMW <%= c.typicalAmount %>)<% } %>
@@ -115,7 +118,8 @@
 
                     <div class="mb-3">
                         <label class="fw-semibold">Payment Method</label>
-                        <select name="method" class="form-select" required>
+                        <select name="method" class="form-select" required id="paymentMethod"
+                            onchange="toggleUploadField()">
                             <option value="">Select Method</option>
                             <option value="Cash">Cash</option>
                             <option value="Manual">Manual</option>
@@ -123,8 +127,8 @@
                         </select>
                     </div>
 
-                    <!-- Upload Proof Field -->
-                    <div class="mb-3">
+                    <!-- Upload Proof Field (Hidden by default, shown only for Manual) -->
+                    <div class="mb-3" id="uploadField" style="display: none;">
                         <label class="fw-semibold">Upload Payment Proof</label>
                         <input type="file" name="paymentProof" class="form-control"
                             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
@@ -169,7 +173,24 @@
                 const selectedStudentInfo = document.getElementById('selectedStudentInfo');
                 const selectedStudentText = document.getElementById('selectedStudentText');
                 const clearSelectionBtn = document.getElementById('clearSelection');
+                const uploadField = document.getElementById('uploadField');
+                const paymentMethodSelect = document.getElementById('paymentMethod');
                 let searchTimeout;
+
+                // Function to toggle upload field based on payment method
+                window.toggleUploadField = function () {
+                    const selectedMethod = paymentMethodSelect.value;
+                    if (selectedMethod === 'Manual') {
+                        uploadField.style.display = 'block';
+                    } else {
+                        uploadField.style.display = 'none';
+                        // Clear the file input when hidden
+                        const fileInput = uploadField.querySelector('input[type="file"]');
+                        if (fileInput) {
+                            fileInput.value = '';
+                        }
+                    }
+                };
 
                 // Global calculation function
                 window.calculateBalance = function () {
@@ -359,8 +380,9 @@
                     }
                 });
 
-                // Initialize calculation
+                // Initialize calculation and toggle function
                 calculateBalance();
+                toggleUploadField(); // Initial call to set correct state
             });
         </script>
 
