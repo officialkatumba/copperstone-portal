@@ -879,6 +879,1038 @@
 
 // module.exports = { generateReceiptPDF };
 
+// // backend/utils/receiptPDFGenerator.js
+// const PDFDocument = require("pdfkit");
+// const fs = require("fs");
+// const path = require("path");
+// const https = require("https");
+// const http = require("http");
+
+// // Helper function to download image
+// function downloadImage(url) {
+//   return new Promise((resolve, reject) => {
+//     const client = url.startsWith("https") ? https : http;
+
+//     client
+//       .get(url, (response) => {
+//         if (response.statusCode !== 200) {
+//           reject(new Error(`Failed to download image: ${response.statusCode}`));
+//           return;
+//         }
+
+//         const chunks = [];
+//         response.on("data", (chunk) => chunks.push(chunk));
+//         response.on("end", () => resolve(Buffer.concat(chunks)));
+//         response.on("error", reject);
+//       })
+//       .on("error", reject);
+//   });
+// }
+
+// async function generateReceiptPDF({ payment }) {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       // Thermal receipt dimensions
+//       const pageWidth = 165; // 58mm width
+//       const margin = 8;
+
+//       // Create document with consistent font
+//       const doc = new PDFDocument({
+//         margin: 0,
+//         size: [pageWidth, 700], // Increased height for new fields
+//         autoFirstPage: false,
+//         font: "Courier", // Consistent font throughout
+//       });
+
+//       const tmpDir = path.join(__dirname, "../../tmp");
+//       if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+
+//       const fileName = `Receipt_${payment._id}_${Date.now()}.pdf`;
+//       const outPath = path.join(tmpDir, fileName);
+//       const stream = fs.createWriteStream(outPath);
+//       doc.pipe(stream);
+
+//       // Download images if available
+//       let logoBuffer, signatureBuffer;
+
+//       try {
+//         if (process.env.LOGO) {
+//           logoBuffer = await downloadImage(process.env.LOGO);
+//         }
+//       } catch (err) {
+//         console.log("Logo not loaded:", err.message);
+//       }
+
+//       try {
+//         if (process.env.SIGNATURE) {
+//           signatureBuffer = await downloadImage(process.env.SIGNATURE);
+//         }
+//       } catch (err) {
+//         console.log("Signature not loaded:", err.message);
+//       }
+
+//       // Add page with exact dimensions
+//       doc.addPage({ margin: 0, size: [pageWidth, 700] });
+
+//       let yPos = margin;
+//       const contentWidth = pageWidth - margin * 2;
+
+//       /* ===== HEADER SECTION ===== */
+//       if (logoBuffer) {
+//         const logoSize = 60;
+//         const logoX = (pageWidth - logoSize) / 2;
+//         doc.image(logoBuffer, logoX, yPos, {
+//           width: logoSize,
+//           height: logoSize,
+//           fit: [logoSize, logoSize],
+//         });
+//         yPos += logoSize + 12;
+//       }
+
+//       doc
+//         .fontSize(14)
+//         .font("Courier-Bold")
+//         .text("COPPERSTONE UNIVERSITY", margin, yPos, {
+//           width: contentWidth,
+//           align: "center",
+//         });
+//       yPos += 16;
+
+//       yPos += 8;
+
+//       doc
+//         .fontSize(10)
+//         .font("Courier-Bold")
+//         .text("OFFICIAL PAYMENT RECEIPT", margin, yPos, {
+//           width: contentWidth,
+//           align: "center",
+//         });
+//       yPos += 14;
+
+//       doc.fontSize(9).font("Courier").text("Finance Department", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 15;
+
+//       /* ===== SEPARATOR LINE ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 15;
+
+//       /* ===== RECEIPT INFORMATION ===== */
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("RECEIPT INFORMATION", margin, yPos);
+//       yPos += 12;
+
+//       doc.font("Courier").fontSize(8);
+
+//       const receiptId =
+//         payment.reference ||
+//         payment._id?.toString().slice(-8) ||
+//         `RC-${Date.now().toString().slice(-6)}`;
+
+//       doc.font("Courier-Bold").text("Receipt No:", margin, yPos);
+//       doc.font("Courier").text(` ${receiptId}`, margin + 45, yPos);
+//       yPos += 10;
+
+//       const now = new Date();
+//       doc.font("Courier-Bold").text("Date:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(` ${now.toLocaleDateString()}`, margin + 25, yPos);
+//       yPos += 10;
+
+//       doc.font("Courier-Bold").text("Time:", margin, yPos);
+//       doc.font("Courier").text(
+//         ` ${now.toLocaleTimeString([], {
+//           hour: "2-digit",
+//           minute: "2-digit",
+//         })}`,
+//         margin + 25,
+//         yPos
+//       );
+//       yPos += 15;
+
+//       /* ===== DASHED SEPARATOR ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .dash(2, { space: 2 })
+//         .strokeColor("#888888")
+//         .lineWidth(0.3)
+//         .stroke();
+//       yPos += 12;
+
+//       /* ===== STUDENT INFORMATION ===== */
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("STUDENT INFORMATION", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       doc.fontSize(8);
+
+//       if (payment.student) {
+//         const fullName = `${payment.student.firstName} ${payment.student.surname}`;
+//         doc.font("Courier-Bold").text("Name:", margin, yPos);
+//         doc.font("Courier").text(` ${fullName}`, margin + 30, yPos);
+//         yPos += 10;
+
+//         const email = payment.student.email || "N/A";
+//         doc.font("Courier-Bold").text("Email:", margin, yPos);
+//         doc.font("Courier").text(` ${email}`, margin + 30, yPos);
+//         yPos += 10;
+
+//         if (payment.student.studentId) {
+//           doc.font("Courier-Bold").text("Student ID:", margin, yPos);
+//           doc
+//             .font("Courier")
+//             .text(` ${payment.student.studentId}`, margin + 50, yPos);
+//           yPos += 10;
+//         }
+//       }
+//       yPos += 10;
+
+//       /* ===== DASHED SEPARATOR ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .dash(2, { space: 2 })
+//         .strokeColor("#888888")
+//         .lineWidth(0.3)
+//         .stroke();
+//       yPos += 12;
+
+//       /* ===== PAYMENT DETAILS ===== */
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("PAYMENT DETAILS", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       doc.fontSize(8);
+
+//       doc.font("Courier-Bold").text("Category:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(` ${payment.category || "N/A"}`, margin + 45, yPos);
+//       yPos += 10;
+
+//       const description = payment.description || "Payment";
+//       doc.font("Courier-Bold").text("Description:", margin, yPos);
+//       yPos += 6;
+
+//       const descriptionHeight = doc.heightOfString(description, {
+//         width: contentWidth - 15,
+//         lineGap: 3,
+//       });
+
+//       doc.font("Courier").text(description, margin + 12, yPos, {
+//         width: contentWidth - 15,
+//         lineGap: 3,
+//       });
+//       yPos += descriptionHeight + 8;
+
+//       doc.font("Courier-Bold").text("Method:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(` ${payment.method || "N/A"}`, margin + 40, yPos);
+//       yPos += 10;
+
+//       if (payment.semester) {
+//         doc.font("Courier-Bold").text("Semester:", margin, yPos);
+//         doc.font("Courier").text(` ${payment.semester}`, margin + 45, yPos);
+//         yPos += 10;
+//       }
+
+//       if (payment.academicYear) {
+//         doc.font("Courier-Bold").text("Academic Year:", margin, yPos);
+//         doc.font("Courier").text(` ${payment.academicYear}`, margin + 65, yPos);
+//         yPos += 10;
+//       }
+//       yPos += 10;
+
+//       /* ===== PAYMENT SUMMARY SECTION (USES NEW FIELDS) ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 8;
+
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("PAYMENT SUMMARY", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       doc.fontSize(8);
+
+//       const amountStartX = pageWidth / 2;
+
+//       // ✅ USING NEW FIELD: totalDue
+
+//       const amountPaid = parseFloat(payment.amount) || 0;
+
+//       const totalDue = parseFloat(payment.totalDue) || amountPaid;
+//       doc.font("Courier-Bold").text("Total Due:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`ZMW ${totalDue.toFixed(2)}`, amountStartX, yPos, {
+//           width: contentWidth / 2,
+//           align: "right",
+//         });
+//       yPos += 10;
+
+//       // ✅ USING EXISTING FIELD: amount (renamed to "Amount Paid")
+//       // const amountPaid = parseFloat(payment.amount) || 0;
+//       doc.font("Courier-Bold").text("Amount Paid:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`ZMW ${amountPaid.toFixed(2)}`, amountStartX, yPos, {
+//           width: contentWidth / 2,
+//           align: "right",
+//         });
+//       yPos += 10;
+
+//       // ✅ USING NEW FIELD: balanceAfterPayment
+//       const balanceRemaining = parseFloat(payment.balanceAfterPayment) || 0;
+//       doc.font("Courier-Bold").text("Balance Remaining:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`ZMW ${balanceRemaining.toFixed(2)}`, amountStartX, yPos, {
+//           width: contentWidth / 2,
+//           align: "right",
+//         });
+//       yPos += 15;
+
+//       /* ===== TAX BREAKDOWN SECTION (KEEP EXISTING) ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 8;
+
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("TAX BREAKDOWN", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       doc.fontSize(8);
+
+//       const vat = amountPaid * 0.16;
+//       const subtotal = amountPaid - vat;
+
+//       doc.font("Courier-Bold").text("Subtotal:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`ZMW ${subtotal.toFixed(2)}`, amountStartX, yPos, {
+//           width: contentWidth / 2,
+//           align: "right",
+//         });
+//       yPos += 10;
+
+//       doc.font("Courier-Bold").text("VAT (16%):", margin, yPos);
+//       doc.font("Courier").text(`ZMW ${vat.toFixed(2)}`, amountStartX, yPos, {
+//         width: contentWidth / 2,
+//         align: "right",
+//       });
+//       yPos += 12;
+
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 8;
+
+//       doc.font("Courier-Bold").fontSize(10);
+//       doc.text("TOTAL PAID:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`ZMW ${amountPaid.toFixed(2)}`, amountStartX, yPos, {
+//           width: contentWidth / 2,
+//           align: "right",
+//         });
+//       yPos += 12;
+
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 15;
+
+//       /* ===== PAYMENT STATUS ===== */
+//       const status = payment.status ? payment.status.toUpperCase() : "PENDING";
+//       const statusColor =
+//         status === "VERIFIED" || status === "FULLY PAID"
+//           ? "#008000"
+//           : status === "PARTIALLY PAID"
+//           ? "#FFA500"
+//           : "#FF0000";
+
+//       doc.font("Courier-Bold").fontSize(9).fillColor(statusColor);
+//       doc.text(`STATUS: ${status}`, margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       if (payment.verifiedAt) {
+//         doc.font("Courier").fontSize(8).fillColor("#000000");
+//         doc.text(
+//           `Verified: ${new Date(payment.verifiedAt).toLocaleDateString()}`,
+//           margin,
+//           yPos,
+//           {
+//             width: contentWidth,
+//             align: "center",
+//           }
+//         );
+//         yPos += 12;
+//       }
+
+//       /* ===== SIGNATURE AREA ===== */
+//       yPos += 10;
+
+//       if (signatureBuffer) {
+//         const sigWidth = 50;
+//         const sigX = (pageWidth - sigWidth) / 2;
+
+//         // doc.image(signatureBuffer, sigX, yPos, {
+//         //   width: sigWidth,
+//         //   fit: [sigWidth, 30],
+//         // });
+//         yPos += 40;
+//       }
+
+//       doc.font("Courier-Bold").fontSize(9).fillColor("#000000");
+//       doc.text("FINANCE DEPARTMENT", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 10;
+
+//       doc.font("Courier").fontSize(8);
+//       doc.text("Copperstone University", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 15;
+
+//       /* ===== FOOTER ===== */
+//       doc
+//         .moveTo(margin + 10, yPos)
+//         .lineTo(pageWidth - margin - 10, yPos)
+//         .dash(2, { space: 2 })
+//         .strokeColor("#000000")
+//         .lineWidth(0.3)
+//         .stroke();
+//       yPos += 12;
+
+//       doc.font("Courier-Bold").fontSize(8);
+//       doc.text("*** OFFICIAL RECEIPT ***", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 10;
+
+//       doc.font("Courier").fontSize(7);
+//       doc.text("finance@copperstone.edu.zm", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 8;
+
+//       doc.text("+260 211 123456", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 10;
+
+//       doc.font("Courier-Oblique").fontSize(8);
+//       doc.text("Thank you for your payment", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 10;
+
+//       // Add payment balance note if applicable
+//       if (balanceRemaining > 0) {
+//         doc.font("Courier-Bold").fontSize(7).fillColor("#FF0000");
+//         doc.text(
+//           `* Balance of ZMW ${balanceRemaining.toFixed(2)} pending`,
+//           margin,
+//           yPos,
+//           {
+//             width: contentWidth,
+//             align: "center",
+//           }
+//         );
+//         yPos += 10;
+//       }
+
+//       // Bottom border
+//       doc
+//         .moveTo(margin + 10, yPos)
+//         .lineTo(pageWidth - margin - 10, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+
+//       doc.end();
+
+//       stream.on("finish", () => resolve(outPath));
+//       stream.on("error", reject);
+//     } catch (err) {
+//       reject(err);
+//     }
+//   });
+// }
+
+// module.exports = { generateReceiptPDF };
+
+// // backend/utils/receiptPDFGenerator.js
+// const PDFDocument = require("pdfkit");
+// const fs = require("fs");
+// const path = require("path");
+// const https = require("https");
+// const http = require("http");
+
+// // Helper function to download image
+// function downloadImage(url) {
+//   return new Promise((resolve, reject) => {
+//     const client = url.startsWith("https") ? https : http;
+
+//     client
+//       .get(url, (response) => {
+//         if (response.statusCode !== 200) {
+//           reject(new Error(`Failed to download image: ${response.statusCode}`));
+//           return;
+//         }
+
+//         const chunks = [];
+//         response.on("data", (chunk) => chunks.push(chunk));
+//         response.on("end", () => resolve(Buffer.concat(chunks)));
+//         response.on("error", reject);
+//       })
+//       .on("error", reject);
+//   });
+// }
+
+// async function generateReceiptPDF({ payment }) {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       // Thermal receipt dimensions
+//       const pageWidth = 165; // 58mm width
+//       const margin = 10; // CHANGED: Increased from 8 to 10 to prevent cutting
+
+//       // Create document with consistent font
+//       const doc = new PDFDocument({
+//         margin: 0,
+//         size: [pageWidth, 700], // Increased height for new fields
+//         autoFirstPage: false,
+//         font: "Courier", // Consistent font throughout
+//       });
+
+//       const tmpDir = path.join(__dirname, "../../tmp");
+//       if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+
+//       const fileName = `Receipt_${payment._id}_${Date.now()}.pdf`;
+//       const outPath = path.join(tmpDir, fileName);
+//       const stream = fs.createWriteStream(outPath);
+//       doc.pipe(stream);
+
+//       // Download images if available
+//       let logoBuffer;
+
+//       try {
+//         if (process.env.LOGO) {
+//           logoBuffer = await downloadImage(process.env.LOGO);
+//         }
+//       } catch (err) {
+//         console.log("Logo not loaded:", err.message);
+//       }
+
+//       // REMOVED: Signature image download
+
+//       // Add page with exact dimensions
+//       doc.addPage({ margin: 0, size: [pageWidth, 700] });
+
+//       let yPos = margin;
+//       const contentWidth = pageWidth - margin * 2;
+
+//       /* ===== HEADER SECTION ===== */
+//       if (logoBuffer) {
+//         const logoSize = 40; // REDUCED: From 60 to 40 to prevent overlapping
+//         const logoX = (pageWidth - logoSize) / 2;
+//         doc.image(logoBuffer, logoX, yPos, {
+//           width: logoSize,
+//           height: logoSize,
+//           fit: [logoSize, logoSize],
+//         });
+//         yPos += logoSize + 8; // REDUCED: From +12 to +8
+//       }
+
+//       // University Title Section
+//       doc
+//         .fontSize(12) // REDUCED: From 14 to 12
+//         .font("Courier-Bold")
+//         .text("COPPERSTONE UNIVERSITY", margin, yPos, {
+//           width: contentWidth,
+//           align: "center",
+//         });
+//       yPos += 14; // REDUCED: From 16 to 14
+
+//       // Address Section (separate section)
+//       doc.fontSize(6).font("Courier"); // REDUCED: From 7 to 6
+//       doc.text("Plot 38002, Baluba Campus, P.O. Box 22041,", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 6; // REDUCED: From 8 to 6
+
+//       doc.text(
+//         "Along Ndola – Kitwe Dual carriageway, KITWE, ZAMBIA",
+//         margin,
+//         yPos,
+//         {
+//           width: contentWidth,
+//           align: "center",
+//         }
+//       );
+//       yPos += 6; // REDUCED: From 8 to 6
+
+//       doc.text(
+//         "Cell: +260 965571607, +260 0967499292, +260 965 653 101",
+//         margin,
+//         yPos,
+//         {
+//           width: contentWidth,
+//           align: "center",
+//         }
+//       );
+//       yPos += 6; // REDUCED: From 8 to 6
+
+//       doc.text(
+//         "www.copperstoneuniversity.edu.zm | email: customercareucopperstone@gmail.com",
+//         margin,
+//         yPos,
+//         {
+//           width: contentWidth,
+//           align: "center",
+//         }
+//       );
+//       yPos += 10; // REDUCED: From 12 to 10
+
+//       // Official Receipt Section (separate section)
+//       doc
+//         .fontSize(9) // REDUCED: From 10 to 9
+//         .font("Courier-Bold")
+//         .text("OFFICIAL PAYMENT RECEIPT", margin, yPos, {
+//           width: contentWidth,
+//           align: "center",
+//         });
+//       yPos += 10; // REDUCED: From 14 to 10
+
+//       doc.fontSize(8).font("Courier").text("Finance Department", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12; // REDUCED: From 15 to 12
+
+//       /* ===== SEPARATOR LINE ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 12; // REDUCED: From 15 to 12
+
+//       /* ===== RECEIPT INFORMATION ===== */
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("RECEIPT INFORMATION", margin, yPos);
+//       yPos += 12;
+
+//       doc.font("Courier").fontSize(8);
+
+//       const receiptId =
+//         payment.reference ||
+//         payment._id?.toString().slice(-8) ||
+//         `RC-${Date.now().toString().slice(-6)}`;
+
+//       // CHANGED BACK: Receipt No inline with one space after colon
+//       doc.font("Courier-Bold").text("Receipt No:", margin, yPos);
+//       doc.font("Courier").text(` ${receiptId}`, margin + 45, yPos);
+//       yPos += 10;
+
+//       const now = new Date();
+//       // CHANGED BACK: Date inline with one space after colon
+//       doc.font("Courier-Bold").text("Date:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(` ${now.toLocaleDateString()}`, margin + 25, yPos);
+//       yPos += 10;
+
+//       // CHANGED BACK: Time inline with one space after colon
+//       doc.font("Courier-Bold").text("Time:", margin, yPos);
+//       doc.font("Courier").text(
+//         ` ${now.toLocaleTimeString([], {
+//           hour: "2-digit",
+//           minute: "2-digit",
+//         })}`,
+//         margin + 25,
+//         yPos
+//       );
+//       yPos += 12; // REDUCED: From 15 to 12
+
+//       /* ===== DASHED SEPARATOR ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .dash(2, { space: 2 })
+//         .strokeColor("#888888")
+//         .lineWidth(0.3)
+//         .stroke();
+//       yPos += 12;
+
+//       /* ===== STUDENT INFORMATION ===== */
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("STUDENT INFORMATION", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       doc.fontSize(8);
+
+//       if (payment.student) {
+//         const fullName = `${payment.student.firstName} ${payment.student.surname}`;
+//         // CHANGED: Name on next line below label
+//         doc.font("Courier-Bold").text("Name:", margin, yPos);
+//         yPos += 10;
+//         doc.font("Courier").text(fullName, margin + 12, yPos, {
+//           width: contentWidth - 12,
+//         });
+//         yPos += 10;
+
+//         const email = payment.student.email || "N/A";
+//         // CHANGED: Email on next line below label
+//         doc.font("Courier-Bold").text("Email:", margin, yPos);
+//         yPos += 10;
+//         doc.font("Courier").text(email, margin + 12, yPos, {
+//           width: contentWidth - 12,
+//         });
+//         yPos += 10;
+
+//         if (payment.student.studentId) {
+//           // CHANGED: Student ID on next line below label
+//           doc.font("Courier-Bold").text("Student ID:", margin, yPos);
+//           yPos += 10;
+//           doc
+//             .font("Courier")
+//             .text(payment.student.studentId, margin + 12, yPos, {
+//               width: contentWidth - 12,
+//             });
+//           yPos += 10;
+//         }
+//       }
+//       yPos += 8; // REDUCED: From 10 to 8
+
+//       /* ===== DASHED SEPARATOR ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .dash(2, { space: 2 })
+//         .strokeColor("#888888")
+//         .lineWidth(0.3)
+//         .stroke();
+//       yPos += 12;
+
+//       /* ===== PAYMENT DETAILS ===== */
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("PAYMENT DETAILS", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       doc.fontSize(8);
+
+//       // CHANGED: Category on next line below label
+//       doc.font("Courier-Bold").text("Category:", margin, yPos);
+//       yPos += 10;
+//       doc.font("Courier").text(payment.category || "N/A", margin + 12, yPos, {
+//         width: contentWidth - 12,
+//       });
+//       yPos += 10;
+
+//       const description = payment.description || "Payment";
+//       // Already on next line below label
+//       doc.font("Courier-Bold").text("Description:", margin, yPos);
+//       yPos += 10;
+
+//       const descriptionHeight = doc.heightOfString(description, {
+//         width: contentWidth - 15,
+//         lineGap: 3,
+//       });
+
+//       doc.font("Courier").text(description, margin + 12, yPos, {
+//         width: contentWidth - 15,
+//         lineGap: 3,
+//       });
+//       yPos += descriptionHeight + 8;
+
+//       // CHANGED BACK: Method inline with two spaces after colon
+//       doc.font("Courier-Bold").text("Method:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`  ${payment.method || "N/A"}`, margin + 35, yPos);
+//       yPos += 10;
+
+//       if (payment.semester) {
+//         // CHANGED BACK: Semester inline with two spaces after colon
+//         doc.font("Courier-Bold").text("Semester:", margin, yPos);
+//         doc.font("Courier").text(`  ${payment.semester}`, margin + 45, yPos);
+//         yPos += 10;
+//       }
+
+//       if (payment.academicYear) {
+//         // CHANGED BACK: Academic Year inline with two spaces after colon
+//         doc.font("Courier-Bold").text("Academic Year:", margin, yPos);
+//         doc
+//           .font("Courier")
+//           .text(`  ${payment.academicYear}`, margin + 65, yPos);
+//         yPos += 10;
+//       }
+//       yPos += 8; // REDUCED: From 10 to 8
+
+//       /* ===== PAYMENT SUMMARY SECTION (USES NEW FIELDS) ===== */
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 8;
+
+//       doc.font("Courier-Bold").fontSize(9);
+//       doc.text("PAYMENT SUMMARY", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       doc.fontSize(8); // CHANGED: All payment figures will use font size 8
+
+//       // Helper function to format numbers with thousand separator
+//       const formatNumber = (num) => {
+//         return parseFloat(num)
+//           .toFixed(2)
+//           .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+//       };
+
+//       const amountStartX = margin + 60; // CHANGED: Start amounts 3 spaces after longest key
+
+//       const amountPaid = parseFloat(payment.amount) || 0;
+//       const totalDue = parseFloat(payment.totalDue) || amountPaid;
+//       const balanceRemaining = parseFloat(payment.balanceAfterPayment) || 0;
+
+//       // Total Due
+//       doc.font("Courier-Bold").text("Total Due:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`ZMW ${formatNumber(totalDue)}`, amountStartX, yPos);
+//       yPos += 10;
+
+//       // Amount Paid
+//       doc.font("Courier-Bold").text("Amount Paid:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`ZMW ${formatNumber(amountPaid)}`, amountStartX, yPos);
+//       yPos += 10;
+
+//       // CHANGED: Balance Remaining to just "Balance"
+//       doc.font("Courier-Bold").text("Balance:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .text(`ZMW ${formatNumber(balanceRemaining)}`, amountStartX, yPos);
+//       yPos += 12; // REDUCED: From 15 to 12
+
+//       // REMOVED: Entire TAX BREAKDOWN SECTION as requested
+
+//       // Directly proceed to TOTAL PAID section after removing tax breakdown
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 8;
+
+//       doc.font("Courier-Bold").fontSize(9); // CHANGED: From 10 to 9 to match other figures
+//       doc.text("TOTAL PAID:", margin, yPos);
+//       doc
+//         .font("Courier")
+//         .fontSize(8) // ADDED: Same font size as other figures
+//         .text(`ZMW ${formatNumber(amountPaid)}`, amountStartX, yPos);
+//       yPos += 12;
+
+//       doc
+//         .moveTo(margin, yPos)
+//         .lineTo(pageWidth - margin, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+//       yPos += 12; // REDUCED: From 15 to 12
+
+//       /* ===== PAYMENT STATUS ===== */
+//       const status = payment.status ? payment.status.toUpperCase() : "PENDING";
+//       const statusColor =
+//         status === "VERIFIED" || status === "FULLY PAID"
+//           ? "#008000"
+//           : status === "PARTIALLY PAID"
+//           ? "#FFA500"
+//           : "#FF0000";
+
+//       doc.font("Courier-Bold").fontSize(9).fillColor(statusColor);
+//       doc.text(`STATUS: ${status}`, margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12;
+
+//       if (payment.verifiedAt) {
+//         doc.font("Courier").fontSize(8).fillColor("#000000");
+//         doc.text(
+//           `Verified: ${new Date(payment.verifiedAt).toLocaleDateString()}`,
+//           margin,
+//           yPos,
+//           {
+//             width: contentWidth,
+//             align: "center",
+//           }
+//         );
+//         yPos += 10; // REDUCED: From 12 to 10
+//       }
+
+//       /* ===== SIGNATURE AREA ===== */
+//       yPos += 8; // REDUCED: From 10 to 8
+
+//       // REMOVED: Signature image display
+//       // Keep blank space for manual signing
+//       doc
+//         .moveTo(margin + 30, yPos + 15)
+//         .lineTo(pageWidth - margin - 30, yPos + 15)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+
+//       yPos += 35; // REDUCED: From 40 to 35
+
+//       doc.font("Courier-Bold").fontSize(9).fillColor("#000000");
+//       doc.text("FINANCE DEPARTMENT", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 10;
+
+//       doc.font("Courier").fontSize(8);
+//       doc.text("Copperstone University", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 12; // REDUCED: From 15 to 12
+
+//       /* ===== FOOTER ===== */
+//       doc
+//         .moveTo(margin + 10, yPos)
+//         .lineTo(pageWidth - margin - 10, yPos)
+//         .dash(2, { space: 2 })
+//         .strokeColor("#000000")
+//         .lineWidth(0.3)
+//         .stroke();
+//       yPos += 10; // REDUCED: From 12 to 10
+
+//       doc.font("Courier-Bold").fontSize(8);
+//       doc.text("*** OFFICIAL RECEIPT ***", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 10;
+
+//       doc.font("Courier").fontSize(7);
+//       doc.text("finance@copperstone.edu.zm", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 8;
+
+//       doc.text("+260 211 123456", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 10;
+
+//       doc.font("Courier-Oblique").fontSize(8);
+//       doc.text("Thank you for your payment", margin, yPos, {
+//         width: contentWidth,
+//         align: "center",
+//       });
+//       yPos += 10;
+
+//       // Add payment balance note if applicable
+//       if (balanceRemaining > 0) {
+//         doc.font("Courier-Bold").fontSize(7).fillColor("#FF0000");
+//         doc.text(
+//           `* Balance of ZMW ${formatNumber(balanceRemaining)} pending`,
+//           margin,
+//           yPos,
+//           {
+//             width: contentWidth,
+//             align: "center",
+//           }
+//         );
+//         yPos += 10;
+//       }
+
+//       // Bottom border
+//       doc
+//         .moveTo(margin + 10, yPos)
+//         .lineTo(pageWidth - margin - 10, yPos)
+//         .strokeColor("#000000")
+//         .lineWidth(0.5)
+//         .stroke();
+
+//       doc.end();
+
+//       stream.on("finish", () => resolve(outPath));
+//       stream.on("error", reject);
+//     } catch (err) {
+//       reject(err);
+//     }
+//   });
+// }
+
+// module.exports = { generateReceiptPDF };
+
 // backend/utils/receiptPDFGenerator.js
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
@@ -912,14 +1944,14 @@ async function generateReceiptPDF({ payment }) {
     try {
       // Thermal receipt dimensions
       const pageWidth = 165; // 58mm width
-      const margin = 8;
+      const margin = 10;
 
       // Create document with consistent font
       const doc = new PDFDocument({
         margin: 0,
-        size: [pageWidth, 700], // Increased height for new fields
+        size: [pageWidth, 600],
         autoFirstPage: false,
-        font: "Courier", // Consistent font throughout
+        font: "Courier",
       });
 
       const tmpDir = path.join(__dirname, "../../tmp");
@@ -931,7 +1963,7 @@ async function generateReceiptPDF({ payment }) {
       doc.pipe(stream);
 
       // Download images if available
-      let logoBuffer, signatureBuffer;
+      let logoBuffer;
 
       try {
         if (process.env.LOGO) {
@@ -939,14 +1971,6 @@ async function generateReceiptPDF({ payment }) {
         }
       } catch (err) {
         console.log("Logo not loaded:", err.message);
-      }
-
-      try {
-        if (process.env.SIGNATURE) {
-          signatureBuffer = await downloadImage(process.env.SIGNATURE);
-        }
-      } catch (err) {
-        console.log("Signature not loaded:", err.message);
       }
 
       // Add page with exact dimensions
@@ -957,50 +1981,51 @@ async function generateReceiptPDF({ payment }) {
 
       /* ===== HEADER SECTION ===== */
       if (logoBuffer) {
-        const logoSize = 60;
+        const logoSize = 45;
         const logoX = (pageWidth - logoSize) / 2;
         doc.image(logoBuffer, logoX, yPos, {
           width: logoSize,
           height: logoSize,
           fit: [logoSize, logoSize],
         });
-        yPos += logoSize + 12;
+        yPos += logoSize + 8;
       }
 
+      // University Title Section
       doc
-        .fontSize(14)
+        .fontSize(10)
         .font("Courier-Bold")
         .text("COPPERSTONE UNIVERSITY", margin, yPos, {
           width: contentWidth,
           align: "center",
         });
-      yPos += 16;
+      yPos += 14;
 
-      yPos += 8;
-
+      // Official Receipt Section
       doc
-        .fontSize(10)
+        .fontSize(9)
         .font("Courier-Bold")
         .text("OFFICIAL PAYMENT RECEIPT", margin, yPos, {
           width: contentWidth,
           align: "center",
         });
-      yPos += 14;
+      yPos += 12;
 
-      doc.fontSize(9).font("Courier").text("Finance Department", margin, yPos, {
+      // Department Section
+      doc.fontSize(8).font("Courier").text("Finance Department", margin, yPos, {
         width: contentWidth,
         align: "center",
       });
-      yPos += 15;
+      yPos += 12;
 
-      /* ===== SEPARATOR LINE ===== */
+      /* ===== HEADER SEPARATOR ===== */
       doc
         .moveTo(margin, yPos)
         .lineTo(pageWidth - margin, yPos)
         .strokeColor("#000000")
         .lineWidth(0.5)
         .stroke();
-      yPos += 15;
+      yPos += 12;
 
       /* ===== RECEIPT INFORMATION ===== */
       doc.font("Courier-Bold").fontSize(9);
@@ -1014,10 +2039,12 @@ async function generateReceiptPDF({ payment }) {
         payment._id?.toString().slice(-8) ||
         `RC-${Date.now().toString().slice(-6)}`;
 
+      // Receipt No
       doc.font("Courier-Bold").text("Receipt No:", margin, yPos);
-      doc.font("Courier").text(` ${receiptId}`, margin + 45, yPos);
+      doc.font("Courier").text(` ${receiptId}`, margin + 50, yPos);
       yPos += 10;
 
+      // Date
       const now = new Date();
       doc.font("Courier-Bold").text("Date:", margin, yPos);
       doc
@@ -1025,6 +2052,7 @@ async function generateReceiptPDF({ payment }) {
         .text(` ${now.toLocaleDateString()}`, margin + 25, yPos);
       yPos += 10;
 
+      // Time
       doc.font("Courier-Bold").text("Time:", margin, yPos);
       doc.font("Courier").text(
         ` ${now.toLocaleTimeString([], {
@@ -1034,7 +2062,7 @@ async function generateReceiptPDF({ payment }) {
         margin + 25,
         yPos
       );
-      yPos += 15;
+      yPos += 12;
 
       /* ===== DASHED SEPARATOR ===== */
       doc
@@ -1058,24 +2086,37 @@ async function generateReceiptPDF({ payment }) {
 
       if (payment.student) {
         const fullName = `${payment.student.firstName} ${payment.student.surname}`;
+
+        // Name
         doc.font("Courier-Bold").text("Name:", margin, yPos);
-        doc.font("Courier").text(` ${fullName}`, margin + 30, yPos);
+        yPos += 10;
+        doc.font("Courier").text(fullName, margin + 12, yPos, {
+          width: contentWidth - 12,
+        });
         yPos += 10;
 
         const email = payment.student.email || "N/A";
+        // Email
         doc.font("Courier-Bold").text("Email:", margin, yPos);
-        doc.font("Courier").text(` ${email}`, margin + 30, yPos);
+        yPos += 10;
+        doc.font("Courier").text(email, margin + 12, yPos, {
+          width: contentWidth - 12,
+        });
         yPos += 10;
 
         if (payment.student.studentId) {
+          // Student ID
           doc.font("Courier-Bold").text("Student ID:", margin, yPos);
+          yPos += 10;
           doc
             .font("Courier")
-            .text(` ${payment.student.studentId}`, margin + 50, yPos);
+            .text(payment.student.studentId, margin + 12, yPos, {
+              width: contentWidth - 12,
+            });
           yPos += 10;
         }
       }
-      yPos += 10;
+      yPos += 8;
 
       /* ===== DASHED SEPARATOR ===== */
       doc
@@ -1097,54 +2138,60 @@ async function generateReceiptPDF({ payment }) {
 
       doc.fontSize(8);
 
+      // Category
       doc.font("Courier-Bold").text("Category:", margin, yPos);
-      doc
-        .font("Courier")
-        .text(` ${payment.category || "N/A"}`, margin + 45, yPos);
+      yPos += 10;
+      doc.font("Courier").text(payment.category || "N/A", margin + 12, yPos, {
+        width: contentWidth - 12,
+      });
       yPos += 10;
 
       const description = payment.description || "Payment";
+      // Description
       doc.font("Courier-Bold").text("Description:", margin, yPos);
-      yPos += 6;
+      yPos += 10;
 
       const descriptionHeight = doc.heightOfString(description, {
         width: contentWidth - 15,
-        lineGap: 3,
+        lineGap: 2,
       });
 
       doc.font("Courier").text(description, margin + 12, yPos, {
         width: contentWidth - 15,
-        lineGap: 3,
+        lineGap: 2,
       });
       yPos += descriptionHeight + 8;
 
+      // Method
       doc.font("Courier-Bold").text("Method:", margin, yPos);
       doc
         .font("Courier")
-        .text(` ${payment.method || "N/A"}`, margin + 40, yPos);
+        .text(` ${payment.method || "N/A"}`, margin + 35, yPos);
       yPos += 10;
 
       if (payment.semester) {
+        // Semester
         doc.font("Courier-Bold").text("Semester:", margin, yPos);
         doc.font("Courier").text(` ${payment.semester}`, margin + 45, yPos);
         yPos += 10;
       }
 
       if (payment.academicYear) {
+        // Academic Year
         doc.font("Courier-Bold").text("Academic Year:", margin, yPos);
         doc.font("Courier").text(` ${payment.academicYear}`, margin + 65, yPos);
         yPos += 10;
       }
-      yPos += 10;
+      yPos += 8;
 
-      /* ===== PAYMENT SUMMARY SECTION (USES NEW FIELDS) ===== */
+      /* ===== PAYMENT SUMMARY SECTION ===== */
       doc
         .moveTo(margin, yPos)
         .lineTo(pageWidth - margin, yPos)
         .strokeColor("#000000")
         .lineWidth(0.5)
         .stroke();
-      yPos += 8;
+      yPos += 10;
 
       doc.font("Courier-Bold").fontSize(9);
       doc.text("PAYMENT SUMMARY", margin, yPos, {
@@ -1155,97 +2202,55 @@ async function generateReceiptPDF({ payment }) {
 
       doc.fontSize(8);
 
-      const amountStartX = pageWidth / 2;
+      // Helper function to format numbers with thousand separator
+      const formatNumber = (num) => {
+        return parseFloat(num)
+          .toFixed(2)
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      };
 
-      // ✅ USING NEW FIELD: totalDue
-
+      const amountStartX = margin + 60;
       const amountPaid = parseFloat(payment.amount) || 0;
-
       const totalDue = parseFloat(payment.totalDue) || amountPaid;
+      const balanceRemaining = parseFloat(payment.balanceAfterPayment) || 0;
+
+      // Total Due
       doc.font("Courier-Bold").text("Total Due:", margin, yPos);
       doc
         .font("Courier")
-        .text(`ZMW ${totalDue.toFixed(2)}`, amountStartX, yPos, {
-          width: contentWidth / 2,
-          align: "right",
-        });
+        .text(`ZMW ${formatNumber(totalDue)}`, amountStartX, yPos);
       yPos += 10;
 
-      // ✅ USING EXISTING FIELD: amount (renamed to "Amount Paid")
-      // const amountPaid = parseFloat(payment.amount) || 0;
+      // Amount Paid
       doc.font("Courier-Bold").text("Amount Paid:", margin, yPos);
       doc
         .font("Courier")
-        .text(`ZMW ${amountPaid.toFixed(2)}`, amountStartX, yPos, {
-          width: contentWidth / 2,
-          align: "right",
-        });
+        .text(`ZMW ${formatNumber(amountPaid)}`, amountStartX, yPos);
       yPos += 10;
 
-      // ✅ USING NEW FIELD: balanceAfterPayment
-      const balanceRemaining = parseFloat(payment.balanceAfterPayment) || 0;
-      doc.font("Courier-Bold").text("Balance Remaining:", margin, yPos);
+      // Balance
+      doc.font("Courier-Bold").text("Balance:", margin, yPos);
       doc
         .font("Courier")
-        .text(`ZMW ${balanceRemaining.toFixed(2)}`, amountStartX, yPos, {
-          width: contentWidth / 2,
-          align: "right",
-        });
-      yPos += 15;
+        .text(`ZMW ${formatNumber(balanceRemaining)}`, amountStartX, yPos);
+      yPos += 12;
 
-      /* ===== TAX BREAKDOWN SECTION (KEEP EXISTING) ===== */
+      // Total Paid separator
       doc
         .moveTo(margin, yPos)
         .lineTo(pageWidth - margin, yPos)
         .strokeColor("#000000")
         .lineWidth(0.5)
         .stroke();
-      yPos += 8;
+      yPos += 10;
 
+      // TOTAL PAID
       doc.font("Courier-Bold").fontSize(9);
-      doc.text("TAX BREAKDOWN", margin, yPos, {
-        width: contentWidth,
-        align: "center",
-      });
-      yPos += 12;
-
-      doc.fontSize(8);
-
-      const vat = amountPaid * 0.16;
-      const subtotal = amountPaid - vat;
-
-      doc.font("Courier-Bold").text("Subtotal:", margin, yPos);
-      doc
-        .font("Courier")
-        .text(`ZMW ${subtotal.toFixed(2)}`, amountStartX, yPos, {
-          width: contentWidth / 2,
-          align: "right",
-        });
-      yPos += 10;
-
-      doc.font("Courier-Bold").text("VAT (16%):", margin, yPos);
-      doc.font("Courier").text(`ZMW ${vat.toFixed(2)}`, amountStartX, yPos, {
-        width: contentWidth / 2,
-        align: "right",
-      });
-      yPos += 12;
-
-      doc
-        .moveTo(margin, yPos)
-        .lineTo(pageWidth - margin, yPos)
-        .strokeColor("#000000")
-        .lineWidth(0.5)
-        .stroke();
-      yPos += 8;
-
-      doc.font("Courier-Bold").fontSize(10);
       doc.text("TOTAL PAID:", margin, yPos);
       doc
         .font("Courier")
-        .text(`ZMW ${amountPaid.toFixed(2)}`, amountStartX, yPos, {
-          width: contentWidth / 2,
-          align: "right",
-        });
+        .fontSize(8)
+        .text(`ZMW ${formatNumber(amountPaid)}`, amountStartX, yPos);
       yPos += 12;
 
       doc
@@ -1254,7 +2259,7 @@ async function generateReceiptPDF({ payment }) {
         .strokeColor("#000000")
         .lineWidth(0.5)
         .stroke();
-      yPos += 15;
+      yPos += 12;
 
       /* ===== PAYMENT STATUS ===== */
       const status = payment.status ? payment.status.toUpperCase() : "PENDING";
@@ -1283,38 +2288,40 @@ async function generateReceiptPDF({ payment }) {
             align: "center",
           }
         );
-        yPos += 12;
+        yPos += 10;
       }
 
       /* ===== SIGNATURE AREA ===== */
-      yPos += 10;
+      yPos += 8;
 
-      if (signatureBuffer) {
-        const sigWidth = 50;
-        const sigX = (pageWidth - sigWidth) / 2;
+      // Signature line
+      doc
+        .moveTo(margin + 30, yPos + 15)
+        .lineTo(pageWidth - margin - 30, yPos + 15)
+        .strokeColor("#000000")
+        .lineWidth(0.5)
+        .stroke();
 
-        doc.image(signatureBuffer, sigX, yPos, {
-          width: sigWidth,
-          fit: [sigWidth, 30],
-        });
-        yPos += 40;
-      }
+      yPos += 25;
 
-      doc.font("Courier-Bold").fontSize(9).fillColor("#000000");
-      doc.text("FINANCE DEPARTMENT", margin, yPos, {
-        width: contentWidth,
-        align: "center",
-      });
-      yPos += 10;
-
+      // University name in signature area
       doc.font("Courier").fontSize(8);
-      doc.text("Copperstone University", margin, yPos, {
+      doc.text("COPPERSTONE UNIVERSITY", margin, yPos, {
         width: contentWidth,
         align: "center",
       });
-      yPos += 15;
+      yPos += 12;
 
-      /* ===== FOOTER ===== */
+      // Finance Department
+      doc.font("Courier").fontSize(6).fillColor("#000000");
+      doc.text("Our Vision!,Our Country,Our World!", margin, yPos, {
+        width: contentWidth,
+        align: "center",
+      });
+      yPos += 10;
+
+      /* ===== FOOTER SECTION ===== */
+      // Top dashed line
       doc
         .moveTo(margin + 10, yPos)
         .lineTo(pageWidth - margin - 10, yPos)
@@ -1322,28 +2329,41 @@ async function generateReceiptPDF({ payment }) {
         .strokeColor("#000000")
         .lineWidth(0.3)
         .stroke();
-      yPos += 12;
-
-      doc.font("Courier-Bold").fontSize(8);
-      doc.text("*** OFFICIAL RECEIPT ***", margin, yPos, {
-        width: contentWidth,
-        align: "center",
-      });
       yPos += 10;
 
-      doc.font("Courier").fontSize(7);
-      doc.text("finance@copperstone.edu.zm", margin, yPos, {
+      // ADDRESS SECTION
+      doc.font("Courier").fontSize(6);
+      doc.text("Plot 38002, Baluba Campus", margin, yPos, {
         width: contentWidth,
         align: "center",
       });
       yPos += 8;
 
-      doc.text("+260 211 123456", margin, yPos, {
+      doc.text("Ndola-Kitwe Dual carriageway, KITWE", margin, yPos, {
         width: contentWidth,
         align: "center",
       });
-      yPos += 10;
+      yPos += 8;
 
+      // doc.text("Cell: +260 965571607, +260 0967499292", margin, yPos, {
+      //   width: contentWidth,
+      //   align: "center",
+      // });
+      // yPos += 8;
+
+      // doc.text("email: customercareucopperstone@gmail.com", margin, yPos, {
+      //   width: contentWidth,
+      //   align: "center",
+      // });
+      // yPos += 10; // Increased from 8 to 10 for more space
+
+      // doc.text("www.copperstoneuniversity.site", margin, yPos, {
+      //   width: contentWidth,
+      //   align: "center",
+      // });
+      // yPos += 10;
+
+      // Thank you message
       doc.font("Courier-Oblique").fontSize(8);
       doc.text("Thank you for your payment", margin, yPos, {
         width: contentWidth,
@@ -1355,7 +2375,7 @@ async function generateReceiptPDF({ payment }) {
       if (balanceRemaining > 0) {
         doc.font("Courier-Bold").fontSize(7).fillColor("#FF0000");
         doc.text(
-          `* Balance of ZMW ${balanceRemaining.toFixed(2)} pending`,
+          `* Balance of ZMW ${formatNumber(balanceRemaining)} pending`,
           margin,
           yPos,
           {

@@ -535,7 +535,7 @@ exports.viewFinanceApplicationDetail = async (req, res) => {
 //     return res.redirect("/finance/payments");
 //   }
 // };
-
+// Verify / reject payment
 exports.verifyPaymentDirect = async (req, res) => {
   try {
     console.log("🔍 DEBUG - Request body:", req.body); // ADD THIS FOR DEBUGGING
@@ -665,27 +665,29 @@ exports.verifyPaymentDirect = async (req, res) => {
         });
 
         // VC + Registrar email
-        await sendEmail({
-          to: ["officialkwina@gmail.com", "annebupe@gmail.com"],
-          subject: "📄 Payment Verified – Receipt Issued",
-          html: `
-            <p>A student payment has been <strong>verified</strong> and an official receipt has been issued.</p>
-            <p><strong>Student:</strong> ${payment.student.firstName} ${payment.student.surname}</p>
-            <p><strong>Amount:</strong> ZMW ${payment.amount}</p>
-            <p><strong>Category:</strong> ${payment.category}</p>
-            <p>The official receipt is attached to this email.</p>
-            <p>Portal access: <br/><a href="${signedUrl}">View Receipt in Portal</a></p>
-          `,
-          attachments: [
-            {
-              filename: `Receipt_${payment._id}.pdf`,
-              path: pdfPath,
-              contentType: "application/pdf",
-            },
-          ],
-        });
+        // await sendEmail({
+        //   to: ["officialkwina@gmail.com", "annebupe@gmail.com"],
+        //   subject: "📄 Payment Verified – Receipt Issued",
+        //   html: `
+        //     <p>A student payment has been <strong>verified</strong> and an official receipt has been issued.</p>
+        //     <p><strong>Student:</strong> ${payment.student.firstName} ${payment.student.surname}</p>
+        //     <p><strong>Amount:</strong> ZMW ${payment.amount}</p>
+        //     <p><strong>Category:</strong> ${payment.category}</p>
+        //     <p>The official receipt is attached to this email.</p>
+        //     <p>Portal access: <br/><a href="${signedUrl}">View Receipt in Portal</a></p>
+        //   `,
+        //   attachments: [
+        //     {
+        //       filename: `Receipt_${payment._id}.pdf`,
+        //       path: pdfPath,
+        //       contentType: "application/pdf",
+        //     },
+        //   ],
+        // });
 
-        console.log("📧 Receipt emails sent (Student, VC, Registrar)");
+        console.log("📧 Receipt emails sent to Student");
+
+        // console.log("📧 Receipt emails sent (Student, VC, Registrar)");
       } else {
         console.warn("⚠️ No student email found. Receipt email skipped.");
       }
@@ -1377,31 +1379,33 @@ exports.createPayment = async (req, res) => {
         ],
       });
 
-      // VC + Registrar email
-      await sendEmail({
-        to: ["officialkwina@gmail.com", "annebupe@gmail.com"],
-        subject: "📄 Payment Received – Receipt Issued",
-        html: `
-          <p>A student payment has been <strong>received and verified</strong>.</p>
-          <p><strong>Student:</strong> ${populatedPayment.student.firstName} ${
-          populatedPayment.student.surname
-        }</p>
-          <p><strong>Amount:</strong> ZMW ${populatedPayment.amount}</p>
-          <p><strong>Category:</strong> ${populatedPayment.category}</p>
-          <p><strong>Balance Due:</strong> ZMW ${finalBalance.toFixed(2)}</p>
-          <p>The official receipt is attached.</p>
-          <p><a href="${signedUrl}">View Receipt in Portal</a></p>
-        `,
-        attachments: [
-          {
-            filename: `Receipt_${payment._id}.pdf`,
-            path: pdfPath,
-            contentType: "application/pdf",
-          },
-        ],
-      });
+      // // VC + Registrar email
+      // await sendEmail({
+      //   to: ["officialkwina@gmail.com", "annebupe@gmail.com"],
+      //   subject: "📄 Payment Received – Receipt Issued",
+      //   html: `
+      //     <p>A student payment has been <strong>received and verified</strong>.</p>
+      //     <p><strong>Student:</strong> ${populatedPayment.student.firstName} ${
+      //     populatedPayment.student.surname
+      //   }</p>
+      //     <p><strong>Amount:</strong> ZMW ${populatedPayment.amount}</p>
+      //     <p><strong>Category:</strong> ${populatedPayment.category}</p>
+      //     <p><strong>Balance Due:</strong> ZMW ${finalBalance.toFixed(2)}</p>
+      //     <p>The official receipt is attached.</p>
+      //     <p><a href="${signedUrl}">View Receipt in Portal</a></p>
+      //   `,
+      //   attachments: [
+      //     {
+      //       filename: `Receipt_${payment._id}.pdf`,
+      //       path: pdfPath,
+      //       contentType: "application/pdf",
+      //     },
+      //   ],
+      // });
 
-      console.log("📧 Payment receipt emails sent (Student, VC, Registrar)");
+      // console.log("📧 Payment receipt emails sent (Student, VC, Registrar)");
+
+      console.log("📧 Payment receipt emails sent (Student)");
     }
 
     // ===============================
