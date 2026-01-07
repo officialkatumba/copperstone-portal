@@ -399,6 +399,12 @@ const applicationSchema = new mongoose.Schema(
       ref: "Programme",
     },
 
+    modeOfStudy: {
+      type: String,
+      enum: ["Full Time", "Distance", "Evening", "Online"],
+      default: "Full Time",
+    },
+
     // ✅ Payment Reference (instead of embedded payment)
     payment: {
       type: mongoose.Schema.Types.ObjectId,
