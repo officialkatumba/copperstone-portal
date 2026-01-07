@@ -439,6 +439,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoStore = require("connect-mongo").default;
+
 const flash = require("connect-flash");
 const passport = require("passport");
 const path = require("path");
@@ -583,13 +585,33 @@ app.set("views", path.join(__dirname, "../frontend/views"));
 // ==================================================
 // SESSION
 // ==================================================
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET || "copperstone_secret",
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       secure: process.env.NODE_ENV === "production", // true only in production
+//       httpOnly: true,
+//       sameSite: "lax",
+//     },
+//   })
+// );
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "copperstone_secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      collectionName: "sessions",
+      ttl: 14 * 24 * 60 * 60, // 14 days
+    }),
+
     cookie: {
-      secure: process.env.NODE_ENV === "production", // true only in production
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: "lax",
     },

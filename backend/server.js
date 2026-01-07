@@ -43,12 +43,31 @@
 // });
 
 // server.js
-require("dotenv").config();
+// require("dotenv").config();
+// const app = require("./app");
+
+// const PORT = process.env.PORT || 8000; // Keep 8000 as you prefer
+
+// app.listen(PORT, "127.0.0.1", () => {
+//   console.log(`✅ Server running at http://127.0.0.1:${PORT}`);
+//   console.log(`🌐 Also accessible as http://localhost:${PORT}`);
+// });
+
+// backend/server.js
+
+// Load env vars ONLY in local development
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 const app = require("./app");
 
-const PORT = process.env.PORT || 8000; // Keep 8000 as you prefer
+const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, "127.0.0.1", () => {
-  console.log(`✅ Server running at http://127.0.0.1:${PORT}`);
-  console.log(`🌐 Also accessible as http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log("======================================");
+  console.log("🚀 SERVER STARTED SUCCESSFULLY");
+  console.log("🌍 Environment:", process.env.NODE_ENV);
+  console.log("🔌 Listening on port:", PORT);
+  console.log("======================================");
 });
