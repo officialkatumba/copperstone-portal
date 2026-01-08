@@ -436,6 +436,252 @@
 
 // module.exports = app;
 
+// const express = require("express");
+// const mongoose = require("mongoose");
+// const session = require("express-session");
+// const flash = require("connect-flash");
+// const passport = require("passport");
+// const path = require("path");
+// const helmet = require("helmet");
+// require("dotenv").config();
+
+// const app = express();
+
+// // ==================================================
+// // TRUST PROXY (REQUIRED FOR HEROKU, SAFE FOR LOCAL)
+// // ==================================================
+// app.enable("trust proxy");
+
+// // ==================================================
+// // HELMET (FINAL CSP – LOCAL + PRODUCTION SAFE)
+// // ==================================================
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: {
+//       directives: {
+//         defaultSrc: ["'self'"],
+
+//         styleSrc: [
+//           "'self'",
+//           "'unsafe-inline'",
+//           "https://cdn.jsdelivr.net",
+//           "https://fonts.googleapis.com",
+//           "https://cdnjs.cloudflare.com",
+//         ],
+
+//         scriptSrc: [
+//           "'self'",
+//           "'unsafe-inline'",
+//           "https://cdn.jsdelivr.net",
+//           "https://cdnjs.cloudflare.com",
+//         ],
+
+//         fontSrc: [
+//           "'self'",
+//           "https://fonts.gstatic.com",
+//           "https://cdnjs.cloudflare.com",
+//         ],
+
+//         imgSrc: [
+//           "'self'",
+//           "data:",
+//           "https://cdn.jsdelivr.net",
+//           "https://cdnjs.cloudflare.com",
+//           "https://encrypted-tbn0.gstatic.com",
+//           "https://images.theconversation.com",
+//           "https://media.istockphoto.com",
+//         ],
+
+//         connectSrc: ["'self'", "https://wa.me"],
+
+//         frameSrc: ["'self'"],
+
+//         formAction: ["'self'"],
+//         baseUri: ["'self'"],
+//         objectSrc: ["'none'"],
+
+//         upgradeInsecureRequests: [],
+//       },
+//     },
+
+//     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+
+//     // Needed for CDNs
+//     crossOriginEmbedderPolicy: false,
+//   })
+// );
+
+// // ==================================================
+// // CRITICAL FIX: HTTPS + NON-WWW (PRODUCTION ONLY)
+// // ==================================================
+// app.use((req, res, next) => {
+//   // 🟢 ALLOW LOCALHOST & DEVELOPMENT - NO REDIRECTS
+//   if (process.env.NODE_ENV !== "production") {
+//     return next();
+//   }
+
+//   const host = req.headers.host;
+
+//   // 🔐 Force HTTPS on Heroku ONLY in production
+//   if (!req.secure && host === "copperstoneuniversity.site") {
+//     return res.redirect(301, `https://${host}${req.originalUrl}`);
+//   }
+
+//   // 🔁 Force NON-WWW in production
+//   if (host === "www.copperstoneuniversity.site") {
+//     return res.redirect(
+//       301,
+//       `https://copperstoneuniversity.site${req.originalUrl}`
+//     );
+//   }
+
+//   next();
+// });
+
+// // ==================================================
+// // DATABASE
+// // ==================================================
+// mongoose
+//   .connect(process.env.MONGO_URI)
+//   .then(() => console.log("✅ MongoDB Connected"))
+//   .catch((err) => console.error("❌ MongoDB Error:", err));
+
+// // ==================================================
+// // PASSPORT CONFIG
+// // ==================================================
+// require("./config/passportConfig")(passport);
+
+// // ==================================================
+// // CORE MIDDLEWARE
+// // ==================================================
+// app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+
+// // ==================================================
+// // STATIC FILES
+// // ==================================================
+// app.use(express.static(path.join(__dirname, "../public")));
+// app.use(express.static(path.join(__dirname, "../frontend/public")));
+
+// // ==================================================
+// // VIEW ENGINE
+// // ==================================================
+// app.set("view engine", "ejs");
+// app.set("views", path.join(__dirname, "../frontend/views"));
+
+// // ==================================================
+// // SESSION
+// // ==================================================
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET || "copperstone_secret",
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       secure: process.env.NODE_ENV === "production", // true only in production
+//       httpOnly: true,
+//       sameSite: "lax",
+//     },
+//   })
+// );
+
+// // ==================================================
+// // AUTH & FLASH
+// // ==================================================
+// app.use(passport.initialize());
+// app.use(passport.session());
+// app.use(flash());
+
+// // ==================================================
+// // GLOBAL VIEW VARIABLES
+// // ==================================================
+// app.use((req, res, next) => {
+//   res.locals.messages = {
+//     success: req.flash("success"),
+//     error: req.flash("error"),
+//   };
+
+//   res.locals.success_msg = req.flash("success_msg");
+//   res.locals.error_msg = req.flash("error_msg");
+//   res.locals.user = req.user || null;
+//   next();
+// });
+
+// // ==================================================
+// // ROUTE IMPORTS
+// // ==================================================
+// const homeRoutes = require("./routes/homeRoutes");
+// const authRoutes = require("./routes/authRoutes");
+// const dashboardRoutes = require("./routes/dashboardRoutes");
+
+// const admissionsRoutes = require("./routes/admissionsRoutes");
+// const applicationRoutes = require("./routes/applicationRoutes");
+// const financeRoutes = require("./routes/financeRoutes");
+// const registrationRoutes = require("./routes/registrationRoutes");
+
+// const deanRoutes = require("./routes/deanRoutes");
+// const vcRoutes = require("./routes/vcRoutes");
+// const registrarRoutes = require("./routes/registrarRoutes");
+// const deanOfStudentsRoutes = require("./routes/deanOfStudentsRoutes");
+// const lecturerRoutes = require("./routes/lecturerRoutes");
+
+// // Skills
+// const skillApplicationRoutes = require("./routes/skillApplicationRoutes");
+// const skillFinanceRoutes = require("./routes/skillFinanceRoutes");
+// const skillAdmissionsRoutes = require("./routes/skillAdmissionsRoutes");
+
+// // ==================================================
+// // ROUTE MOUNTING (STRICT NAMESPACING)
+// // ==================================================
+
+// // 🌍 Public & Auth
+// app.use("/", homeRoutes);
+// app.use("/auth", authRoutes);
+// app.use("/dashboard", dashboardRoutes);
+
+// // 🎓 Applications & Registration
+// app.use("/applications", applicationRoutes);
+// app.use("/registration", registrationRoutes);
+
+// // 🏫 Admissions & Finance
+// app.use("/admissions", admissionsRoutes);
+// app.use("/finance", financeRoutes);
+
+// // 👨‍🏫 Academic Leadership
+// app.use("/dean", deanRoutes);
+// app.use("/vc", vcRoutes);
+// app.use("/dean-of-students", deanOfStudentsRoutes);
+
+// // 🧾 Registrar
+// app.use("/registrar", registrarRoutes);
+
+// // 🧑‍🏫 Lecturers
+// app.use("/lecturer", lecturerRoutes);
+
+// // 🛠 Skills
+// app.use("/skills", skillApplicationRoutes);
+// app.use("/finance/skills", skillFinanceRoutes);
+// app.use("/admissions/skills", skillAdmissionsRoutes);
+
+// // ==================================================
+// // TEST ROUTE
+// // ==================================================
+// app.get("/registrar/test", (req, res) => {
+//   res.send("✅ Registrar route is working");
+// });
+
+// // ==================================================
+// // 404 HANDLER
+// // ==================================================
+// app.use((req, res) => {
+//   res.status(404).render("error/404", {
+//     title: "Page Not Found",
+//     user: req.user || null,
+//   });
+// });
+
+// module.exports = app;
+
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
@@ -468,59 +714,83 @@ app.enable("trust proxy");
 // ==================================================
 // HELMET (FINAL CSP – LOCAL + PRODUCTION SAFE)
 // ==================================================
+
+// ==================================================
+// MINIMAL HELMET CONFIG - WILL FIX YOUR ISSUE
+// ==================================================
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
+    contentSecurityPolicy: false, // ← This is key!
+  })
+);
 
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "https://cdn.jsdelivr.net",
-          "https://fonts.googleapis.com",
-          "https://cdnjs.cloudflare.com",
-        ],
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: false,
+//     crossOriginEmbedderPolicy: false,
+//     crossOriginResourcePolicy: { policy: "cross-origin" },
+//   })
+// );
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: {
+//       directives: {
+//         defaultSrc: ["'self'"],
 
-        scriptSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-        ],
+//         styleSrc: [
+//           "'self'",
+//           "'unsafe-inline'",
+//           "https://cdn.jsdelivr.net",
+//           "https://fonts.googleapis.com",
+//           "https://cdnjs.cloudflare.com",
+//         ],
 
-        fontSrc: [
-          "'self'",
-          "https://fonts.gstatic.com",
-          "https://cdnjs.cloudflare.com",
-        ],
+//         scriptSrc: [
+//           "'self'",
+//           "'unsafe-inline'",
+//           "'unsafe-eval'", // ← ADD THIS LINE
+//           "https://cdn.jsdelivr.net",
+//           "https://cdnjs.cloudflare.com",
+//         ],
 
-        imgSrc: [
-          "'self'",
-          "data:",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "https://encrypted-tbn0.gstatic.com",
-          "https://images.theconversation.com",
-          "https://media.istockphoto.com",
-        ],
+//         fontSrc: [
+//           "'self'",
+//           "https://fonts.gstatic.com",
+//           "https://cdnjs.cloudflare.com",
+//         ],
 
-        connectSrc: ["'self'", "https://wa.me"],
+//         imgSrc: [
+//           "'self'",
+//           "data:",
+//           "https://cdn.jsdelivr.net",
+//           "https://cdnjs.cloudflare.com",
+//           "https://encrypted-tbn0.gstatic.com",
+//           "https://images.theconversation.com",
+//           "https://media.istockphoto.com",
+//         ],
 
-        frameSrc: ["'self'"],
+//         connectSrc: ["'self'", "https://wa.me"],
 
-        formAction: ["'self'"],
-        baseUri: ["'self'"],
-        objectSrc: ["'none'"],
+//         frameSrc: ["'self'"],
 
-        upgradeInsecureRequests: [],
-      },
-    },
+//         formAction: ["'self'"],
+//         baseUri: ["'self'"],
+//         objectSrc: ["'none'"],
 
-    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+//         upgradeInsecureRequests: [],
+//       },
+//     },
 
-    // Needed for CDNs
-    crossOriginEmbedderPolicy: false,
+//     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+
+//     // Needed for CDNs
+//     crossOriginEmbedderPolicy: false,
+//   })
+// );
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
   })
 );
 
