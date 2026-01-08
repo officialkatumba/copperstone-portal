@@ -718,11 +718,11 @@ app.enable("trust proxy");
 // ==================================================
 // MINIMAL HELMET CONFIG - WILL FIX YOUR ISSUE
 // ==================================================
-app.use(
-  helmet({
-    contentSecurityPolicy: false, // ← This is key!
-  })
-);
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: false, // ← This is key!
+//   })
+// );
 
 // app.use(
 //   helmet({
