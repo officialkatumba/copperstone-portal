@@ -1448,22 +1448,39 @@ exports.createPayment = async (req, res) => {
 exports.listPayments = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search || "";
+    const limit = parseInt(req.query.limit) || 20; // START AT 20
+    const search = (req.query.search || "").trim();
+    const category = (req.query.category || "").trim();
 
     const skip = (page - 1) * limit;
 
-    // 🔍 Search filter
+    // ============================
+    // BUILD QUERY
+    // ============================
     const query = {};
-    if (search) {
-      query.$or = [
-        { category: new RegExp(search, "i") },
-        { method: new RegExp(search, "i") },
-        { description: new RegExp(search, "i") },
-      ];
+
+    // CATEGORY FILTER
+    if (category) {
+      query.category = category;
     }
 
-    // 📄 Payments (paginated)
+    // STUDENT SEARCH (name OR email)
+    if (search) {
+      const students = await User.find({
+        role: "Student",
+        $or: [
+          { firstName: new RegExp(search, "i") },
+          { surname: new RegExp(search, "i") },
+          { email: new RegExp(search, "i") },
+        ],
+      }).select("_id");
+
+      query.student = { $in: students.map((s) => s._id) };
+    }
+
+    // ============================
+    // PAYMENTS
+    // ============================
     const payments = await Payment.find(query)
       .populate("student", "firstName surname email")
       .sort({ createdAt: -1 })
@@ -1473,19 +1490,20 @@ exports.listPayments = async (req, res) => {
     const totalCount = await Payment.countDocuments(query);
     const totalPages = Math.ceil(totalCount / limit);
 
-    // 📊 Summary calculations
+    // ============================
+    // SUMMARY TOTALS
+    // ============================
     const now = new Date();
-
     const startOfToday = new Date(now.setHours(0, 0, 0, 0));
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
     const sum = async (from) => {
-      const res = await Payment.aggregate([
+      const r = await Payment.aggregate([
         { $match: { createdAt: { $gte: from } } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]);
-      return res[0]?.total || 0;
+      return r.length ? r[0].total : 0;
     };
 
     const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
@@ -1498,7 +1516,6 @@ exports.listPayments = async (req, res) => {
     res.render("finance/payments", {
       title: "All Payments",
       payments,
-      user: req.user,
 
       // summary
       totalToday,
@@ -1510,11 +1527,17 @@ exports.listPayments = async (req, res) => {
       monthRange: `${startOfMonth.toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
       yearRange: `${startOfYear.getFullYear()} - ${new Date().getFullYear()}`,
 
-      // pagination + search
+      // filters
+      search,
+      category,
+
+      // pagination
       currentPage: page,
       totalPages,
+      totalCount,
       limit,
-      search,
+
+      user: req.user,
     });
   } catch (err) {
     console.error("List payments error:", err);
@@ -1544,5 +1567,98 @@ exports.viewPaymentReceipt = async (req, res) => {
     console.error("View payment receipt error:", error);
     req.flash("error_msg", "Failed to access receipt.");
     return res.redirect("back");
+  }
+};
+
+//Cancel receipt
+
+exports.cancelReceipt = async (req, res) => {
+  try {
+    const paymentId = req.params.id;
+    const { cancelReason } = req.body;
+
+    // ===============================
+    // 1️⃣ LOAD PAYMENT
+    // ===============================
+    const payment = await Payment.findById(paymentId)
+      .populate("student", "firstName surname email")
+      .exec();
+
+    if (!payment) {
+      req.flash("error_msg", "Payment not found.");
+      return res.redirect("/finance/payments");
+    }
+
+    // ===============================
+    // 2️⃣ VALIDATE CAN BE CANCELLED
+    // ===============================
+    if (!payment.receipt || !payment.receipt.gcsPath) {
+      req.flash("error_msg", "No receipt found to cancel.");
+      return res.redirect("/finance/payments");
+    }
+
+    if (payment.status === "Cancelled") {
+      req.flash("error_msg", "Receipt is already cancelled.");
+      return res.redirect("/finance/payments");
+    }
+
+    // ===============================
+    // 3️⃣ UPDATE PAYMENT STATUS
+    // ===============================
+    const previousStatus = payment.status;
+    payment.status = "Cancelled";
+    payment.remarks = `Receipt cancelled: ${
+      cancelReason || "No reason provided"
+    } (Previously: ${previousStatus})`;
+    payment.updatedAt = new Date();
+
+    // Clear receipt data
+    payment.receipt = null;
+
+    // ===============================
+    // 4️⃣ SAVE PAYMENT
+    // ===============================
+    await payment.save();
+
+    // ===============================
+    // 5️⃣ OPTIONAL: SEND NOTIFICATION EMAIL
+    // ===============================
+    const studentEmail = payment.student?.email;
+    if (studentEmail) {
+      await sendEmail({
+        to: studentEmail,
+        subject: "❌ Payment Receipt Cancelled",
+        html: `
+          <p>Dear ${payment.student.firstName || "Student"},</p>
+          <p>Your payment receipt has been <strong>cancelled</strong> by the finance office.</p>
+          
+          <p><strong>Reason:</strong> ${cancelReason || "Not specified"}</p>
+          <p><strong>Original Amount:</strong> ZMW ${payment.amount.toFixed(
+            2
+          )}</p>
+          <p><strong>Payment Date:</strong> ${payment.createdAt.toLocaleDateString()}</p>
+          
+          <p>You will need to make a new payment to complete this transaction.</p>
+          <p>Please contact the finance office if you have any questions.</p>
+          
+          <br/>
+          <p>Regards,<br/>Finance Office</p>
+        `,
+      });
+      console.log("📧 Cancellation email sent to student");
+    }
+
+    // ===============================
+    // 6️⃣ SUCCESS REDIRECT
+    // ===============================
+    req.flash(
+      "success_msg",
+      "Receipt cancelled successfully. Payment status updated to 'Cancelled'."
+    );
+    return res.redirect("/finance/payments");
+  } catch (error) {
+    console.error("❌ CANCEL RECEIPT ERROR:", error);
+    req.flash("error_msg", "Failed to cancel receipt.");
+    return res.redirect("/finance/payments");
   }
 };

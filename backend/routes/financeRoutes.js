@@ -8,6 +8,7 @@ const {
   // verifyPayment,
   verifyPaymentDirect,
   viewReceipt,
+  cancelReceipt,
   // ✅ NEW PAYMENT FEATURES
   showInitiatePaymentForm,
   createPayment,
@@ -116,6 +117,14 @@ router.post(
   // ensureAuthenticated,
   // ensureFinanceOfficer,
   verifyPaymentDirect // Add this controller
+);
+
+// In your finance routes file
+router.post(
+  "/payments/:id/cancel-receipt",
+  // ensureAuthenticated,
+  // ensureFinance,
+  cancelReceipt
 );
 
 module.exports = router;
