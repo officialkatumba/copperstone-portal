@@ -31,6 +31,119 @@ exports.showApplicationForm = async (req, res) => {
  * Handle application submission
  */
 
+// exports.submitApplication = async (req, res) => {
+//   try {
+//     const {
+//       firstChoice,
+//       secondChoice,
+//       paymentMethod,
+//       paymentAmount,
+//       paymentDescription,
+//     } = req.body;
+
+//     // Default paymentAmount → 0
+//     const amountToSave = paymentAmount ? parseFloat(paymentAmount) : 0;
+//     const applicationYear = new Date().getFullYear();
+
+//     const programme = await Programme.findById(firstChoice);
+//     if (!programme) {
+//       req.flash("error_msg", "Invalid programme selected");
+//       return res.redirect("back");
+//     }
+
+//     const programmeCode = programme.code;
+
+//     // ✅ Upload supporting documents
+//     const gcsDocs = [];
+//     for (const file of req.files) {
+//       const uploaded = await uploadToGCS(
+//         file,
+//         req.user,
+//         programmeCode,
+//         applicationYear
+//       );
+
+//       gcsDocs.push({
+//         name: file.originalname,
+//         gcsUrl: uploaded.publicUrl,
+//         gcsPath: uploaded.path,
+//       });
+//     }
+
+//     // ✅ 1. FIRST create the application WITHOUT payment
+//     const application = await Application.create({
+//       applicant: req.user._id,
+//       firstChoice,
+//       secondChoice: secondChoice || null,
+//       documents: gcsDocs,
+//       // NO payment field here - it will be added after creating Payment record
+//     });
+
+//     // ✅ 2. CREATE PAYMENT RECORD if amount > 0
+//     if (amountToSave > 0) {
+//       const payment = await Payment.create({
+//         student: req.user._id,
+//         application: application._id, // Link to application
+//         programme: firstChoice,
+//         category: "Application Fee",
+//         description: paymentDescription || "Application Fee",
+//         amount: amountToSave,
+//         totalDue: amountToSave, // For application fee, total = amount
+//         balanceAfterPayment: 0, // Application fee is paid in full
+//         method: paymentMethod,
+//         currency: "ZMW",
+//         reference: `APP-${Date.now().toString().slice(-8)}`,
+//         status: "Pending", // Student payments need verification
+//         remarks: "Submitted with application - pending verification",
+//         // Use first document as proof if exists
+//         proofOfPayment:
+//           gcsDocs.length > 0
+//             ? {
+//                 gcsUrl: gcsDocs[0].gcsUrl,
+//                 gcsPath: gcsDocs[0].gcsPath,
+//                 uploadedAt: new Date(),
+//                 name: gcsDocs[0].name,
+//               }
+//             : undefined,
+//       });
+
+//       // ✅ 3. LINK PAYMENT TO APPLICATION
+//       application.payment = payment._id;
+//       await application.save();
+//     }
+
+//     // ✅ Send confirmation email
+//     if (req.user.email) {
+//       await sendEmail({
+//         to: req.user.email,
+//         subject: "📄 Application Submitted Successfully",
+//         html: `
+//           <p>Dear ${req.user.firstName},</p>
+//           <p>Your application has been <strong>submitted successfully</strong>.</p>
+//           <p><strong>Application ID:</strong> ${application._id}</p>
+//           <p><strong>Programme:</strong> ${programme.name}</p>
+//           ${
+//             amountToSave > 0
+//               ? `<p><strong>Application Fee:</strong> ZMW ${amountToSave.toFixed(
+//                   2
+//                 )} (Pending Verification)</p>`
+//               : ""
+//           }
+//           <p><strong>Status:</strong> Under Review</p>
+//           <p>Regards,<br/>Admissions Office</p>
+//         `,
+//       });
+//     }
+
+//     req.flash("success_msg", "Application submitted successfully!");
+//     res.redirect("/dashboard/student");
+//   } catch (err) {
+//     console.error("Application Error:", err);
+//     req.flash("error_msg", "Failed to submit application.");
+//     res.redirect("/applications/apply");
+//   }
+// };
+
 exports.submitApplication = async (req, res) => {
   try {
     const {
@@ -39,6 +152,7 @@ exports.submitApplication = async (req, res) => {
       paymentMethod,
       paymentAmount,
       paymentDescription,
+      modeOfStudy, // ✅ ADD THIS LINE
     } = req.body;
 
     // Default paymentAmount → 0
@@ -75,6 +189,7 @@ exports.submitApplication = async (req, res) => {
       applicant: req.user._id,
       firstChoice,
       secondChoice: secondChoice || null,
+      modeOfStudy: modeOfStudy || "Full Time", // ✅ ADD THIS LINE (with default)
       documents: gcsDocs,
       // NO payment field here - it will be added after creating Payment record
     });
@@ -112,7 +227,7 @@ exports.submitApplication = async (req, res) => {
       await application.save();
     }
 
-    // ✅ Send confirmation email
+    // ✅ Send confirmation email (updated with modeOfStudy)
     if (req.user.email) {
       await sendEmail({
         to: req.user.email,
@@ -122,6 +237,9 @@ exports.submitApplication = async (req, res) => {
           <p>Your application has been <strong>submitted successfully</strong>.</p>
           <p><strong>Application ID:</strong> ${application._id}</p>
           <p><strong>Programme:</strong> ${programme.name}</p>
+          <p><strong>Mode of Study:</strong> ${
+            modeOfStudy || "Full Time"
+          }</p> <!-- ✅ ADD THIS LINE -->
           ${
             amountToSave > 0
               ? `<p><strong>Application Fee:</strong> ZMW ${amountToSave.toFixed(

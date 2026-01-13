@@ -1,4 +1,5 @@
-<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+<%- include('../partials/header') %>
+  <%- include('../partials/navbar') %>
 
     <div class="container my-4">
       <h2 class="fw-bold mb-4 text-center" style="color: var(--primary-purple)">
@@ -10,9 +11,9 @@
           <div class="card shadow-lg border-0 rounded-3 p-3 p-md-4">
             <% if (application.payment?.method==="CDF Sponsored" ) { %>
               <div class="position-absolute top-0 start-0 w-100 text-center fw-bold text-white py-1 mb-3" style="background: linear-gradient(90deg, #ff6a00, #ff0084); 
-           border-top-left-radius: 8px; 
-           border-top-right-radius: 8px;
-           z-index: 10;">
+                                border-top-left-radius: 8px; 
+                                border-top-right-radius: 8px;
+                                z-index: 10;">
                 🎓 CDF SPONSORED APPLICATION
               </div>
               <% } %>
@@ -32,9 +33,15 @@
                       <strong>Email:</strong>
                       <%= application.applicant.email %>
                     </p>
-                    <p class="mb-0">
+                    <p class="mb-1">
                       <strong>Mobile:</strong>
                       <%= application.applicant.mobile %>
+                    </p>
+                    <p class="mb-0">
+                      <strong>Mode of Study:</strong>
+                      <span class="badge bg-primary">
+                        <%= application.modeOfStudy || "Full Time" %>
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -124,7 +131,6 @@
                               <% } %>
                         </div>
 
-
                         <!-- Show verification details if already verified -->
                         <% if (application.payment?.status==="Verified" && application.payment?.verifiedAt) { %>
                           <div class="mt-2 p-2 bg-light rounded">
@@ -132,9 +138,11 @@
                               <i class="fas fa-check-circle me-1"></i>
                               <strong>Verified on:</strong>
                               <%= new Date(application.payment.verifiedAt).toLocaleDateString() %>
-                                <% if (application.payment?.verifiedBy) { %> <br /><strong>By:</strong>
-                                  Finance Officer <% } %>
-                                    <% if (application.payment?.remarks) { %> <br /><strong>Remarks:</strong>
+                                <% if (application.payment?.verifiedBy) { %>
+                                  <br /><strong>By:</strong> Finance Officer
+                                  <% } %>
+                                    <% if (application.payment?.remarks) { %>
+                                      <br /><strong>Remarks:</strong>
                                       <%= application.payment.remarks %>
                                         <% } %>
                             </small>
@@ -146,9 +154,11 @@
                                 <i class="fas fa-times-circle me-1"></i>
                                 <strong>Rejected on:</strong>
                                 <%= new Date(application.payment.verifiedAt).toLocaleDateString() %>
-                                  <% if (application.payment?.verifiedBy) { %> <br /><strong>By:</strong>
-                                    Finance Officer <% } %>
-                                      <% if (application.payment?.remarks) { %> <br /><strong>Remarks:</strong>
+                                  <% if (application.payment?.verifiedBy) { %>
+                                    <br /><strong>By:</strong> Finance Officer
+                                    <% } %>
+                                      <% if (application.payment?.remarks) { %>
+                                        <br /><strong>Remarks:</strong>
                                         <%= application.payment.remarks %>
                                           <% } %>
                               </small>
@@ -205,10 +215,11 @@
                     <!-- Show message when payment is already verified or rejected -->
                     <div class="alert alert-info">
                       <i class="fas fa-info-circle me-2"></i>
-                      <% if (application.payment?.status==="Verified" ) { %> This payment
-                        has already been verified. No further action required. <% } else if
-                          (application.payment?.status==="Rejected" ) { %> This payment has
-                          been rejected. No further action required. <% } %>
+                      <% if (application.payment?.status==="Verified" ) { %>
+                        This payment has already been verified. No further action required.
+                        <% } else if (application.payment?.status==="Rejected" ) { %>
+                          This payment has been rejected. No further action required.
+                          <% } %>
                     </div>
                     <% } %>
 

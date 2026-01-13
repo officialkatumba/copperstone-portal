@@ -1,4 +1,5 @@
-<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+<%- include('../partials/header') %>
+  <%- include('../partials/navbar') %>
 
     <div class="container my-4">
       <h2 class="fw-bold mb-4 text-center" style="color: var(--primary-purple)">
@@ -24,9 +25,15 @@
                   <strong>Email:</strong>
                   <%= application.applicant.email %>
                 </p>
-                <p class="mb-0">
+                <p class="mb-1">
                   <strong>Mobile:</strong>
                   <%= application.applicant.mobile %>
+                </p>
+                <p class="mb-0">
+                  <strong>Mode of Study:</strong>
+                  <span class="badge bg-primary">
+                    <%= application.modeOfStudy || "Full Time" %>
+                  </span>
                 </p>
               </div>
             </div>
@@ -64,6 +71,7 @@
                   <% }) %>
               </ul>
             </div>
+
             <!-- Receipt Section - UPDATED for payment reference model -->
             <div class="mb-4">
               <h5 class="fw-bold text-success mb-3">
@@ -101,8 +109,6 @@
                     <% } %>
             </div>
 
-
-
             <!-- Acceptance Letter -->
             <div class="mb-4">
               <h5 class="fw-bold text-warning mb-3">
@@ -117,8 +123,9 @@
                         <%= application.acceptanceLetter.name %>
                       </strong>
                       <br />
-                      <small class="text-muted"> Uploaded on: <%= application.acceptanceLetter.uploadedAt.toDateString()
-                          %> </small>
+                      <small class="text-muted">
+                        Uploaded on: <%= application.acceptanceLetter.uploadedAt.toDateString() %>
+                      </small>
                     </div>
                     <!-- ✅ CORRECTED: Regular admissions route -->
                     <a href="/admissions/applications/<%= application._id %>/letter" target="_blank"
