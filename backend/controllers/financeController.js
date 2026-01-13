@@ -1572,6 +1572,98 @@ exports.viewPaymentReceipt = async (req, res) => {
 
 //Cancel receipt
 
+// exports.cancelReceipt = async (req, res) => {
+//   try {
+//     const paymentId = req.params.id;
+//     const { cancelReason } = req.body;
+
+//     // ===============================
+//     // 1️⃣ LOAD PAYMENT
+//     // ===============================
+//     const payment = await Payment.findById(paymentId)
+//       .populate("student", "firstName surname email")
+//       .exec();
+
+//     if (!payment) {
+//       req.flash("error_msg", "Payment not found.");
+//       return res.redirect("/finance/payments");
+//     }
+
+//     // ===============================
+//     // 2️⃣ VALIDATE CAN BE CANCELLED
+//     // ===============================
+//     if (!payment.receipt || !payment.receipt.gcsPath) {
+//       req.flash("error_msg", "No receipt found to cancel.");
+//       return res.redirect("/finance/payments");
+//     }
+
+//     if (payment.status === "Cancelled") {
+//       req.flash("error_msg", "Receipt is already cancelled.");
+//       return res.redirect("/finance/payments");
+//     }
+
+//     // ===============================
+//     // 3️⃣ UPDATE PAYMENT STATUS
+//     // ===============================
+//     const previousStatus = payment.status;
+//     payment.status = "Cancelled";
+//     payment.remarks = `Receipt cancelled: ${
+//       cancelReason || "No reason provided"
+//     } (Previously: ${previousStatus})`;
+//     payment.updatedAt = new Date();
+
+//     // Clear receipt data
+//     payment.receipt = null;
+
+//     // ===============================
+//     // 4️⃣ SAVE PAYMENT
+//     // ===============================
+//     await payment.save();
+
+//     // ===============================
+//     // 5️⃣ OPTIONAL: SEND NOTIFICATION EMAIL
+//     // ===============================
+//     const studentEmail = payment.student?.email;
+//     if (studentEmail) {
+//       await sendEmail({
+//         to: studentEmail,
+//         subject: "❌ Payment Receipt Cancelled",
+//         html: `
+//           <p>Dear ${payment.student.firstName || "Student"},</p>
+//           <p>Your payment receipt has been <strong>cancelled</strong> by the finance office.</p>
+
+//           <p><strong>Reason:</strong> ${cancelReason || "Not specified"}</p>
+//           <p><strong>Original Amount:</strong> ZMW ${payment.amount.toFixed(
+//             2
+//           )}</p>
+//           <p><strong>Payment Date:</strong> ${payment.createdAt.toLocaleDateString()}</p>
+
+//           <p>You will need to make a new payment to complete this transaction.</p>
+//           <p>Please contact the finance office if you have any questions.</p>
+
+//           <br/>
+//           <p>Regards,<br/>Finance Office</p>
+//         `,
+//       });
+//       console.log("📧 Cancellation email sent to student");
+//     }
+
+//     // ===============================
+//     // 6️⃣ SUCCESS REDIRECT
+//     // ===============================
+//     req.flash(
+//       "success_msg",
+//       "Receipt cancelled successfully. Payment status updated to 'Cancelled'."
+//     );
+//     return res.redirect("/finance/payments");
+//   } catch (error) {
+//     console.error("❌ CANCEL RECEIPT ERROR:", error);
+//     req.flash("error_msg", "Failed to cancel receipt.");
+//     return res.redirect("/finance/payments");
+//   }
+// };
+
+// Update the cancelReceipt function in financeController.js
 exports.cancelReceipt = async (req, res) => {
   try {
     const paymentId = req.params.id;
@@ -1603,13 +1695,13 @@ exports.cancelReceipt = async (req, res) => {
     }
 
     // ===============================
-    // 3️⃣ UPDATE PAYMENT STATUS
+    // 3️⃣ STORE CANCELLATION INFO
     // ===============================
-    const previousStatus = payment.status;
+    payment.previousStatus = payment.status; // Store what status it was before
     payment.status = "Cancelled";
-    payment.remarks = `Receipt cancelled: ${
-      cancelReason || "No reason provided"
-    } (Previously: ${previousStatus})`;
+    payment.cancellationReason = cancelReason || "No reason provided";
+    payment.cancelledBy = req.user._id;
+    payment.cancelledAt = new Date();
     payment.updatedAt = new Date();
 
     // Clear receipt data

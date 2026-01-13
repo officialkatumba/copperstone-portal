@@ -15,7 +15,8 @@
                     <div class="card shadow-sm text-center">
                         <div class="card-body">
                             <small class="text-muted">Today</small>
-                            <h5 class="fw-bold">ZMW <%= Number(totalToday || 0).toLocaleString() %>
+                            <h5 class="fw-bold">ZMW <%= Number(totalToday || 0).toLocaleString('en-US',
+                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
                             </h5>
                         </div>
                     </div>
@@ -24,7 +25,8 @@
                     <div class="card shadow-sm text-center">
                         <div class="card-body">
                             <small class="text-muted">This Month</small>
-                            <h5 class="fw-bold">ZMW <%= Number(totalMonth || 0).toLocaleString() %>
+                            <h5 class="fw-bold">ZMW <%= Number(totalMonth || 0).toLocaleString('en-US',
+                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
                             </h5>
                         </div>
                     </div>
@@ -33,7 +35,8 @@
                     <div class="card shadow-sm text-center">
                         <div class="card-body">
                             <small class="text-muted">This Year</small>
-                            <h5 class="fw-bold">ZMW <%= Number(totalYear || 0).toLocaleString() %>
+                            <h5 class="fw-bold">ZMW <%= Number(totalYear || 0).toLocaleString('en-US',
+                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
                             </h5>
                         </div>
                     </div>
@@ -42,7 +45,8 @@
                     <div class="card shadow-sm text-center">
                         <div class="card-body">
                             <small class="text-muted">All Time</small>
-                            <h5 class="fw-bold">ZMW <%= Number(totalAll || 0).toLocaleString() %>
+                            <h5 class="fw-bold">ZMW <%= Number(totalAll || 0).toLocaleString('en-US',
+                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
                             </h5>
                         </div>
                     </div>
@@ -134,13 +138,16 @@
                                             </td>
 
                                             <td class="fw-bold text-primary">
-                                                ZMW <%= Number(p.amount || 0).toFixed(2) %>
+                                                ZMW <%= Number(p.amount || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
                                             </td>
 
                                             <td>
                                                 <% if ((p.balanceAfterPayment || 0)> 0) { %>
                                                     <span class="badge bg-warning text-dark">
-                                                        ZMW <%= Number(p.balanceAfterPayment).toFixed(2) %>
+                                                        ZMW <%= Number(p.balanceAfterPayment ||
+                                                            0).toLocaleString('en-US', {minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2}) %>
                                                     </span>
                                                     <% } else { %>
                                                         <span class="badge bg-success">Paid</span>
@@ -309,21 +316,25 @@
                                 <!-- ADDED: Total Due -->
                                 <div class="col-6 mb-2">
                                     <small class="text-muted d-block">Total Due</small>
-                                    <span class="fw-bold text-success">ZMW <%= payment.totalDue ?
-                                            payment.totalDue.toFixed(2) : '0.00' %></span>
+                                    <span class="fw-bold text-success">ZMW <%= (payment.totalDue ||
+                                            0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:
+                                            2}) %></span>
                                 </div>
 
                                 <!-- KEEP: Amount -->
                                 <div class="col-6 mb-2">
                                     <small class="text-muted d-block">Amount Paid</small>
-                                    <span class="fw-bold text-primary">ZMW <%= payment.amount.toFixed(2) %></span>
+                                    <span class="fw-bold text-primary">ZMW <%= (payment.amount ||
+                                            0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:
+                                            2}) %></span>
                                 </div>
 
                                 <!-- ADDED: Balance Remaining -->
                                 <div class="col-6 mb-2">
                                     <small class="text-muted d-block">Balance Remaining</small>
-                                    <span class="fw-bold text-warning">ZMW <%= payment.balanceAfterPayment ?
-                                            payment.balanceAfterPayment.toFixed(2) : '0.00' %>
+                                    <span class="fw-bold text-warning">ZMW <%= (payment.balanceAfterPayment ||
+                                            0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:
+                                            2}) %>
                                     </span>
                                 </div>
 
@@ -364,9 +375,11 @@
                                                             <% } else if(payment.status==='Pending' ){ %>
                                                                 <span class="badge bg-warning text-dark">Pending</span>
                                                                 <% } else if(payment.status==='Cancelled' ){ %>
-                                                                    <span class="badge bg-secondary">Cancelled</span>
+                                                                    <span
+                                                                        class="badge bg-danger text-white">Cancelled</span>
                                                                     <% } else if(payment.status==='Rejected' ){ %>
-                                                                        <span class="badge bg-danger">Rejected</span>
+                                                                        <span
+                                                                            class="badge bg-danger text-white">Rejected</span>
                                                                         <% } else { %>
                                                                             <span class="badge bg-secondary">
                                                                                 <%= payment.status %>
@@ -375,69 +388,98 @@
                                                 </div>
                             </div>
 
-                            <!-- Receipt and Proof of Payment Section -->
-                            <div class="border-top pt-3 mb-3">
-                                <!-- Receipt - Only show for verified/paid payments -->
-                                <% if((payment.status==='Verified' || payment.status==='Fully Paid' ||
-                                    payment.status==='Partially Paid' ) && (payment.receipt &&
-                                    payment.receipt.gcsPath)){ %>
-                                    <div class="mb-2">
-                                        <small class="text-muted d-block mb-1">Payment
-                                            Receipt</small>
-                                        <a href="/finance/payments/<%= payment._id %>/receipt" target="_blank"
-                                            class="btn btn-sm btn-success d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
-                                            style="border-radius:20px;">
-                                            <i class="fas fa-file-pdf"></i>
-                                            <span class="fw-semibold">View Receipt</span>
-                                        </a>
-                                        <!-- Cancel Receipt Button - Only show if receipt exists and payment is verified -->
-                                        <% if(payment.receipt && payment.receipt.gcsPath && (payment.status==='Verified'
-                                            || payment.status==='Fully Paid' || payment.status==='Partially Paid' )){ %>
-                                            <button type="button"
-                                                class="btn btn-sm btn-danger d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
-                                                style="border-radius:20px;" data-bs-toggle="modal"
-                                                data-bs-target="#cancelReceiptModal<%= payment._id %>">
-                                                <i class="fas fa-ban"></i>
-                                                <span class="fw-semibold">Cancel Receipt</span>
-                                            </button>
-                                            <% } %>
+                            <!-- CANCELLATION INFO - Show only for cancelled payments -->
+                            <% if(payment.status==='Cancelled' && payment.cancellationReason){ %>
+                                <div class="border-top pt-3 mb-3">
+                                    <div class="alert alert-danger">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-ban me-2 fs-5"></i>
+                                            <div>
+                                                <h6 class="fw-bold mb-1">Receipt Cancelled</h6>
+                                                <p class="mb-1"><strong>Reason:</strong>
+                                                    <%= payment.cancellationReason %>
+                                                </p>
+                                                <% if(payment.cancelledAt){ %>
+                                                    <p class="mb-0"><strong>Cancelled on:</strong>
+                                                        <%= payment.cancelledAt.toLocaleDateString() %>
+                                                    </p>
+                                                    <% } %>
+                                                        <% if(payment.previousStatus){ %>
+                                                            <p class="mb-0"><strong>Previous Status:</strong>
+                                                                <%= payment.previousStatus %>
+                                                            </p>
+                                                            <% } %>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <% } %>
+                                </div>
+                                <% } %>
 
-                                        <!-- Proof of Payment Upload -->
-                                        <% if(payment.proofOfPayment && (payment.proofOfPayment.gcsPath ||
-                                            payment.proofOfPayment.gcsUrl)){ %>
+                                    <!-- Receipt and Proof of Payment Section -->
+                                    <div class="border-top pt-3 mb-3">
+                                        <!-- Receipt - Only show for verified/paid payments -->
+                                        <% if((payment.status==='Verified' || payment.status==='Fully Paid' ||
+                                            payment.status==='Partially Paid' ) && (payment.receipt &&
+                                            payment.receipt.gcsPath)){ %>
                                             <div class="mb-2">
-                                                <small class="text-muted d-block mb-1">Proof of
-                                                    Payment</small>
-                                                <a href="/finance/payments/<%= payment._id %>/proof" target="_blank"
-                                                    class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+                                                <small class="text-muted d-block mb-1">Payment
+                                                    Receipt</small>
+                                                <a href="/finance/payments/<%= payment._id %>/receipt" target="_blank"
+                                                    class="btn btn-sm btn-success d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
                                                     style="border-radius:20px;">
-                                                    <i class="fas fa-file-upload"></i>
-                                                    <span class="fw-semibold">View Uploaded
-                                                        Proof</span>
+                                                    <i class="fas fa-file-pdf"></i>
+                                                    <span class="fw-semibold">View Receipt</span>
                                                 </a>
-                                                <% if(payment.proofOfPayment.name){ %>
-                                                    <small class="text-muted d-block mt-1">
-                                                        <i class="fas fa-file me-1"></i>
-                                                        <%= payment.proofOfPayment.name %>
-                                                    </small>
+                                                <!-- Cancel Receipt Button - Only show if receipt exists and payment is verified -->
+                                                <% if(payment.receipt && payment.receipt.gcsPath &&
+                                                    (payment.status==='Verified' || payment.status==='Fully Paid' ||
+                                                    payment.status==='Partially Paid' )){ %>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-danger d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+                                                        style="border-radius:20px;" data-bs-toggle="modal"
+                                                        data-bs-target="#cancelReceiptModal<%= payment._id %>">
+                                                        <i class="fas fa-ban"></i>
+                                                        <span class="fw-semibold">Cancel Receipt</span>
+                                                    </button>
                                                     <% } %>
                                             </div>
                                             <% } %>
-                            </div>
 
-                            <!-- Dates -->
-                            <div class="small text-muted pt-3 border-top">
-                                <div class="d-flex justify-content-between">
-                                    <span>Created: <%= payment.createdAt.toLocaleString() %>
-                                    </span>
-                                    <% if(payment.verifiedAt){ %>
-                                        <span>Verified: <%= payment.verifiedAt.toLocaleDateString() %>
-                                        </span>
-                                        <% } %>
-                                </div>
-                            </div>
+                                                <!-- Proof of Payment Upload -->
+                                                <% if(payment.proofOfPayment && (payment.proofOfPayment.gcsPath ||
+                                                    payment.proofOfPayment.gcsUrl)){ %>
+                                                    <div class="mb-2">
+                                                        <small class="text-muted d-block mb-1">Proof of
+                                                            Payment</small>
+                                                        <a href="/finance/payments/<%= payment._id %>/proof"
+                                                            target="_blank"
+                                                            class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+                                                            style="border-radius:20px;">
+                                                            <i class="fas fa-file-upload"></i>
+                                                            <span class="fw-semibold">View Uploaded
+                                                                Proof</span>
+                                                        </a>
+                                                        <% if(payment.proofOfPayment.name){ %>
+                                                            <small class="text-muted d-block mt-1">
+                                                                <i class="fas fa-file me-1"></i>
+                                                                <%= payment.proofOfPayment.name %>
+                                                            </small>
+                                                            <% } %>
+                                                    </div>
+                                                    <% } %>
+                                    </div>
+
+                                    <!-- Dates -->
+                                    <div class="small text-muted pt-3 border-top">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Created: <%= payment.createdAt.toLocaleString() %>
+                                            </span>
+                                            <% if(payment.verifiedAt){ %>
+                                                <span>Verified: <%= payment.verifiedAt.toLocaleDateString() %>
+                                                </span>
+                                                <% } %>
+                                        </div>
+                                    </div>
                         </div>
 
                         <!-- Verify Payment Section - Only show for Pending payments -->
@@ -531,6 +573,7 @@
                                     <li>Remove the receipt from this payment</li>
                                     <li>Change payment status to "Cancelled"</li>
                                     <li>Require the student to make a new payment</li>
+                                    <li>The cancellation reason will be stored permanently</li>
                                 </ul>
 
                                 <div class="mb-3">
@@ -540,7 +583,8 @@
                                     <textarea class="form-control" id="cancelReason<%= payment._id %>"
                                         name="cancelReason" rows="3" required
                                         placeholder="Enter reason for cancelling this receipt..."></textarea>
-                                    <div class="form-text">This reason will be recorded in the payment history.</div>
+                                    <div class="form-text">This reason will be permanently recorded in the payment
+                                        history.</div>
                                 </div>
                             </div>
                             <div class="modal-footer">
