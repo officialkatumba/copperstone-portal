@@ -596,11 +596,54 @@ exports.verifyPaymentDirect = async (req, res) => {
     // ===============================
     // 3️⃣ ISSUE RECEIPT (ONLY IF VERIFIED)
     // ===============================
+    // if (
+    //   action === "Verified" &&
+    //   (!payment.receipt || !payment.receipt.gcsPath)
+    // ) {
+    //   console.log("🔍 DEBUG - Generating receipt for verified payment");
+    //   // Generate receipt PDF
+    //   const pdfPath = await generateReceiptPDF({
+    //     payment: {
+    //       _id: payment._id,
+    //       reference: payment.reference,
+    //       amount: payment.amount,
+    //       method: payment.method,
+    //       status: "Verified",
+    //       verifiedAt: payment.verifiedAt,
+    //       category: payment.category,
+    //       description: payment.description,
+    //       student: payment.student,
+    //     },
+    //   });
+
+    // ===============================
+    // 3️⃣ ISSUE RECEIPT (ONLY IF VERIFIED)
+    // ===============================
     if (
       action === "Verified" &&
       (!payment.receipt || !payment.receipt.gcsPath)
     ) {
       console.log("🔍 DEBUG - Generating receipt for verified payment");
+
+      // ===============================
+      // 3a️⃣ GET APPLICATION DATA FOR RECEIPT
+      // ===============================
+      let applicationData = null;
+      if (payment.application) {
+        try {
+          const Application = require("../models/Application");
+          applicationData = await Application.findById(payment.application)
+            .populate("firstChoice", "name code")
+            .populate("secondChoice", "name code")
+            .lean();
+        } catch (err) {
+          console.log(
+            "Could not load application data for receipt:",
+            err.message
+          );
+        }
+      }
+
       // Generate receipt PDF
       const pdfPath = await generateReceiptPDF({
         payment: {
@@ -614,6 +657,7 @@ exports.verifyPaymentDirect = async (req, res) => {
           description: payment.description,
           student: payment.student,
         },
+        application: applicationData,
       });
 
       // Upload receipt to GCS
@@ -1314,13 +1358,42 @@ exports.createPayment = async (req, res) => {
     // ===============================
     // 3️⃣ GENERATE RECEIPT
     // ===============================
+    // const populatedPayment = await Payment.findById(payment._id)
+    //   .populate("student")
+    //   .populate("programme");
+
+    // const pdfPath = await generateReceiptPDF({
+    //   payment: populatedPayment,
+    //   application: null,
+    // });
+
+    // ===============================
+    // 3️⃣ GENERATE RECEIPT
+    // ===============================
     const populatedPayment = await Payment.findById(payment._id)
       .populate("student")
       .populate("programme");
 
+    // Get application data if payment has application reference
+    let applicationData = null;
+    if (payment.application) {
+      try {
+        const Application = require("../models/Application");
+        applicationData = await Application.findById(payment.application)
+          .populate("firstChoice", "name code")
+          .populate("secondChoice", "name code")
+          .lean();
+      } catch (err) {
+        console.log(
+          "Could not load application data for receipt:",
+          err.message
+        );
+      }
+    }
+
     const pdfPath = await generateReceiptPDF({
       payment: populatedPayment,
-      application: null,
+      application: applicationData,
     });
 
     const gcsPath = `receipts/payment_${payment._id}_${Date.now()}.pdf`;
