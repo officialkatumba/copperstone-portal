@@ -1,107 +1,263 @@
-<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+<%- include('../partials/header') %>
+  <%- include('../partials/navbar') %>
 
-    <div class="container my-5">
+    <div class="container my-4">
+      <!-- PAGE HEADING -->
       <div class="text-center mb-4">
-        <h2 class="fw-bold" style="color: var(--primary-purple)">
-          Applications & Payments
-        </h2>
-        <p class="text-muted">
-          Review all student applications and their payment status.
-        </p>
+        <h2 class="fw-bold" style="color: var(--primary-purple)">Applications & Payments</h2>
+        <p class="text-muted">Review all student applications and their payment status.</p>
       </div>
 
-      <% if (applications.length===0) { %>
-        <div class="alert alert-info text-center">No applications found.</div>
-        <% } else { %>
-          <div class="table-responsive shadow-sm rounded-3">
-            <table class="table table-striped align-middle">
-              <thead class="table-light">
+      <!-- FILTERS & PAGINATION CONTROLS IN ONE LINE -->
+      <form method="GET" class="row g-2 mb-3 align-items-center">
+        <!-- SEARCH -->
+        <div class="col-md-3 col-lg-2">
+          <input type="text" name="search" class="form-control form-control-sm" placeholder="Search name/email"
+            value="<%= search || '' %>">
+        </div>
+
+        <!-- APPLICATION STATUS -->
+        <div class="col-md-2 col-lg-2">
+          <select name="applicationStatus" class="form-select form-select-sm">
+            <option value="">App Status</option>
+            <% ["Pending", "Under Review" , "Approved" , "Rejected" ].forEach(function(s){ %>
+              <option value="<%= s %>" <%=applicationStatus===s ? 'selected' : '' %>>
+                <%= s %>
+              </option>
+              <% }) %>
+          </select>
+        </div>
+
+        <!-- PAYMENT STATUS -->
+        <div class="col-md-2 col-lg-2">
+          <select name="paymentStatus" class="form-select form-select-sm">
+            <option value="">Payment Status</option>
+            <option value="noPayment" <%=paymentStatus==='noPayment' ? 'selected' : '' %>>No Payment</option>
+            <option value="hasPayment" <%=paymentStatus==='hasPayment' ? 'selected' : '' %>>Has Payment</option>
+            <% ["Pending", "Verified" , "Partially Paid" , "Fully Paid" , "Cancelled" , "Rejected"
+              ].forEach(function(ps){ %>
+              <option value="<%= ps %>" <%=paymentStatus===ps ? 'selected' : '' %>>
+                <%= ps %>
+              </option>
+              <% }) %>
+          </select>
+        </div>
+
+        <!-- ITEMS PER PAGE -->
+        <div class="col-md-2 col-lg-1">
+          <select name="limit" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="20" <%=limit===20 ? 'selected' : '' %>>20</option>
+            <option value="50" <%=limit===50 ? 'selected' : '' %>>50</option>
+            <option value="100" <%=limit===100 ? 'selected' : '' %>>100</option>
+          </select>
+        </div>
+
+        <!-- FILTER BUTTON -->
+        <div class="col-md-1 col-lg-1">
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            <i class="fas fa-filter"></i> Filter
+          </button>
+        </div>
+
+        <!-- RESET BUTTON -->
+        <div class="col-md-1 col-lg-1">
+          <a href="/admissions/applications" class="btn btn-outline-secondary btn-sm w-100">
+            <i class="fas fa-redo"></i> Reset
+          </a>
+        </div>
+
+        <!-- PAGE INFO -->
+        <div class="col-md-3 col-lg-3 text-md-end">
+          <small class="text-muted">
+            Page <strong>
+              <%= currentPage %>
+            </strong> of <strong>
+              <%= totalPages %>
+            </strong>
+            (<%= totalCount %> total)
+          </small>
+        </div>
+      </form>
+
+      <!-- APPLICATIONS TABLE -->
+      <div class="card shadow-sm">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Applicant</th>
+                <th>Programme (1st Choice)</th>
+                <th>Application Status</th>
+                <th>Payment Status</th>
+                <th>Amount (ZMW)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (!applications || applications.length===0) { %>
                 <tr>
-                  <th>#</th>
-                  <th>Applicant</th>
-                  <th>Programme (1st Choice)</th>
-                  <th>Application Status</th>
-                  <th>Payment Method & Amount</th>
-                  <th>Payment Status</th>
-                  <th>Submitted On</th>
-                  <th>Action</th>
+                  <td colspan="7" class="text-center text-muted py-4">
+                    No applications found
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <% applications.forEach((app, index)=> { %>
-                  <tr>
-                    <td>
-                      <%= index + 1 %>
-                    </td>
-                    <td>
-                      <% if (app.applicant) { %>
-                        <strong>
-                          <%= app.applicant.firstName %>
-                            <%= app.applicant.surname %>
-                        </strong><br />
-                        <small>
-                          <%= app.applicant.email %>
-                        </small>
-                        <% } else { %>
-                          <strong class="text-danger">Applicant Not Found</strong><br />
-                          <small>Application ID: <%= app._id %></small>
-                          <% } %>
-                    </td>
-                    <td>
-                      <%= app.firstChoice?.name %> (<%= app.firstChoice?.code %>)
-                    </td>
+                <% } %>
 
-                    <!-- ✅ Application Status -->
-                    <td>
-                      <% if (app.status==='Approved' ) { %>
-                        <span class="badge bg-success">Approved</span>
-                        <% } else if (app.status==='Rejected' ) { %>
-                          <span class="badge bg-danger">Rejected</span>
-                          <% } else if (app.status==='Under Review' ) { %>
-                            <span class="badge bg-info text-dark">Under Review</span>
-                            <% } else { %>
-                              <span class="badge bg-warning text-dark">Pending</span>
-                              <% } %>
-                    </td>
+                  <% applications.forEach(function(app, index){ %>
+                    <tr>
+                      <td>
+                        <%= (currentPage - 1) * limit + index + 1 %>
+                      </td>
 
-                    <!-- ✅ Payment Method & Amount combined -->
-                    <td>
-                      <% if (app.payment?.method) { %>
-                        <%= app.payment.method %>
-                          <% if (app.payment.amount) { %> —
-                            <strong>ZMW <%= app.payment.amount.toLocaleString() %></strong>
-                            <% } %>
-                              <% } else { %>
-                                <span class="text-muted">N/A</span>
-                                <% } %>
-                    </td>
-
-                    <!-- ✅ Payment Status -->
-                    <td>
-                      <% if (app.payment?.status==='Verified' ) { %>
-                        <span class="badge bg-success">Verified</span>
-                        <% } else if (app.payment?.status==='Rejected' ) { %>
-                          <span class="badge bg-danger">Rejected</span>
+                      <td>
+                        <% if (app.applicant) { %>
+                          <strong>
+                            <%= app.applicant.firstName + ' ' + app.applicant.surname %>
+                          </strong><br>
+                          <small class="text-muted">
+                            <%= app.applicant.email %>
+                          </small>
                           <% } else { %>
-                            <span class="badge bg-warning text-dark">Pending</span>
+                            <strong class="text-danger">Applicant Not Found</strong><br>
+                            <small>App ID: <%= app._id.toString().slice(-6) %></small>
                             <% } %>
-                    </td>
+                      </td>
 
-                    <td>
-                      <%= new Date(app.createdAt).toLocaleDateString() %>
-                    </td>
+                      <td>
+                        <% if (app.firstChoice) { %>
+                          <%= app.firstChoice.name %> (<%= app.firstChoice.code %>)
+                              <% } else { %>
+                                <span class="text-muted">Not specified</span>
+                                <% } %>
+                      </td>
 
-                    <td>
-                      <a href="/admissions/applications/<%= app._id %>" class="btn btn-sm btn-primary">
-                        <i class="fas fa-eye"></i> View
-                      </a>
-                    </td>
-                  </tr>
-                  <% }) %>
-              </tbody>
-            </table>
-          </div>
-          <% } %>
+                      <!-- Application Status -->
+                      <td>
+                        <% if (app.status==='Approved' ) { %>
+                          <span class="badge bg-success">Approved</span>
+                          <% } else if (app.status==='Rejected' ) { %>
+                            <span class="badge bg-danger">Rejected</span>
+                            <% } else if (app.status==='Under Review' ) { %>
+                              <span class="badge bg-info text-dark">Under Review</span>
+                              <% } else { %>
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                <% } %>
+                      </td>
+
+                      <!-- Payment Status -->
+                      <td>
+                        <% if (app.payment) { %>
+                          <% if (app.payment.status==='Verified' || app.payment.status==='Fully Paid' ) { %>
+                            <span class="badge bg-success">
+                              <%= app.payment.status %>
+                            </span>
+                            <% } else if (app.payment.status==='Rejected' || app.payment.status==='Cancelled' ) { %>
+                              <span class="badge bg-danger">
+                                <%= app.payment.status %>
+                              </span>
+                              <% } else if (app.payment.status==='Partially Paid' ) { %>
+                                <span class="badge bg-warning text-dark">Partially Paid</span>
+                                <% } else if (app.payment.status==='Pending' ) { %>
+                                  <span class="badge bg-warning text-dark">Pending</span>
+                                  <% } else { %>
+                                    <span class="badge bg-secondary">
+                                      <%= app.payment.status %>
+                                    </span>
+                                    <% } %>
+                                      <% } else { %>
+                                        <span class="badge bg-secondary">No Payment</span>
+                                        <% } %>
+                      </td>
+
+                      <!-- Amount Column -->
+                      <td>
+                        <% if (app.payment?.amount) { %>
+                          <strong>
+                            <%= Number(app.payment.amount).toLocaleString('en-US', {minimumFractionDigits: 2,
+                              maximumFractionDigits: 2}) %>
+                          </strong>
+                          <% } else { %>
+                            <span class="text-muted">N/A</span>
+                            <% } %>
+                      </td>
+
+                      <td>
+                        <a href="/admissions/applications/<%= app._id %>" class="btn btn-sm btn-primary">
+                          View
+                        </a>
+                      </td>
+                    </tr>
+                    <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FOOTER COUNT -->
+      <div class="text-muted mt-2">
+        Showing <strong>
+          <%= applications.length %>
+        </strong> of
+        <strong>
+          <%= totalCount %>
+        </strong> applications
+      </div>
+
+      <!-- PAGINATION -->
+      <% if (totalPages> 1) { %>
+        <nav class="mt-3">
+          <ul class="pagination pagination-sm justify-content-center">
+            <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+              <a class="page-link"
+                href="?page=<%= currentPage-1 %>&limit=<%= limit %>&search=<%= search %>&applicationStatus=<%= applicationStatus %>&paymentStatus=<%= paymentStatus %>">
+                &laquo;
+              </a>
+            </li>
+
+            <% const startPage=Math.max(1, currentPage - 2); const endPage=Math.min(totalPages, currentPage + 2); %>
+
+              <% if (startPage> 1) { %>
+                <li class="page-item">
+                  <a class="page-link"
+                    href="?page=1&limit=<%= limit %>&search=<%= search %>&applicationStatus=<%= applicationStatus %>&paymentStatus=<%= paymentStatus %>">
+                    1
+                  </a>
+                </li>
+                <% if (startPage> 2) { %>
+                  <li class="page-item disabled"><span class="page-link">…</span></li>
+                  <% } %>
+                    <% } %>
+
+                      <% for(let i=startPage; i <=endPage; i++){ %>
+                        <li class="page-item <%= i===currentPage ? 'active' : '' %>">
+                          <a class="page-link"
+                            href="?page=<%= i %>&limit=<%= limit %>&search=<%= search %>&applicationStatus=<%= applicationStatus %>&paymentStatus=<%= paymentStatus %>">
+                            <%= i %>
+                          </a>
+                        </li>
+                        <% } %>
+
+                          <% if (endPage < totalPages) { %>
+                            <% if (endPage < totalPages - 1) { %>
+                              <li class="page-item disabled"><span class="page-link">…</span></li>
+                              <% } %>
+                                <li class="page-item">
+                                  <a class="page-link"
+                                    href="?page=<%= totalPages %>&limit=<%= limit %>&search=<%= search %>&applicationStatus=<%= applicationStatus %>&paymentStatus=<%= paymentStatus %>">
+                                    <%= totalPages %>
+                                  </a>
+                                </li>
+                                <% } %>
+
+                                  <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                    <a class="page-link"
+                                      href="?page=<%= currentPage+1 %>&limit=<%= limit %>&search=<%= search %>&applicationStatus=<%= applicationStatus %>&paymentStatus=<%= paymentStatus %>">
+                                      &raquo;
+                                    </a>
+                                  </li>
+          </ul>
+        </nav>
+        <% } %>
     </div>
 
     <%- include('../partials/footer') %>

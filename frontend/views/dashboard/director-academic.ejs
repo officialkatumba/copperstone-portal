@@ -1,0 +1,268 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-5">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold" style="color: var(--primary-purple)">
+                    Director Academic Dashboard
+                </h2>
+                <p class="lead text-muted">
+                    Welcome, <%- user.firstName %> — You are logged in as
+                        <strong>Director Academic</strong>.
+                        <br>
+                        <small class="text-info">
+                            Academic Year: <%- currentAcademicYear || '2024/2025' %> | Semester: <%- currentSemester
+                                    || '1' %>
+                        </small>
+                </p>
+            </div>
+
+            <!-- SUMMARY SECTION -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold mb-4" style="color: var(--primary-purple)">
+                                <i class="fas fa-chart-line me-2"></i>Summary Overview
+                            </h4>
+                            <div class="row g-3">
+                                <!-- Total Students -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #e3f2fd;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #2196f3;">
+                                            <i class="fas fa-users fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                <%- stats && stats.totalStudents ? stats.totalStudents : 0 %>
+                                            </h5>
+                                            <small class="text-muted">Total Students</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pending Clearances -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #fff3cd;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #ff9800;">
+                                            <i class="fas fa-hourglass-half fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                <%- stats && stats.pendingClearance ? stats.pendingClearance : 0 %>
+                                            </h5>
+                                            <small class="text-muted">Pending Clearances</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Cleared Students -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #d1f7c4;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #4caf50;">
+                                            <i class="fas fa-check-circle fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                <%- stats && stats.clearedForTerm ? stats.clearedForTerm : 0 %>
+                                            </h5>
+                                            <small class="text-muted">Cleared Students</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Lecturers -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #fce4ec;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #e91e63;">
+                                            <i class="fas fa-chalkboard-teacher fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                <%- typeof totalLecturers !=='undefined' ? totalLecturers : 0 %>
+                                            </h5>
+                                            <small class="text-muted">Total Lecturers</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Dashboard Cards -->
+            <div class="row g-4 justify-content-center">
+                <!-- All Students -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title fw-bold">All Students</h5>
+                            <p class="card-text text-muted">
+                                View all students and academic profiles
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/director-academic/students" class="btn btn-primary">
+                                    <i class="fas fa-user-graduate me-1"></i> View Students
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Clearance -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-hourglass-half fa-3x mb-3 text-warning"></i>
+                            <h5 class="card-title fw-bold">Pending Clearance</h5>
+                            <p class="card-text text-muted">
+                                Students awaiting academic clearance
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/director-academic/clearance/pending" class="btn btn-warning">
+                                    <i class="fas fa-clipboard-check me-1"></i> Review
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cleared Students -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                            <h5 class="card-title fw-bold">Cleared Students</h5>
+                            <p class="card-text text-muted">
+                                Students cleared for the semester
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/director-academic/clearance/cleared" class="btn btn-success">
+                                    <i class="fas fa-check me-1"></i> View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Payments -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-credit-card fa-3x mb-3" style="color: #6f42c1;"></i>
+                            <h5 class="card-title fw-bold">All Payments</h5>
+                            <p class="card-text text-muted">
+                                View all financial transactions and payments
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/director-academic/payments" class="btn"
+                                    style="background-color: #6f42c1; color: white;">
+                                    <i class="fas fa-money-bill-wave me-1"></i> View Payments
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Expenses -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-invoice-dollar fa-3x mb-3" style="color: #dc3545;"></i>
+                            <h5 class="card-title fw-bold">All Expenses</h5>
+                            <p class="card-text text-muted">
+                                Review departmental expenses and budgets
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/director-academic/expenses" class="btn btn-danger">
+                                    <i class="fas fa-chart-line me-1"></i> View Expenses
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students in Boarding -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-building fa-3x mb-3" style="color: #20c997;"></i>
+                            <h5 class="card-title fw-bold">Students in Boarding</h5>
+                            <p class="card-text text-muted">
+                                Manage boarding students and accommodations
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/director-academic/boarding" class="btn"
+                                    style="background-color: #20c997; color: white;">
+                                    <i class="fas fa-bed me-1"></i> Boarding Students
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Lecturers -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chalkboard-teacher fa-3x mb-3" style="color: #e91e63;"></i>
+                            <h5 class="card-title fw-bold">All Lecturers</h5>
+                            <p class="card-text text-muted">
+                                View and manage academic staff members
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/director-academic/lecturers" class="btn"
+                                    style="background-color: #e91e63; color: white;">
+                                    <i class="fas fa-user-tie me-1"></i> View Lecturers
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Reports -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-bar fa-3x mb-3 text-info"></i>
+                            <h5 class="card-title fw-bold">Academic Reports</h5>
+                            <p class="card-text text-muted">
+                                Clearance & programme reports
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/director-academic/reports" class="btn btn-info text-white">
+                                    <i class="fas fa-chart-pie me-1"></i> View Reports
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user-cog fa-3x mb-3 text-secondary"></i>
+                            <h5 class="card-title fw-bold">Profile</h5>
+                            <p class="card-text text-muted">
+                                Update your profile
+                            </p>
+                            <div class="d-grid gap-2">
+                                <a href="/profile" class="btn btn-secondary">
+                                    <i class="fas fa-user-edit me-1"></i> Edit Profile
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../partials/footer') %>

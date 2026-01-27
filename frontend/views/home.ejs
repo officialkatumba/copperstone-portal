@@ -565,8 +565,8 @@
               <% const dashboardLink=user.role==='Admin' ? '/dashboard/admin' : user.role==='AdmissionsOfficer'
                 ? '/dashboard/admissions' : user.role==='FinanceOfficer' ? '/dashboard/finance' :
                 user.role==='Registrar' ? '/dashboard/registrar' : user.role==='VC' ? '/dashboard/vc' :
-                user.role==='Dean' ? '/dashboard/dean' : user.role==='Lecturer' ? '/dashboard/lecturer'
-                : '/dashboard/student' ; %>
+                user.role==='DirectorAcademic' ? '/dashboard/director-academic' : user.role==='Dean' ? '/dashboard/dean'
+                : user.role==='Lecturer' ? '/dashboard/lecturer' : '/dashboard/student' ; %>
 
                 <!-- Role-based Dashboard -->
                 <a href="<%= dashboardLink %>" class="btn dashboard-btn">Dashboard</a>

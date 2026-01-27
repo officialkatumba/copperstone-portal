@@ -91,6 +91,9 @@ const {
   viewApplicationDetail,
   updateApplicationStatus,
   viewAcceptanceLetter, // ADD THIS IMPORT
+  deleteApplication,
+  deleteDuplicateApplications,
+  findDuplicateApplicants,
 } = require("../controllers/admissionsController");
 
 const { ensureAuthenticated } = require("../middleware/auth");
@@ -101,7 +104,7 @@ router.get(
   "/dashboard",
   ensureAuthenticated,
 
-  showAdmissionsDashboard
+  showAdmissionsDashboard,
 );
 
 // View all applications
@@ -112,7 +115,7 @@ router.get(
   "/applications/:id",
   ensureAuthenticated,
 
-  viewApplicationDetail
+  viewApplicationDetail,
 );
 
 // Update application status (approve/reject/under review)
@@ -120,7 +123,7 @@ router.post(
   "/applications/:id/status",
   ensureAuthenticated,
 
-  updateApplicationStatus
+  updateApplicationStatus,
 );
 
 // ✅ ADD THIS: View acceptance letter
@@ -128,7 +131,38 @@ router.get(
   "/applications/:id/letter",
 
   ensureAuthenticated,
-  viewAcceptanceLetter // USE THE CONTROLLER FUNCTION
+  viewAcceptanceLetter, // USE THE CONTROLLER FUNCTION
+);
+
+// Add these imports at the top
+// const {
+//   // ... existing imports
+//   deleteApplication,
+//   deleteDuplicateApplications,
+//   findDuplicateApplicants
+// } = require("../controllers/admissionsController");
+
+// Add these routes after the existing ones:
+
+// Delete single application
+router.delete(
+  "/applications/:id/delete",
+  ensureAuthenticated,
+  deleteApplication,
+);
+
+// Delete all duplicates for a specific applicant
+router.post(
+  "/applications/duplicates/:applicantId/delete",
+  ensureAuthenticated,
+  deleteDuplicateApplications,
+);
+
+// View duplicate applications
+router.get(
+  "/applications/duplicates",
+  ensureAuthenticated,
+  findDuplicateApplicants,
 );
 
 module.exports = router;

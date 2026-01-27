@@ -306,7 +306,7 @@ router.get(
       let profilePicUrl = null;
       if (dbUser?.studentProfile?.profilePicture?.gcsPath) {
         profilePicUrl = await generateSignedUrl(
-          dbUser.studentProfile.profilePicture.gcsPath
+          dbUser.studentProfile.profilePicture.gcsPath,
         );
       }
 
@@ -320,7 +320,7 @@ router.get(
       req.flash("error_msg", "Failed to load dashboard.");
       res.redirect("/auth/login");
     }
-  }
+  },
 );
 
 // ================= ADMIN DASHBOARD =================
@@ -338,7 +338,7 @@ router.get(
       title: "Admissions Dashboard",
       user: req.user,
     });
-  }
+  },
 );
 
 // ================= DEAN DASHBOARD =================
@@ -359,7 +359,7 @@ router.get(
       title: "Finance Dashboard",
       user: req.user,
     });
-  }
+  },
 );
 
 // ================= DEAN OF STUDENTS =================
@@ -372,7 +372,7 @@ router.get(
       title: "Dean of Students Dashboard",
       user: req.user,
     });
-  }
+  },
 );
 
 // ================= REGISTRAR DASHBOARD =================
@@ -398,7 +398,7 @@ router.get(
       req.flash("error_msg", "Failed to load Registrar dashboard");
       res.redirect("/dashboard/registrar");
     }
-  }
+  },
 );
 
 // ================= VC DASHBOARD =================
@@ -511,6 +511,296 @@ router.get("/vc", ensureAuthenticated, async (req, res) => {
     res.redirect("/dashboard");
   }
 });
+
+// ================= DIRECTOR ACADEMIC DASHBOARD =================
+// router.get(
+//   "/director-academic",
+//   ensureAuthenticated,
+//   ensureRole("DirectorAcademic"),
+//   async (req, res) => {
+//     try {
+//       const User = require("../models/User");
+//       const Programme = require("../models/Programme");
+
+//       const currentAcademicYear = "2024/2025";
+//       const currentSemester = 1;
+
+//       // Get statistics
+//       const totalStudents = await User.countDocuments({ role: "Student" });
+
+//       // Students pending clearance for current term
+//       const pendingClearance = await User.countDocuments({
+//         role: "Student",
+//         $or: [
+//           {
+//             "studentProfile.academicClearance.currentSemesterClearance.cleared": false,
+//           },
+//           {
+//             "studentProfile.academicClearance.currentSemesterClearance": {
+//               $exists: false,
+//             },
+//           },
+//         ],
+//       });
+
+//       // Students cleared for current term
+//       const clearedForTerm = await User.countDocuments({
+//         role: "Student",
+//         "studentProfile.academicClearance.currentSemesterClearance.cleared": true,
+//         "studentProfile.academicClearance.currentSemesterClearance.semester":
+//           currentSemester,
+//       });
+
+//       // Students needing NURTE numbers
+//       const needNURTE = await User.countDocuments({
+//         role: "Student",
+//         "studentProfile.nurteNumber": { $exists: false },
+//         "studentProfile.admissionStatus": "Approved",
+//       });
+
+//       // Recent clearance activities
+//       const recentClearances = await User.aggregate([
+//         {
+//           $match: {
+//             role: "Student",
+//             "studentProfile.academicClearance.currentSemesterClearance.cleared": true,
+//           },
+//         },
+//         {
+//           $sort: {
+//             "studentProfile.academicClearance.currentSemesterClearance.clearedAt":
+//               -1,
+//           },
+//         },
+//         { $limit: 5 },
+//         {
+//           $lookup: {
+//             from: "programmes",
+//             localField: "programme",
+//             foreignField: "_id",
+//             as: "programmeInfo",
+//           },
+//         },
+//         {
+//           $project: {
+//             studentName: { $concat: ["$firstName", " ", "$surname"] },
+//             studentEmail: "$email",
+//             studentId: "$_id",
+//             programme: { $arrayElemAt: ["$programmeInfo.name", 0] },
+//             semester: "$currentSemester",
+//             status:
+//               "$studentProfile.academicClearance.currentSemesterClearance.clearanceLevel",
+//             clearedByName:
+//               "$studentProfile.academicClearance.currentSemesterClearance.clearedByName",
+//             clearedAt:
+//               "$studentProfile.academicClearance.currentSemesterClearance.clearedAt",
+//           },
+//         },
+//       ]);
+
+//       // Quick stats by programme
+//       const programmeStats = await Programme.aggregate([
+//         {
+//           $lookup: {
+//             from: "users",
+//             localField: "_id",
+//             foreignField: "programme",
+//             as: "students",
+//           },
+//         },
+//         {
+//           $project: {
+//             name: 1,
+//             code: 1,
+//             totalStudents: { $size: "$students" },
+//             clearedStudents: {
+//               $size: {
+//                 $filter: {
+//                   input: "$students",
+//                   as: "student",
+//                   cond: {
+//                     $eq: [
+//                       "$$student.studentProfile.academicClearance.currentSemesterClearance.cleared",
+//                       true,
+//                     ],
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//         { $sort: { name: 1 } },
+//         { $limit: 5 },
+//       ]);
+
+//       res.render("dashboard/director-academic", {
+//         title: "Academic Director Dashboard",
+//         user: req.user,
+//         currentAcademicYear,
+//         currentSemester,
+//         stats: {
+//           totalStudents,
+//           pendingClearance,
+//           clearedForTerm,
+//           needNURTE,
+//         },
+//         programmeStats,
+//         recentClearances,
+//       });
+//     } catch (err) {
+//       console.error("Director Academic Dashboard error:", err);
+//       req.flash("error_msg", "Failed to load Director Academic dashboard");
+//       res.redirect("/dashboard");
+//     }
+//   },
+// );
+
+// ================= DIRECTOR ACADEMIC DASHBOARD =================
+router.get(
+  "/director-academic",
+  ensureAuthenticated,
+  ensureRole("DirectorAcademic"),
+  async (req, res) => {
+    try {
+      const User = require("../models/User");
+      const Programme = require("../models/Programme");
+
+      const currentAcademicYear = "2024/2025";
+      const currentSemester = 1;
+
+      // Get statistics
+      const totalStudents = await User.countDocuments({ role: "Student" });
+
+      // Add this line: Count total lecturers
+      const totalLecturers = await User.countDocuments({ role: "Lecturer" });
+
+      // Students pending clearance for current term
+      const pendingClearance = await User.countDocuments({
+        role: "Student",
+        $or: [
+          {
+            "studentProfile.academicClearance.currentSemesterClearance.cleared": false,
+          },
+          {
+            "studentProfile.academicClearance.currentSemesterClearance": {
+              $exists: false,
+            },
+          },
+        ],
+      });
+
+      // Students cleared for current term
+      const clearedForTerm = await User.countDocuments({
+        role: "Student",
+        "studentProfile.academicClearance.currentSemesterClearance.cleared": true,
+        "studentProfile.academicClearance.currentSemesterClearance.semester":
+          currentSemester,
+      });
+
+      // Students needing NURTE numbers
+      const needNURTE = await User.countDocuments({
+        role: "Student",
+        "studentProfile.nurteNumber": { $exists: false },
+        "studentProfile.admissionStatus": "Approved",
+      });
+
+      // Recent clearance activities
+      const recentClearances = await User.aggregate([
+        {
+          $match: {
+            role: "Student",
+            "studentProfile.academicClearance.currentSemesterClearance.cleared": true,
+          },
+        },
+        {
+          $sort: {
+            "studentProfile.academicClearance.currentSemesterClearance.clearedAt":
+              -1,
+          },
+        },
+        { $limit: 5 },
+        {
+          $lookup: {
+            from: "programmes",
+            localField: "programme",
+            foreignField: "_id",
+            as: "programmeInfo",
+          },
+        },
+        {
+          $project: {
+            studentName: { $concat: ["$firstName", " ", "$surname"] },
+            studentEmail: "$email",
+            studentId: "$_id",
+            programme: { $arrayElemAt: ["$programmeInfo.name", 0] },
+            semester: "$currentSemester",
+            status:
+              "$studentProfile.academicClearance.currentSemesterClearance.clearanceLevel",
+            clearedByName:
+              "$studentProfile.academicClearance.currentSemesterClearance.clearedByName",
+            clearedAt:
+              "$studentProfile.academicClearance.currentSemesterClearance.clearedAt",
+          },
+        },
+      ]);
+
+      // Quick stats by programme
+      const programmeStats = await Programme.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "programme",
+            as: "students",
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            code: 1,
+            totalStudents: { $size: "$students" },
+            clearedStudents: {
+              $size: {
+                $filter: {
+                  input: "$students",
+                  as: "student",
+                  cond: {
+                    $eq: [
+                      "$$student.studentProfile.academicClearance.currentSemesterClearance.cleared",
+                      true,
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+        { $sort: { name: 1 } },
+        { $limit: 5 },
+      ]);
+
+      res.render("dashboard/director-academic", {
+        title: "Academic Director Dashboard",
+        user: req.user,
+        currentAcademicYear,
+        currentSemester,
+        stats: {
+          totalStudents,
+          pendingClearance,
+          clearedForTerm,
+          needNURTE,
+        },
+        programmeStats,
+        recentClearances,
+        totalLecturers, // Add this line to pass the variable to the template
+      });
+    } catch (err) {
+      console.error("Director Academic Dashboard error:", err);
+      req.flash("error_msg", "Failed to load Director Academic dashboard");
+      res.redirect("/dashboard");
+    }
+  },
+);
 
 // router.get("/dashboard/lecturer", lecturerController.showLecturerDashboard);
 

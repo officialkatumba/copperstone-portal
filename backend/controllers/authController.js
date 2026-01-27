@@ -699,6 +699,9 @@ exports.loginUser = (req, res, next) => {
           return res.redirect("/dashboard/dean-of-students");
         case "StudentAffairs":
           return res.redirect("/dashboard/StudentAffairs");
+        // In your auth controller login function, add:
+        case "DirectorAcademic":
+          return res.redirect("/dashboard/director-academic");
         default:
           return res.redirect("/dashboard/student");
       }

@@ -791,7 +791,7 @@ app.enable("trust proxy");
 app.use(
   helmet({
     contentSecurityPolicy: false,
-  })
+  }),
 );
 
 // ==================================================
@@ -814,7 +814,7 @@ app.use((req, res, next) => {
   if (host === "www.copperstoneuniversity.site") {
     return res.redirect(
       301,
-      `https://copperstoneuniversity.site${req.originalUrl}`
+      `https://copperstoneuniversity.site${req.originalUrl}`,
     );
   }
 
@@ -885,7 +885,7 @@ app.use(
       httpOnly: true,
       sameSite: "lax",
     },
-  })
+  }),
 );
 
 // ==================================================
@@ -927,6 +927,18 @@ const vcRoutes = require("./routes/vcRoutes");
 const registrarRoutes = require("./routes/registrarRoutes");
 const deanOfStudentsRoutes = require("./routes/deanOfStudentsRoutes");
 const lecturerRoutes = require("./routes/lecturerRoutes");
+
+// // In your main app.js or server.js
+// const directorAcademicRoutes = require("./routes/directorAcademicRoutes");
+
+// // Add this with your other route imports
+// app.use("/director-academic", directorAcademicRoutes);
+
+// routes
+const directorAcademicRoutes = require("./routes/directorAcademicRoutes");
+
+// mount
+app.use("/director-academic", directorAcademicRoutes);
 
 // Skills
 const skillApplicationRoutes = require("./routes/skillApplicationRoutes");
