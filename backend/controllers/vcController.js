@@ -179,7 +179,7 @@ exports.approveAppointment = async (req, res) => {
     await user.save();
     req.flash(
       "success_msg",
-      `Successfully appointed ${user.firstName} ${user.surname} as ${position}`
+      `Successfully appointed ${user.firstName} ${user.surname} as ${position}`,
     );
     res.redirect("back");
   } catch (err) {
@@ -452,84 +452,356 @@ const getStartOfYear = () => {
 // const Payment = require("../models/Payment");
 // const mongoose = require("mongoose");
 
-// ----------------- VC – View All Payments -----------------
+// // ----------------- VC – View All Payments -----------------
+// exports.viewAllPaymentsVC = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, search } = req.query;
+//     const parsedLimit = parseInt(limit) || 10;
+//     const parsedPage = parseInt(page) || 1;
+
+//     // ----------------- Build Filter -----------------
+//     let filter = {};
+//     if (search) {
+//       const regex = new RegExp(search, "i");
+//       const orConditions = [
+//         { category: regex },
+//         { method: regex },
+//         { status: regex },
+//         { description: regex },
+//       ];
+//       if (mongoose.Types.ObjectId.isValid(search)) {
+//         orConditions.push({ _id: search });
+//       }
+//       filter.$or = orConditions;
+//     }
+
+//     // ----------------- Fetch Payments -----------------
+//     const payments = await Payment.find(filter)
+//       .populate("student", "firstName surname email")
+//       .sort({ createdAt: -1 })
+//       .skip((parsedPage - 1) * parsedLimit)
+//       .limit(parsedLimit)
+//       .lean();
+
+//     const totalPaymentsCount = await Payment.countDocuments(filter);
+
+//     // ----------------- Summary Calculations -----------------
+//     const now = new Date();
+//     const startOfToday = new Date(
+//       now.getFullYear(),
+//       now.getMonth(),
+//       now.getDate(),
+//     );
+//     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+//     const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+//     const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
+//       Payment.aggregate([
+//         { $match: { createdAt: { $gte: startOfToday } } },
+//         { $group: { _id: null, sum: { $sum: "$amount" } } },
+//       ]),
+//       Payment.aggregate([
+//         { $match: { createdAt: { $gte: startOfMonth } } },
+//         { $group: { _id: null, sum: { $sum: "$amount" } } },
+//       ]),
+//       Payment.aggregate([
+//         { $match: { createdAt: { $gte: startOfYear } } },
+//         { $group: { _id: null, sum: { $sum: "$amount" } } },
+//       ]),
+//       Payment.aggregate([{ $group: { _id: null, sum: { $sum: "$amount" } } }]),
+//     ]);
+
+//     res.render("vc/payments", {
+//       title: "VC Dashboard - All Payments",
+//       payments,
+//       totalToday: totalToday[0]?.sum || 0,
+//       totalMonth: totalMonth[0]?.sum || 0,
+//       totalYear: totalYear[0]?.sum || 0,
+//       totalAll: totalAll[0]?.sum || 0,
+//       today: startOfToday.toLocaleDateString(),
+//       monthRange: `${startOfMonth.toLocaleDateString()} - ${now.toLocaleDateString()}`,
+//       yearRange: `${startOfYear.toLocaleDateString()} - ${now.toLocaleDateString()}`,
+//       currentPage: parsedPage,
+//       totalPages: Math.ceil(totalPaymentsCount / parsedLimit),
+//       limit: parsedLimit,
+//       search: search || "",
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("VC Payments Error:", err);
+//     req.flash("error_msg", "Unable to load payments.");
+//     res.redirect("/dashboard/vc");
+//   }
+// };
+
+// vcController.js - Updated viewAllPaymentsVC function
 exports.viewAllPaymentsVC = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search } = req.query;
-    const parsedLimit = parseInt(limit) || 10;
-    const parsedPage = parseInt(page) || 1;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const search = (req.query.search || "").trim();
+    const category = (req.query.category || "").trim();
 
-    // ----------------- Build Filter -----------------
-    let filter = {};
-    if (search) {
-      const regex = new RegExp(search, "i");
-      const orConditions = [
-        { category: regex },
-        { method: regex },
-        { status: regex },
-        { description: regex },
-      ];
-      if (mongoose.Types.ObjectId.isValid(search)) {
-        orConditions.push({ _id: search });
-      }
-      filter.$or = orConditions;
+    const skip = (page - 1) * limit;
+
+    // ============================
+    // BUILD QUERY
+    // ============================
+    const query = {};
+
+    // CATEGORY FILTER
+    if (category) {
+      query.category = category;
     }
 
-    // ----------------- Fetch Payments -----------------
-    const payments = await Payment.find(filter)
-      .populate("student", "firstName surname email")
+    // STUDENT SEARCH (name OR email OR NURTE)
+    if (search) {
+      const students = await User.find({
+        role: "Student",
+        $or: [
+          { firstName: new RegExp(search, "i") },
+          { surname: new RegExp(search, "i") },
+          { email: new RegExp(search, "i") },
+          { "studentProfile.nurteNumber": new RegExp(search, "i") },
+        ],
+      }).select("_id");
+
+      query.student = { $in: students.map((s) => s._id) };
+    }
+
+    // ============================
+    // PAYMENTS
+    // ============================
+    const payments = await Payment.find(query)
+      .populate("student", "firstName surname email studentProfile.nurteNumber")
       .sort({ createdAt: -1 })
-      .skip((parsedPage - 1) * parsedLimit)
-      .limit(parsedLimit)
+      .skip(skip)
+      .limit(limit)
       .lean();
 
-    const totalPaymentsCount = await Payment.countDocuments(filter);
+    const totalCount = await Payment.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / limit);
 
-    // ----------------- Summary Calculations -----------------
+    // ============================
+    // SUMMARY TOTALS FOR ALL PAYMENTS
+    // ============================
     const now = new Date();
-    const startOfToday = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
+    const startOfToday = new Date(now.setHours(0, 0, 0, 0));
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
+    const sum = async (from, additionalQuery = {}) => {
+      const matchQuery = { createdAt: { $gte: from } };
+      if (additionalQuery.category) {
+        matchQuery.category = additionalQuery.category;
+      }
+
+      const r = await Payment.aggregate([
+        { $match: matchQuery },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]);
+      return r.length ? r[0].total : 0;
+    };
+
+    // Overall totals
     const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
-      Payment.aggregate([
-        { $match: { createdAt: { $gte: startOfToday } } },
-        { $group: { _id: null, sum: { $sum: "$amount" } } },
-      ]),
-      Payment.aggregate([
-        { $match: { createdAt: { $gte: startOfMonth } } },
-        { $group: { _id: null, sum: { $sum: "$amount" } } },
-      ]),
-      Payment.aggregate([
-        { $match: { createdAt: { $gte: startOfYear } } },
-        { $group: { _id: null, sum: { $sum: "$amount" } } },
-      ]),
-      Payment.aggregate([{ $group: { _id: null, sum: { $sum: "$amount" } } }]),
+      sum(startOfToday),
+      sum(startOfMonth),
+      sum(startOfYear),
+      sum(new Date(0)),
     ]);
+
+    // ============================
+    // CATEGORY-SPECIFIC TOTALS FOR SUMMARY CARDS
+    // ============================
+    const categoryTotals = await Payment.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Extract specific category totals
+    const tuitionTotal =
+      categoryTotals.find((c) => c._id === "Tuition Fee (Per Semester)")
+        ?.totalAmount || 0;
+    const boardingTotal =
+      categoryTotals.find((c) => c._id === "Boarding Fee")?.totalAmount || 0;
+    const applicationTotal =
+      categoryTotals.find((c) => c._id === "Application Fee")?.totalAmount || 0;
+    const registrationTotal =
+      categoryTotals.find((c) => c._id === "Registration Fee")?.totalAmount ||
+      0;
+    const examTotal =
+      categoryTotals.find((c) => c._id === "Exam Fee")?.totalAmount || 0;
+    const graduationTotal =
+      categoryTotals.find((c) => c._id === "Graduation Fee")?.totalAmount || 0;
+    const otherTotal =
+      categoryTotals.find((c) => c._id === "Other")?.totalAmount || 0;
+
+    // Calculate total outstanding balances
+    const balanceAggregation = await Payment.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalBalance: { $sum: "$balanceAfterPayment" },
+        },
+      },
+    ]);
+
+    const totalBalanceOutstanding = balanceAggregation[0]?.totalBalance || 0;
 
     res.render("vc/payments", {
       title: "VC Dashboard - All Payments",
       payments,
-      totalToday: totalToday[0]?.sum || 0,
-      totalMonth: totalMonth[0]?.sum || 0,
-      totalYear: totalYear[0]?.sum || 0,
-      totalAll: totalAll[0]?.sum || 0,
-      today: startOfToday.toLocaleDateString(),
-      monthRange: `${startOfMonth.toLocaleDateString()} - ${now.toLocaleDateString()}`,
-      yearRange: `${startOfYear.toLocaleDateString()} - ${now.toLocaleDateString()}`,
-      currentPage: parsedPage,
-      totalPages: Math.ceil(totalPaymentsCount / parsedLimit),
-      limit: parsedLimit,
-      search: search || "",
+
+      // Summary cards data
+      tuitionTotal,
+      boardingTotal,
+      applicationTotal,
+      registrationTotal,
+      examTotal,
+      graduationTotal,
+      otherTotal,
+      totalBalanceOutstanding,
+      totalAll,
+
+      // Time-based totals
+      totalToday,
+      totalMonth,
+      totalYear,
+
+      today: new Date().toLocaleDateString(),
+      monthRange: `${startOfMonth.toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
+      yearRange: `${startOfYear.getFullYear()} - ${new Date().getFullYear()}`,
+
+      // Filters
+      search,
+      category,
+
+      // Pagination
+      currentPage: page,
+      totalPages,
+      totalCount,
+      limit,
+
       user: req.user,
     });
   } catch (err) {
     console.error("VC Payments Error:", err);
     req.flash("error_msg", "Unable to load payments.");
+    res.redirect("/dashboard/vc");
+  }
+};
+
+// vcController.js
+
+// vcController.js
+// const User = require("../models/User"); // Make sure to import User model
+
+// exports.vcDashboard = async (req, res) => {
+//   try {
+//     // Minimal data fetching
+//     const totalStudents = await User.countDocuments({ role: "Student" });
+
+//     // Get total staff - check your actual role values in the database
+//     const totalStaff = await User.countDocuments({
+//       role: {
+//         $in: [
+//           "staff",
+//           "Staff",
+//           "lecturer",
+//           "Lecturer",
+//           "dean",
+//           "Dean",
+//           "hod",
+//           "HOD",
+//           "dvc",
+//           "DVC",
+//           "director",
+//           "Director",
+//           "admin",
+//           "Admin",
+//           "academic", // Common role name
+//         ],
+//       },
+//     });
+
+//     // Placeholder stats
+//     const pendingApprovals = 0;
+//     const activeIssues = 0;
+
+//     res.render("dashboard/vc", {
+//       title: "Vice-Chancellor Dashboard",
+//       user: req.user,
+//       stats: {
+//         totalStudents: totalStudents || 0,
+//         totalStaff: totalStaff || 0,
+//         pendingApprovals: pendingApprovals || 0,
+//         activeIssues: activeIssues || 0,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("VC Dashboard error:", err);
+//     req.flash("error_msg", "Failed to load dashboard");
+//     res.redirect("/"); // Redirect to home instead of error page
+//   }
+// };
+
+// // Add these minimal functions for the other pages
+// exports.viewAllPaymentsVC = async (req, res) => {
+//   // Your existing payments function - should work as-is
+// };
+
+exports.viewAllExpensesVC = async (req, res) => {
+  try {
+    res.render("vc/expenses", {
+      title: "VC Dashboard - All Expenses",
+      user: req.user,
+      expenses: [], // Add your expense data here
+    });
+  } catch (err) {
+    console.error("VC Expenses Error:", err);
+    req.flash("error_msg", "Unable to load expenses.");
+    res.redirect("/dashboard/vc");
+  }
+};
+
+exports.viewAllStaffVC = async (req, res) => {
+  try {
+    const staff = await User.find({
+      role: {
+        $in: ["Staff", "Lecturer", "Dean", "HOD", "DVC", "Director", "Admin"],
+      },
+    })
+      .select("firstName surname email role department createdAt")
+      .limit(50)
+      .lean();
+
+    res.render("vc/staff", {
+      title: "VC Dashboard - All Staff",
+      user: req.user,
+      staff,
+    });
+  } catch (err) {
+    console.error("VC Staff Error:", err);
+    req.flash("error_msg", "Unable to load staff.");
+    res.redirect("/dashboard/vc");
+  }
+};
+
+exports.viewReportsVC = async (req, res) => {
+  try {
+    res.render("vc/reports", {
+      title: "VC Dashboard - Reports",
+      user: req.user,
+    });
+  } catch (err) {
+    console.error("VC Reports Error:", err);
+    req.flash("error_msg", "Unable to load reports.");
     res.redirect("/dashboard/vc");
   }
 };

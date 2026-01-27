@@ -111,6 +111,7 @@ const {
   listLecturers,
   viewLecturer,
   listReports,
+  // viewAllPaymentsDirectorAcademic,
 } = require("../controllers/directorAcademicController");
 
 const User = require("../models/User"); // Add this import
@@ -188,5 +189,12 @@ router.get("/reports", listReports);
  * ============================
  */
 router.post("/clearance/reset-semester", resetSemesterClearance);
+
+// router.get(
+//   "/director-academic/payments",
+//   ensureAuthenticated,
+//   // ensureDirectorAcademic,
+//   viewAllPaymentsDirectorAcademic,
+// );
 
 module.exports = router;

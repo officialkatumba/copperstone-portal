@@ -4,6 +4,8 @@ const Payment = require("../models/Payment");
 const Expense = require("../models/Expense");
 const Course = require("../models/Course");
 const AuditLog = require("../models/AuditLog");
+// const User = require("../models/User");
+// const Payment = require("../models/Payment");
 
 /**
  * ============================
@@ -801,90 +803,90 @@ exports.reinstateStudent = async (req, res) => {
   }
 };
 
-// List all payments
-exports.listPayments = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const search = (req.query.search || "").trim();
-    const category = (req.query.category || "").trim();
+// // List all payments
+// exports.listPayments = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 20;
+//     const search = (req.query.search || "").trim();
+//     const category = (req.query.category || "").trim();
 
-    const skip = (page - 1) * limit;
+//     const skip = (page - 1) * limit;
 
-    // Build query
-    const query = {};
+//     // Build query
+//     const query = {};
 
-    // Category filter
-    if (category) {
-      query.category = category;
-    }
+//     // Category filter
+//     if (category) {
+//       query.category = category;
+//     }
 
-    // Student search
-    if (search) {
-      const students = await User.find({
-        role: "Student",
-        $or: [
-          { firstName: new RegExp(search, "i") },
-          { surname: new RegExp(search, "i") },
-          { email: new RegExp(search, "i") },
-        ],
-      }).select("_id");
+//     // Student search
+//     if (search) {
+//       const students = await User.find({
+//         role: "Student",
+//         $or: [
+//           { firstName: new RegExp(search, "i") },
+//           { surname: new RegExp(search, "i") },
+//           { email: new RegExp(search, "i") },
+//         ],
+//       }).select("_id");
 
-      query.student = { $in: students.map((s) => s._id) };
-    }
+//       query.student = { $in: students.map((s) => s._id) };
+//     }
 
-    // Get payments
-    const payments = await Payment.find(query)
-      .populate("student", "firstName surname email")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+//     // Get payments
+//     const payments = await Payment.find(query)
+//       .populate("student", "firstName surname email")
+//       .sort({ createdAt: -1 })
+//       .skip(skip)
+//       .limit(limit);
 
-    const totalCount = await Payment.countDocuments(query);
-    const totalPages = Math.ceil(totalCount / limit);
+//     const totalCount = await Payment.countDocuments(query);
+//     const totalPages = Math.ceil(totalCount / limit);
 
-    // Summary totals
-    const now = new Date();
-    const startOfToday = new Date(now.setHours(0, 0, 0, 0));
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
+//     // Summary totals
+//     const now = new Date();
+//     const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+//     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+//     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    const sum = async (from) => {
-      const r = await Payment.aggregate([
-        { $match: { createdAt: { $gte: from } } },
-        { $group: { _id: null, total: { $sum: "$amount" } } },
-      ]);
-      return r.length ? r[0].total : 0;
-    };
+//     const sum = async (from) => {
+//       const r = await Payment.aggregate([
+//         { $match: { createdAt: { $gte: from } } },
+//         { $group: { _id: null, total: { $sum: "$amount" } } },
+//       ]);
+//       return r.length ? r[0].total : 0;
+//     };
 
-    const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
-      sum(startOfToday),
-      sum(startOfMonth),
-      sum(startOfYear),
-      sum(new Date(0)),
-    ]);
+//     const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
+//       sum(startOfToday),
+//       sum(startOfMonth),
+//       sum(startOfYear),
+//       sum(new Date(0)),
+//     ]);
 
-    res.render("director-academic/payments", {
-      title: "All Payments - Director Academic",
-      payments,
-      totalToday,
-      totalMonth,
-      totalYear,
-      totalAll,
-      search,
-      category,
-      currentPage: page,
-      totalPages,
-      totalCount,
-      limit,
-      user: req.user,
-    });
-  } catch (error) {
-    console.error("List payments error:", error);
-    req.flash("error_msg", "Failed to load payments");
-    res.redirect("/director-academic");
-  }
-};
+//     res.render("directorAcademic/payments", {
+//       title: "All Payments - Director Academic",
+//       payments,
+//       totalToday,
+//       totalMonth,
+//       totalYear,
+//       totalAll,
+//       search,
+//       category,
+//       currentPage: page,
+//       totalPages,
+//       totalCount,
+//       limit,
+//       user: req.user,
+//     });
+//   } catch (error) {
+//     console.error("List payments error:", error);
+//     req.flash("error_msg", "Failed to load payments");
+//     res.redirect("/director-academic");
+//   }
+// };
 
 // List all expenses
 exports.listExpenses = async (req, res) => {
@@ -1033,6 +1035,139 @@ exports.listReports = async (req, res) => {
   } catch (error) {
     console.error("List reports error:", error);
     req.flash("error_msg", "Failed to load reports");
+    res.redirect("/director-academic");
+  }
+};
+
+// listPayments
+
+// In directorAcademicController.js - Updated viewAllPaymentsDirectorAcademic function
+
+// exports.viewAllPaymentsDirectorAcademic = async (req, res) => {
+
+exports.listPayments = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const search = (req.query.search || "").trim();
+    const category = (req.query.category || "").trim();
+
+    const skip = (page - 1) * limit;
+
+    // ============================
+    // BUILD QUERY
+    // ============================
+    const query = {};
+
+    // CATEGORY FILTER
+    if (category) {
+      query.category = category;
+    }
+
+    // STUDENT SEARCH (name OR email OR NURTE)
+    if (search) {
+      const students = await User.find({
+        role: "Student",
+        $or: [
+          { firstName: new RegExp(search, "i") },
+          { surname: new RegExp(search, "i") },
+          { email: new RegExp(search, "i") },
+          { "studentProfile.nurteNumber": new RegExp(search, "i") },
+        ],
+      }).select("_id");
+
+      query.student = { $in: students.map((s) => s._id) };
+    }
+
+    // ============================
+    // PAYMENTS
+    // ============================
+    const payments = await Payment.find(query)
+      .populate({
+        path: "student",
+        select: "firstName surname email studentProfile.nurteNumber",
+        populate: {
+          path: "programme",
+          select: "name code",
+        },
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalCount = await Payment.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // ============================
+    // SIMPLIFIED TOTALS FOR DIRECTOR ACADEMIC
+    // ============================
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0,
+      0,
+      0,
+      0,
+    );
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    const sum = async (from) => {
+      const r = await Payment.aggregate([
+        { $match: { createdAt: { $gte: from } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]);
+      return r.length ? r[0].total : 0;
+    };
+
+    // Overall totals (4 cards like original)
+    const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
+      sum(startOfToday),
+      sum(startOfMonth),
+      sum(startOfYear),
+      sum(new Date(0)), // From beginning of time
+    ]);
+
+    // Format dates for display
+    const todayFormatted = new Date().toLocaleDateString();
+    const monthStartFormatted = startOfMonth.toLocaleDateString();
+    const nowFormatted = now.toLocaleDateString();
+    const monthRange = `${monthStartFormatted} - ${nowFormatted}`;
+    const yearRange = `${startOfYear.getFullYear()} - ${now.getFullYear()}`;
+
+    res.render("director-academic/payments", {
+      title: "Director Academic - All Payments",
+      payments,
+
+      // Simplified summary (4 cards) - ALL REQUIRED VARIABLES
+      totalToday,
+      totalMonth,
+      totalYear,
+      totalAll,
+
+      // Date variables for display
+      today: todayFormatted,
+      monthRange: monthRange,
+      yearRange: yearRange,
+
+      // Filters
+      search,
+      category,
+
+      // Pagination
+      currentPage: page,
+      totalPages,
+      totalCount,
+      limit,
+
+      user: req.user,
+    });
+  } catch (err) {
+    console.error("Director Academic Payments Error:", err);
+    req.flash("error_msg", "Unable to load payments.");
     res.redirect("/director-academic");
   }
 };

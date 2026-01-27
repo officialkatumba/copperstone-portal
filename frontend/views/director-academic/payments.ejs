@@ -4,134 +4,72 @@
         <div class="container my-5">
             <!-- PAGE HEADING -->
             <div class="text-center mb-5">
-                <h2 class="fw-bold" style="color: var(--primary-purple)">All Payments Overview</h2>
-                <p class="text-muted">Comprehensive view of all university payments and financial transactions</p>
+                <h2 class="fw-bold" style="color: var(--primary-purple)">Student Payments</h2>
+                <p class="text-muted">View payment records for academic oversight</p>
             </div>
 
             <!-- ===================================== -->
-            <!-- 7 SUMMARY CARDS (VC-SPECIFIC METRICS) -->
+            <!-- 4 SUMMARY CARDS (Simplified) -->
             <!-- ===================================== -->
             <div class="row g-4 mb-5">
-                <!-- Total Tuition Fees -->
+                <!-- Total Today -->
                 <div class="col-md-3 col-6">
                     <div class="card text-center border-0 shadow-sm h-100">
                         <div class="card-body">
                             <div class="text-primary mb-2">
-                                <i class="fas fa-university fa-3x"></i>
+                                <i class="fas fa-calendar-day fa-3x"></i>
                             </div>
                             <h3 class="fw-bold">
-                                ZMW <%= Number(tuitionTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
+                                ZMW <%= Number(totalToday || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
                                     maximumFractionDigits: 2}) %>
                             </h3>
-                            <p class="text-muted mb-0">Tuition Fees</p>
-                            <small class="text-primary">Main Revenue</small>
+                            <p class="text-muted mb-0">Today</p>
+                            <small class="text-primary">
+                                <%= today %>
+                            </small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Total Boarding Fees -->
+                <!-- This Month -->
                 <div class="col-md-3 col-6">
                     <div class="card text-center border-0 shadow-sm h-100">
                         <div class="card-body">
                             <div class="text-success mb-2">
-                                <i class="fas fa-building fa-3x"></i>
+                                <i class="fas fa-calendar-alt fa-3x"></i>
                             </div>
                             <h3 class="fw-bold">
-                                ZMW <%= Number(boardingTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
+                                ZMW <%= Number(totalMonth || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
                                     maximumFractionDigits: 2}) %>
                             </h3>
-                            <p class="text-muted mb-0">Boarding Fees</p>
-                            <small class="text-success">Accommodation</small>
+                            <p class="text-muted mb-0">This Month</p>
+                            <small class="text-success">
+                                <%= monthRange %>
+                            </small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Total Application Fees -->
+                <!-- This Year -->
                 <div class="col-md-3 col-6">
                     <div class="card text-center border-0 shadow-sm h-100">
                         <div class="card-body">
                             <div class="text-warning mb-2">
-                                <i class="fas fa-file-signature fa-3x"></i>
+                                <i class="fas fa-calendar fa-3x"></i>
                             </div>
                             <h3 class="fw-bold">
-                                ZMW <%= Number(applicationTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
+                                ZMW <%= Number(totalYear || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
                                     maximumFractionDigits: 2}) %>
                             </h3>
-                            <p class="text-muted mb-0">Application Fees</p>
-                            <small class="text-warning">Admissions</small>
+                            <p class="text-muted mb-0">This Year</p>
+                            <small class="text-warning">
+                                <%= yearRange %>
+                            </small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Total Registration Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-info mb-2">
-                                <i class="fas fa-user-plus fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(registrationTotal || 0).toLocaleString('en-US', {minimumFractionDigits:
-                                    2, maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Registration Fees</p>
-                            <small class="text-info">Student Registration</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Exam Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-purple mb-2">
-                                <i class="fas fa-graduation-cap fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(examTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Exam Fees</p>
-                            <small class="text-purple">Assessments</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Graduation Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-dark mb-2">
-                                <i class="fas fa-award fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(graduationTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Graduation Fees</p>
-                            <small class="text-dark">Ceremonies</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Outstanding Balances -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-danger mb-2">
-                                <i class="fas fa-exclamation-triangle fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(totalBalanceOutstanding || 0).toLocaleString('en-US',
-                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Outstanding Balances</p>
-                            <small class="text-danger">Pending Collection</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total All Payments -->
+                <!-- Total All -->
                 <div class="col-md-3 col-6">
                     <div class="card text-center border-0 shadow-sm h-100">
                         <div class="card-body">
@@ -142,8 +80,8 @@
                                 ZMW <%= Number(totalAll || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
                                     maximumFractionDigits: 2}) %>
                             </h3>
-                            <p class="text-muted mb-0">Total Revenue</p>
-                            <small class="text-secondary">All Time</small>
+                            <p class="text-muted mb-0">All Time</p>
+                            <small class="text-secondary">Total Revenue</small>
                         </div>
                     </div>
                 </div>
@@ -155,9 +93,9 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <form method="GET" class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <input type="text" name="search" class="form-control"
-                                placeholder="Search student (name, email, or NURTE)" value="<%= search || '' %>">
+                                placeholder="Search by student name, email, or NURTE" value="<%= search || '' %>">
                         </div>
 
                         <div class="col-md-3">
@@ -192,9 +130,9 @@
                             </button>
                         </div>
 
-                        <div class="col-md-2">
-                            <a href="/vc/payments" class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-redo"></i> Reset
+                        <div class="col-md-1">
+                            <a href="/director-academic/payments" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-redo"></i>
                             </a>
                         </div>
                     </form>
@@ -223,7 +161,6 @@
                                 <th>Category</th>
                                 <th>Amount Paid</th>
                                 <th>Balance</th>
-                                <th>Method</th>
                                 <th>Status</th>
                                 <th>Date</th>
                                 <th>Actions</th>
@@ -267,6 +204,7 @@
                                                 </div>
                                             </td>
 
+
                                             <td>
                                                 <span class="badge bg-light text-dark border">
                                                     <%= p.category %>
@@ -290,12 +228,6 @@
                                                             <i class="fas fa-check me-1"></i>Paid
                                                         </span>
                                                         <% } %>
-                                            </td>
-
-                                            <td>
-                                                <span class="badge bg-info text-white">
-                                                    <%= p.method %>
-                                                </span>
                                             </td>
 
                                             <td>
@@ -381,7 +313,7 @@
         </div>
 
         <!-- ===================================== -->
-        <!-- PAYMENT MODALS (VIEW ONLY - VC CAN'T VERIFY/CANCEL) -->
+        <!-- PAYMENT MODALS (VIEW ONLY) -->
         <!-- ===================================== -->
         <% if (payments && payments.length> 0) { %>
             <% payments.forEach(function(payment) { %>
@@ -416,6 +348,15 @@
                                             <span class="badge bg-info">NURTE: <%=
                                                     payment.student.studentProfile.nurteNumber %></span>
                                             <% } %>
+                                                <% if (payment.student.programme) { %>
+                                                    <div class="mt-1">
+                                                        <span class="badge bg-light text-dark">
+                                                            <%= payment.student.programme.name %>
+                                                        </span>
+                                                        <span class="badge bg-light text-dark ms-1">Sem <%=
+                                                                payment.student.currentSemester %></span>
+                                                    </div>
+                                                    <% } %>
                                     </div>
                                 </div>
 
@@ -526,27 +467,6 @@
                                                 </a>
                                             </div>
                                             <% } %>
-
-                                                <!-- Payment History -->
-                                                <div class="border-top pt-3 mt-3">
-                                                    <h6 class="fw-bold mb-3">Payment Timeline</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <small class="text-muted d-block">Created</small>
-                                                            <span>
-                                                                <%= new Date(payment.createdAt).toLocaleString() %>
-                                                            </span>
-                                                        </div>
-                                                        <% if (payment.verifiedAt) { %>
-                                                            <div class="col-md-6">
-                                                                <small class="text-muted d-block">Verified</small>
-                                                                <span>
-                                                                    <%= new Date(payment.verifiedAt).toLocaleString() %>
-                                                                </span>
-                                                            </div>
-                                                            <% } %>
-                                                    </div>
-                                                </div>
                             </div>
 
                             <div class="modal-footer">
