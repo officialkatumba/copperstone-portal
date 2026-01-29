@@ -534,6 +534,169 @@ const getStartOfYear = () => {
 //   }
 // };
 
+// // vcController.js - Updated viewAllPaymentsVC function
+// exports.viewAllPaymentsVC = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 20;
+//     const search = (req.query.search || "").trim();
+//     const category = (req.query.category || "").trim();
+
+//     const skip = (page - 1) * limit;
+
+//     // ============================
+//     // BUILD QUERY
+//     // ============================
+//     const query = {};
+
+//     // CATEGORY FILTER
+//     if (category) {
+//       query.category = category;
+//     }
+
+//     // STUDENT SEARCH (name OR email OR NURTE)
+//     if (search) {
+//       const students = await User.find({
+//         role: "Student",
+//         $or: [
+//           { firstName: new RegExp(search, "i") },
+//           { surname: new RegExp(search, "i") },
+//           { email: new RegExp(search, "i") },
+//           { "studentProfile.nurteNumber": new RegExp(search, "i") },
+//         ],
+//       }).select("_id");
+
+//       query.student = { $in: students.map((s) => s._id) };
+//     }
+
+//     // ============================
+//     // PAYMENTS
+//     // ============================
+//     const payments = await Payment.find(query)
+//       .populate("student", "firstName surname email studentProfile.nurteNumber")
+//       .sort({ createdAt: -1 })
+//       .skip(skip)
+//       .limit(limit)
+//       .lean();
+
+//     const totalCount = await Payment.countDocuments(query);
+//     const totalPages = Math.ceil(totalCount / limit);
+
+//     // ============================
+//     // SUMMARY TOTALS FOR ALL PAYMENTS
+//     // ============================
+//     const now = new Date();
+//     const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+//     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+//     const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+//     const sum = async (from, additionalQuery = {}) => {
+//       const matchQuery = { createdAt: { $gte: from } };
+//       if (additionalQuery.category) {
+//         matchQuery.category = additionalQuery.category;
+//       }
+
+//       const r = await Payment.aggregate([
+//         { $match: matchQuery },
+//         { $group: { _id: null, total: { $sum: "$amount" } } },
+//       ]);
+//       return r.length ? r[0].total : 0;
+//     };
+
+//     // Overall totals
+//     const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
+//       sum(startOfToday),
+//       sum(startOfMonth),
+//       sum(startOfYear),
+//       sum(new Date(0)),
+//     ]);
+
+//     // ============================
+//     // CATEGORY-SPECIFIC TOTALS FOR SUMMARY CARDS
+//     // ============================
+//     const categoryTotals = await Payment.aggregate([
+//       {
+//         $group: {
+//           _id: "$category",
+//           totalAmount: { $sum: "$amount" },
+//           count: { $sum: 1 },
+//         },
+//       },
+//     ]);
+
+//     // Extract specific category totals
+//     const tuitionTotal =
+//       categoryTotals.find((c) => c._id === "Tuition Fee (Per Semester)")
+//         ?.totalAmount || 0;
+//     const boardingTotal =
+//       categoryTotals.find((c) => c._id === "Boarding Fee")?.totalAmount || 0;
+//     const applicationTotal =
+//       categoryTotals.find((c) => c._id === "Application Fee")?.totalAmount || 0;
+//     const registrationTotal =
+//       categoryTotals.find((c) => c._id === "Registration Fee")?.totalAmount ||
+//       0;
+//     const examTotal =
+//       categoryTotals.find((c) => c._id === "Exam Fee")?.totalAmount || 0;
+//     const graduationTotal =
+//       categoryTotals.find((c) => c._id === "Graduation Fee")?.totalAmount || 0;
+//     const otherTotal =
+//       categoryTotals.find((c) => c._id === "Other")?.totalAmount || 0;
+
+//     // Calculate total outstanding balances
+//     const balanceAggregation = await Payment.aggregate([
+//       {
+//         $group: {
+//           _id: null,
+//           totalBalance: { $sum: "$balanceAfterPayment" },
+//         },
+//       },
+//     ]);
+
+//     const totalBalanceOutstanding = balanceAggregation[0]?.totalBalance || 0;
+
+//     res.render("vc/payments", {
+//       title: "VC Dashboard - All Payments",
+//       payments,
+
+//       // Summary cards data
+//       tuitionTotal,
+//       boardingTotal,
+//       applicationTotal,
+//       registrationTotal,
+//       examTotal,
+//       graduationTotal,
+//       otherTotal,
+//       totalBalanceOutstanding,
+//       totalAll,
+
+//       // Time-based totals
+//       totalToday,
+//       totalMonth,
+//       totalYear,
+
+//       today: new Date().toLocaleDateString(),
+//       monthRange: `${startOfMonth.toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
+//       yearRange: `${startOfYear.getFullYear()} - ${new Date().getFullYear()}`,
+
+//       // Filters
+//       search,
+//       category,
+
+//       // Pagination
+//       currentPage: page,
+//       totalPages,
+//       totalCount,
+//       limit,
+
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("VC Payments Error:", err);
+//     req.flash("error_msg", "Unable to load payments.");
+//     res.redirect("/dashboard/vc");
+//   }
+// };
+
 // vcController.js - Updated viewAllPaymentsVC function
 exports.viewAllPaymentsVC = async (req, res) => {
   try {
@@ -541,20 +704,14 @@ exports.viewAllPaymentsVC = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const search = (req.query.search || "").trim();
     const category = (req.query.category || "").trim();
-
     const skip = (page - 1) * limit;
 
     // ============================
     // BUILD QUERY
     // ============================
     const query = {};
+    if (category) query.category = category;
 
-    // CATEGORY FILTER
-    if (category) {
-      query.category = category;
-    }
-
-    // STUDENT SEARCH (name OR email OR NURTE)
     if (search) {
       const students = await User.find({
         role: "Student",
@@ -565,7 +722,6 @@ exports.viewAllPaymentsVC = async (req, res) => {
           { "studentProfile.nurteNumber": new RegExp(search, "i") },
         ],
       }).select("_id");
-
       query.student = { $in: students.map((s) => s._id) };
     }
 
@@ -583,36 +739,19 @@ exports.viewAllPaymentsVC = async (req, res) => {
     const totalPages = Math.ceil(totalCount / limit);
 
     // ============================
-    // SUMMARY TOTALS FOR ALL PAYMENTS
+    // DATE SETUP
     // ============================
     const now = new Date();
-    const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    const sum = async (from, additionalQuery = {}) => {
-      const matchQuery = { createdAt: { $gte: from } };
-      if (additionalQuery.category) {
-        matchQuery.category = additionalQuery.category;
-      }
-
-      const r = await Payment.aggregate([
-        { $match: matchQuery },
-        { $group: { _id: null, total: { $sum: "$amount" } } },
-      ]);
-      return r.length ? r[0].total : 0;
-    };
-
-    // Overall totals
-    const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
-      sum(startOfToday),
-      sum(startOfMonth),
-      sum(startOfYear),
-      sum(new Date(0)),
-    ]);
-
     // ============================
-    // CATEGORY-SPECIFIC TOTALS FOR SUMMARY CARDS
+    // ALL TIME CATEGORY TOTALS
     // ============================
     const categoryTotals = await Payment.aggregate([
       {
@@ -624,7 +763,7 @@ exports.viewAllPaymentsVC = async (req, res) => {
       },
     ]);
 
-    // Extract specific category totals
+    // Extract specific category totals (All Time)
     const tuitionTotal =
       categoryTotals.find((c) => c._id === "Tuition Fee (Per Semester)")
         ?.totalAmount || 0;
@@ -642,6 +781,70 @@ exports.viewAllPaymentsVC = async (req, res) => {
     const otherTotal =
       categoryTotals.find((c) => c._id === "Other")?.totalAmount || 0;
 
+    // ============================
+    // TODAY'S CATEGORY TOTALS
+    // ============================
+    const todayCategoryTotals = await Payment.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startOfToday },
+        },
+      },
+      {
+        $group: {
+          _id: "$category",
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Extract specific category totals (Today)
+    const todayTuition =
+      todayCategoryTotals.find((c) => c._id === "Tuition Fee (Per Semester)")
+        ?.totalAmount || 0;
+    const todayBoarding =
+      todayCategoryTotals.find((c) => c._id === "Boarding Fee")?.totalAmount ||
+      0;
+    const todayApplication =
+      todayCategoryTotals.find((c) => c._id === "Application Fee")
+        ?.totalAmount || 0;
+    const todayRegistration =
+      todayCategoryTotals.find((c) => c._id === "Registration Fee")
+        ?.totalAmount || 0;
+    const todayExam =
+      todayCategoryTotals.find((c) => c._id === "Exam Fee")?.totalAmount || 0;
+    const todayGraduation =
+      todayCategoryTotals.find((c) => c._id === "Graduation Fee")
+        ?.totalAmount || 0;
+    const todayOther =
+      todayCategoryTotals.find((c) => c._id === "Other")?.totalAmount || 0;
+
+    // ============================
+    // OTHER TOTALS
+    // ============================
+    // Overall totals
+    const totalToday = todayCategoryTotals.reduce(
+      (sum, cat) => sum + cat.totalAmount,
+      0,
+    );
+
+    const [totalMonth, totalYear, totalAll] = await Promise.all([
+      Payment.aggregate([
+        { $match: { createdAt: { $gte: startOfMonth } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]).then((r) => r[0]?.total || 0),
+
+      Payment.aggregate([
+        { $match: { createdAt: { $gte: startOfYear } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]).then((r) => r[0]?.total || 0),
+
+      Payment.aggregate([
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]).then((r) => r[0]?.total || 0),
+    ]);
+
     // Calculate total outstanding balances
     const balanceAggregation = await Payment.aggregate([
       {
@@ -658,7 +861,7 @@ exports.viewAllPaymentsVC = async (req, res) => {
       title: "VC Dashboard - All Payments",
       payments,
 
-      // Summary cards data
+      // ALL TIME totals (Row 1)
       tuitionTotal,
       boardingTotal,
       applicationTotal,
@@ -669,14 +872,23 @@ exports.viewAllPaymentsVC = async (req, res) => {
       totalBalanceOutstanding,
       totalAll,
 
-      // Time-based totals
+      // TODAY'S totals (Row 2)
+      todayTuition,
+      todayBoarding,
+      todayApplication,
+      todayRegistration,
+      todayExam,
+      todayGraduation,
+      todayOther,
       totalToday,
+
+      // Other time-based totals
       totalMonth,
       totalYear,
 
       today: new Date().toLocaleDateString(),
-      monthRange: `${startOfMonth.toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
-      yearRange: `${startOfYear.getFullYear()} - ${new Date().getFullYear()}`,
+      monthRange: `${startOfMonth.toLocaleDateString()} - ${now.toLocaleDateString()}`,
+      yearRange: `${startOfYear.getFullYear()} - ${now.getFullYear()}`,
 
       // Filters
       search,

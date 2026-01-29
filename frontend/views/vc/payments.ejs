@@ -4,146 +4,310 @@
         <div class="container my-5">
             <!-- PAGE HEADING -->
             <div class="text-center mb-5">
-                <h2 class="fw-bold" style="color: var(--primary-purple)">All Payments Overview</h2>
+                <h2 class="fw-bold" style="color: var(--primary-purple)">All Payments Overview By VC</h2>
                 <p class="text-muted">Comprehensive view of all university payments and financial transactions</p>
             </div>
-
             <!-- ===================================== -->
-            <!-- 7 SUMMARY CARDS (VC-SPECIFIC METRICS) -->
+            <!-- SUMMARY OVERVIEW - 2 ROWS OF 8 CARDS -->
             <!-- ===================================== -->
-            <div class="row g-4 mb-5">
-                <!-- Total Tuition Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-primary mb-2">
-                                <i class="fas fa-university fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(tuitionTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Tuition Fees</p>
-                            <small class="text-primary">Main Revenue</small>
-                        </div>
-                    </div>
-                </div>
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold mb-4" style="color: var(--primary-purple)">
+                                <i class="fas fa-chart-line me-2"></i>Payment Summary Overview
+                            </h4>
 
-                <!-- Total Boarding Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-success mb-2">
-                                <i class="fas fa-building fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(boardingTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Boarding Fees</p>
-                            <small class="text-success">Accommodation</small>
-                        </div>
-                    </div>
-                </div>
+                            <!-- ROW 1: ALL TIME TOTALS -->
+                            <!-- <h6 class="fw-bold mb-3 text-muted">All Time Totals (Since Inception)</h6> -->
+                            <!-- ROW 1: ALL TIME TOTALS -->
+                            <h6 class="fw-bold mb-3 text-muted d-flex align-items-center">
+                                All Time Totals (Since Inception)
+                                <span class="badge rounded-pill ms-2"
+                                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+                                    <i class="fas fa-wallet me-1"></i>
+                                    ZMW <%= Number(totalAll || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2}) %>
+                                </span>
+                            </h6>
+                            <div class="row g-3 mb-4">
+                                <!-- Total Tuition Fees (All Time) -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #e3f2fd;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #2196f3;">
+                                            <i class="fas fa-university fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(tuitionTotal || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Tuition Fees</small>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <!-- Total Application Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-warning mb-2">
-                                <i class="fas fa-file-signature fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(applicationTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Application Fees</p>
-                            <small class="text-warning">Admissions</small>
-                        </div>
-                    </div>
-                </div>
+                                <!-- Total Boarding Fees (All Time) -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #d1f7c4;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #4caf50;">
+                                            <i class="fas fa-building fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(boardingTotal || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Boarding Fees</small>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <!-- Total Registration Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-info mb-2">
-                                <i class="fas fa-user-plus fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(registrationTotal || 0).toLocaleString('en-US', {minimumFractionDigits:
-                                    2, maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Registration Fees</p>
-                            <small class="text-info">Student Registration</small>
-                        </div>
-                    </div>
-                </div>
+                                <!-- Total Application Fees (All Time) -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #fff3cd;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #ff9800;">
+                                            <i class="fas fa-file-signature fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(applicationTotal || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Application Fees</small>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <!-- Total Exam Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-purple mb-2">
-                                <i class="fas fa-graduation-cap fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(examTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Exam Fees</p>
-                            <small class="text-purple">Assessments</small>
-                        </div>
-                    </div>
-                </div>
+                                <!-- Total Registration Fees (All Time) -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #fce4ec;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #e91e63;">
+                                            <i class="fas fa-user-plus fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(registrationTotal || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Registration Fees</small>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <!-- Total Graduation Fees -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-dark mb-2">
-                                <i class="fas fa-award fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(graduationTotal || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Graduation Fees</p>
-                            <small class="text-dark">Ceremonies</small>
-                        </div>
-                    </div>
-                </div>
+                                <!-- Total Exam Fees (All Time) -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #e8f4fd;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #9c27b0;">
+                                            <i class="fas fa-graduation-cap fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(examTotal || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Exam Fees</small>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <!-- Total Outstanding Balances -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-danger mb-2">
-                                <i class="fas fa-exclamation-triangle fa-3x"></i>
-                            </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(totalBalanceOutstanding || 0).toLocaleString('en-US',
-                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Outstanding Balances</p>
-                            <small class="text-danger">Pending Collection</small>
-                        </div>
-                    </div>
-                </div>
+                                <!-- Total Graduation Fees (All Time) -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #f3e5f5;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #673ab7;">
+                                            <i class="fas fa-award fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(graduationTotal || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Graduation Fees</small>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <!-- Total All Payments -->
-                <div class="col-md-3 col-6">
-                    <div class="card text-center border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="text-secondary mb-2">
-                                <i class="fas fa-wallet fa-3x"></i>
+                                <!-- Total Other Fees (All Time) -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #e8eaf6;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #3f51b5;">
+                                            <i class="fas fa-file-invoice-dollar fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(otherTotal || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Other Fees</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Outstanding Balances (All Time) -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #ffebee;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #f44336;">
+                                            <i class="fas fa-exclamation-triangle fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(totalBalanceOutstanding || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">All Balances</small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <h3 class="fw-bold">
-                                ZMW <%= Number(totalAll || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2}) %>
-                            </h3>
-                            <p class="text-muted mb-0">Total Revenue</p>
-                            <small class="text-secondary">All Time</small>
+
+                            <!-- ROW 2: TODAY'S TOTALS -->
+                            <h6 class="fw-bold mb-3 text-muted">Today's Collection (<%= new Date().toLocaleDateString()
+                                    %>)</h6>
+                            <div class="row g-3">
+                                <!-- Today's Tuition Fees -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #e3f2fd;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #2196f3;">
+                                            <i class="fas fa-university fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(todayTuition || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Tuition Today</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Today's Boarding Fees -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #d1f7c4;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #4caf50;">
+                                            <i class="fas fa-building fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(todayBoarding || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Boarding Today</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Today's Application Fees -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #fff3cd;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #ff9800;">
+                                            <i class="fas fa-file-signature fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(todayApplication || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Applications Today</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Today's Registration Fees -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #fce4ec;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #e91e63;">
+                                            <i class="fas fa-user-plus fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(todayRegistration || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Registrations Today</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Today's Exam Fees -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #e8f4fd;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #9c27b0;">
+                                            <i class="fas fa-graduation-cap fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(todayExam || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Exam Fees Today</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Today's Graduation Fees -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #f3e5f5;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #673ab7;">
+                                            <i class="fas fa-award fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(todayGraduation || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Graduation Today</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Today's Other Fees -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #e8eaf6;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #3f51b5;">
+                                            <i class="fas fa-file-invoice-dollar fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(todayOther || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Other Today</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Today's Total Collection -->
+                                <div class="col-md-3 col-6">
+                                    <div class="d-flex align-items-center p-3 rounded"
+                                        style="background-color: #e0f7fa;">
+                                        <div class="rounded-circle p-3 me-3" style="background-color: #00bcd4;">
+                                            <i class="fas fa-wallet fa-2x text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">
+                                                ZMW <%= Number(totalToday || 0).toLocaleString('en-US',
+                                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            </h5>
+                                            <small class="text-muted">Total Today</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -223,9 +387,9 @@
                                 <th>Category</th>
                                 <th>Amount Paid</th>
                                 <th>Balance</th>
-                                <th>Method</th>
+                                <!-- <th>Method</th> -->
                                 <th>Status</th>
-                                <th>Date</th>
+                                <!-- <th>Date</th> -->
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -292,11 +456,7 @@
                                                         <% } %>
                                             </td>
 
-                                            <td>
-                                                <span class="badge bg-info text-white">
-                                                    <%= p.method %>
-                                                </span>
-                                            </td>
+
 
                                             <td>
                                                 <% const statusClass=p.status==='Verified' || p.status==='Fully Paid'
@@ -309,15 +469,7 @@
                                                     </span>
                                             </td>
 
-                                            <td>
-                                                <small>
-                                                    <%= new Date(p.createdAt).toLocaleDateString() %>
-                                                </small><br>
-                                                <small class="text-muted">
-                                                    <%= new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit' ,
-                                                        minute: '2-digit' }) %>
-                                                </small>
-                                            </td>
+
 
                                             <td>
                                                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"

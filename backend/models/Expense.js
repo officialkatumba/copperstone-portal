@@ -26,7 +26,7 @@ const expenseSchema = new Schema(
       enum: ["ZMW", "USD", "EUR", "GBP"],
     },
 
-    // Simple Category (string instead of ObjectId reference)
+    // Category
     category: {
       type: String,
       required: [true, "Category is required"],
@@ -48,12 +48,6 @@ const expenseSchema = new Schema(
         "Insurance",
         "Other",
       ],
-    },
-
-    // Programme Association
-    programme: {
-      type: Schema.Types.ObjectId,
-      ref: "Programme",
     },
 
     // Payment Details
@@ -101,7 +95,7 @@ const expenseSchema = new Schema(
       trim: true,
     },
 
-    // Simple budget tracking
+    // Budget tracking
     budgetCode: {
       type: String,
       trim: true,
@@ -115,7 +109,7 @@ const expenseSchema = new Schema(
     },
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt automatically
+    timestamps: true,
   },
 );
 
@@ -124,7 +118,6 @@ expenseSchema.index({ category: 1 });
 expenseSchema.index({ status: 1 });
 expenseSchema.index({ date: -1 });
 expenseSchema.index({ requestedBy: 1 });
-expenseSchema.index({ programme: 1 });
 
 // Virtual for formatted amount with Kwacha symbol
 expenseSchema.virtual("formattedAmount").get(function () {

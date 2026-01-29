@@ -34,6 +34,8 @@ const userSchema = new mongoose.Schema(
         "Admin",
         "AdmissionsOfficer",
         "FinanceOfficer",
+        "FinanceManager",
+        "DirectorFinance",
         "Registrar",
         "VC",
         "Dean",

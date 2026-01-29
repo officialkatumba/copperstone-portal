@@ -1,0 +1,157 @@
+<%- include('../../partials/header') %>
+    <%- include('../../partials/navbar') %>
+
+        <div class="container my-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0 fw-bold">Expense Details</h5>
+                                <small class="text-muted">ID: <%= expense._id %></small>
+                            </div>
+                            <div>
+                                <a href="/finance/expenses" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-arrow-left me-1"></i> Back
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <span class="badge bg-success fs-6 py-2 px-3">
+                                        <i class="fas fa-check-circle me-1"></i> PAID
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Title</label>
+                                    <p class="fs-5 fw-semibold">
+                                        <%= expense.title %>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Category</label>
+                                    <p><span class="badge bg-info">
+                                            <%= expense.category %>
+                                        </span></p>
+                                </div>
+
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">Description</label>
+                                    <p class="p-3 bg-light rounded">
+                                        <%= expense.description || 'No description' %>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">Amount</label>
+                                    <p class="fs-4 fw-bold text-primary">
+                                        <%= expense.formattedAmount %>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">Date</label>
+                                    <p>
+                                        <%= expense.formattedDate %>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted">Payment Method</label>
+                                    <p>
+                                        <%= expense.paymentMethod %>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Transaction Reference</label>
+                                    <p>
+                                        <%= expense.transactionReference || 'N/A' %>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">Budget Code</label>
+                                    <p>
+                                        <%= expense.budgetCode || 'N/A' %>
+                                    </p>
+                                </div>
+
+                                <% if (expense.receiptNumber) { %>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label text-muted">Receipt Number</label>
+                                        <p>
+                                            <%= expense.receiptNumber %>
+                                        </p>
+                                    </div>
+                                    <% } %>
+
+                                        <% if (expense.receipt) { %>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label text-muted">Receipt</label>
+                                                <div class="p-3 bg-light rounded">
+                                                    <a href="<%= expense.receipt.signedUrl %>"
+                                                        class="btn btn-outline-primary" target="_blank">
+                                                        <i class="fas fa-download me-1"></i> Download Receipt
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <% } %>
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Recorded By</label>
+                                    <p>
+                                        <% if (expense.requestedBy) { %>
+                                            <%= expense.requestedBy.firstName %>
+                                                <%= expense.requestedBy.surname %>
+                                                    <% if (expense.requestedBy.email) { %>
+                                                        <br><small class="text-muted">
+                                                            <%= expense.requestedBy.email %>
+                                                        </small>
+                                                        <% } %>
+                                                            <% } else { %>
+                                                                Finance Officer
+                                                                <% } %>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Recorded On</label>
+                                    <p>
+                                        <%= new Date(expense.createdAt).toLocaleString() %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-light">
+                            <div class="d-flex justify-content-between">
+                                <a href="/finance/expenses" class="btn btn-outline-secondary">
+                                    <i class="fas fa-list me-1"></i> Back to List
+                                </a>
+                                <% if (user.role==='FinanceManager' || user.role==='Admin' ) { %>
+                                    <form action="/finance/expenses/<%= expense._id %>/delete" method="POST">
+                                        <button type="submit" class="btn btn-outline-danger"
+                                            onclick="return confirm('Delete this expense record?')">
+                                            <i class="fas fa-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
+                                    <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../../partials/footer') %>

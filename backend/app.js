@@ -985,6 +985,10 @@ app.get("/registrar/test", (req, res) => {
   res.send("✅ Registrar route is working");
 });
 
+// Add to your main server file (app.js or server.js)
+const expenseRoutes = require("./routes/expenseRoutes");
+app.use("/finance/expenses", expenseRoutes);
+
 // ==================================================
 // 404 HANDLER
 // ==================================================

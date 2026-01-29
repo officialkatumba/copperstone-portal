@@ -1,0 +1,183 @@
+<%- include('../../partials/header') %>
+    <%- include('../../partials/navbar') %>
+
+        <div class="container-fluid my-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 fw-bold">
+                            <i class="fas fa-building me-2"></i>University Expenses
+                        </h5>
+                        <p class="text-muted mb-0">Record of all university operational expenses</p>
+                    </div>
+                    <div>
+                        <a href="/finance/expenses/new" class="btn btn-info">
+                            <i class="fas fa-plus-circle me-1"></i> Record Expense
+                        </a>
+                        <a href="/finance/expenses/export/csv" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-download me-1"></i> Export
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Filters -->
+                    <form method="GET" class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" value="<%= search %>"
+                                placeholder="Search expenses...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="category">
+                                <option value="">All Categories</option>
+                                <% categories.forEach(function(cat) { %>
+                                    <option value="<%= cat %>" <%=category===cat ? 'selected' : '' %>><%= cat %>
+                                    </option>
+                                    <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="/finance/expenses" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-sync-alt"></i> Reset
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                <strong>Total Paid Expenses:</strong> K <%= totalAll.toLocaleString('en-ZM',
+                                    {minimumFractionDigits: 2}) %>
+                                    <span class="ms-3">
+                                        <strong>This Month:</strong> K <%= totalMonth.toLocaleString('en-ZM',
+                                            {minimumFractionDigits: 2}) %>
+                                    </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (expenses.length===0) { %>
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
+                                            <p class="text-muted">No expenses recorded yet</p>
+                                        </td>
+                                    </tr>
+                                    <% } %>
+
+                                        <% expenses.forEach(function(expense) { %>
+                                            <tr>
+                                                <td>
+                                                    <strong>
+                                                        <%= expense.title %>
+                                                    </strong>
+                                                    <% if (expense.description) { %>
+                                                        <br><small class="text-muted">
+                                                            <%= expense.description.substring(0, 50) %>...
+                                                        </small>
+                                                        <% } %>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info">
+                                                        <%= expense.category %>
+                                                    </span>
+                                                </td>
+                                                <td class="fw-bold">
+                                                    <%= expense.formattedAmount %>
+                                                </td>
+                                                <td>
+                                                    <%= expense.formattedDate %>
+                                                </td>
+                                                <td>
+                                                    <%= expense.paymentMethod %>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-success">Paid</span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a href="/finance/expenses/<%= expense._id %>"
+                                                            class="btn btn-outline-primary">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <% if (expense.receipt) { %>
+                                                            <a href="/finance/expenses/<%= expense._id %>/receipt"
+                                                                class="btn btn-outline-info" target="_blank">
+                                                                <i class="fas fa-receipt"></i>
+                                                            </a>
+                                                            <% } %>
+                                                                <% if (user.role==='FinanceManager' ||
+                                                                    user.role==='Admin' ) { %>
+                                                                    <form
+                                                                        action="/finance/expenses/<%= expense._id %>/delete"
+                                                                        method="POST" class="d-inline">
+                                                                        <button type="submit"
+                                                                            class="btn btn-outline-danger"
+                                                                            onclick="return confirm('Delete this expense?')">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                    <% } %>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <% if (totalPages> 1) { %>
+                        <nav class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <% if (currentPage> 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="?page=<%= currentPage - 1 %>&search=<%= search %>&category=<%= category %>">
+                                            Previous
+                                        </a>
+                                    </li>
+                                    <% } %>
+
+                                        <li class="page-item active">
+                                            <span class="page-link">Page <%= currentPage %> of <%= totalPages %></span>
+                                        </li>
+
+                                        <% if (currentPage < totalPages) { %>
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                    href="?page=<%= currentPage + 1 %>&search=<%= search %>&category=<%= category %>">
+                                                    Next
+                                                </a>
+                                            </li>
+                                            <% } %>
+                            </ul>
+                        </nav>
+                        <% } %>
+                </div>
+            </div>
+        </div>
+
+        <%- include('../../partials/footer') %>
