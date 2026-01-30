@@ -1,11 +1,4 @@
 // backend/controllers/financeController.js
-// const Application = require("../models/Application");
-// const { generateSignedUrl } = require("../config/gcsUpload");
-// const { generateReceiptPDF } = require("../utils/receiptPDFGenerator");
-// const { uploadFile } = require("../utils/gcs");
-// const Payment = require("../models/Payment");
-
-// backend/controllers/financeController.js
 const { sendEmail } = require("../utils/mailer");
 const Application = require("../models/Application");
 const Payment = require("../models/Payment");
@@ -14,28 +7,6 @@ const User = require("../models/User"); // ✅ FIXED
 const { generateSignedUrl } = require("../config/gcsUpload");
 const { generateReceiptPDF } = require("../utils/receiptPDFGenerator");
 const { uploadFile } = require("../utils/gcs");
-
-// List all applications with payments
-// exports.listFinanceApplications = async (req, res) => {
-//   try {
-//     const applications = await Application.find()
-//       .populate("applicant", "firstName surname email mobile")
-//       .populate("firstChoice", "name code level")
-//       .populate("secondChoice", "name code level")
-//       .sort({ createdAt: -1 })
-//       .lean();
-
-//     res.render("finance/applications", {
-//       title: "Finance - Applications & Payments",
-//       applications,
-//       user: req.user,
-//     });
-//   } catch (err) {
-//     console.error("Finance list error:", err);
-//     req.flash("error_msg", "Could not load finance applications.");
-//     res.redirect("/dashboard/finance");
-//   }
-// };
 
 // List all applications with payments
 exports.listFinanceApplications = async (req, res) => {
@@ -535,6 +506,7 @@ exports.viewFinanceApplicationDetail = async (req, res) => {
 //     return res.redirect("/finance/payments");
 //   }
 // };
+
 // Verify / reject payment
 exports.verifyPaymentDirect = async (req, res) => {
   try {
@@ -639,7 +611,7 @@ exports.verifyPaymentDirect = async (req, res) => {
         } catch (err) {
           console.log(
             "Could not load application data for receipt:",
-            err.message
+            err.message,
           );
         }
       }
@@ -757,7 +729,7 @@ exports.verifyPaymentDirect = async (req, res) => {
       "success_msg",
       action === "Verified"
         ? "Payment verified, receipt issued, and emails sent."
-        : "Payment status updated successfully."
+        : "Payment status updated successfully.",
     );
 
     return res.redirect("/finance/payments");
@@ -1005,249 +977,7 @@ exports.searchStudents = async (req, res) => {
   }
 };
 
-// // ===============================
-// // CREATE PAYMENT + AUTO RECEIPT - FIXED
-// // ===============================
-// exports.createPayment = async (req, res) => {
-//   try {
-//     const {
-//       student,
-//       category,
-//       description,
-//       amount,
-//       method,
-//       semester,
-//       academicYear,
-//       programme,
-//     } = req.body;
-
-//     if (!student || !category || !description || !amount || !method) {
-//       req.flash("error_msg", "All required fields must be filled.");
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     const payment = await Payment.create({
-//       student,
-//       category,
-//       description,
-//       amount,
-//       method,
-//       semester: semester || null,
-//       academicYear: academicYear || null,
-//       programme: programme || null,
-//       status: "Verified",
-//       verifiedBy: req.user._id,
-//       verifiedAt: new Date(),
-//     });
-
-//     // Generate receipt
-//     const populatedPayment = await Payment.findById(payment._id)
-//       .populate("student")
-//       .populate("programme");
-
-//     const pdfPath = await generateReceiptPDF({
-//       payment: populatedPayment,
-//       application: null,
-//     });
-
-//     const gcsPath = `receipts/payment_${payment._id}_${Date.now()}.pdf`;
-//     await uploadFile(pdfPath, gcsPath);
-
-//     // ✅ FIX: Generate signed URL for payment receipts
-//     const signedUrl = await generateSignedUrl(gcsPath);
-
-//     payment.receipt = {
-//       name: "Official Payment Receipt",
-//       gcsPath,
-//       gcsUrl: signedUrl, // ✅ Store signed URL instead of direct URL
-//       issuedAt: new Date(),
-//     };
-
-//     await payment.save();
-
-//     // Clean up temp file
-//     const fs = require("fs");
-//     if (fs.existsSync(pdfPath)) {
-//       fs.unlinkSync(pdfPath);
-//     }
-
-//     req.flash("success_msg", "Payment created and receipt issued.");
-//     res.redirect("/finance/payments");
-//   } catch (err) {
-//     console.error("Create payment error:", err);
-//     req.flash("error_msg", "Failed to initiate payment.");
-//     res.redirect("/finance/payments/new");
-//   }
-// };
-
-// ===============================
-// CREATE PAYMENT + AUTO RECEIPT
-// // ===============================
-// exports.createPayment = async (req, res) => {
-//   try {
-//     const {
-//       student,
-//       category,
-//       description,
-//       amount,
-//       method,
-//       semester,
-//       academicYear,
-//       programme,
-//     } = req.body;
-
-//     if (!student || !category || !description || !amount || !method) {
-//       req.flash("error_msg", "All required fields must be filled.");
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     // ===============================
-//     // 1️⃣ CREATE PAYMENT (VERIFIED)
-//     // ===============================
-//     const payment = await Payment.create({
-//       student,
-//       category,
-//       description,
-//       amount,
-//       method,
-//       semester: semester || null,
-//       academicYear: academicYear || null,
-//       programme: programme || null,
-//       status: "Verified",
-//       verifiedBy: req.user._id,
-//       verifiedAt: new Date(),
-//     });
-
-//     // ===============================
-//     // 2️⃣ GENERATE RECEIPT
-//     // ===============================
-//     const populatedPayment = await Payment.findById(payment._id)
-//       .populate("student")
-//       .populate("programme");
-
-//     const pdfPath = await generateReceiptPDF({
-//       payment: populatedPayment,
-//       application: null,
-//     });
-
-//     const gcsPath = `receipts/payment_${payment._id}_${Date.now()}.pdf`;
-//     await uploadFile(pdfPath, gcsPath);
-
-//     const signedUrl = await generateSignedUrl(gcsPath);
-
-//     payment.receipt = {
-//       name: "Official Payment Receipt",
-//       gcsPath,
-//       gcsUrl: signedUrl,
-//       issuedAt: new Date(),
-//     };
-
-//     await payment.save();
-
-//     // ===============================
-//     // 3️⃣ SEND RECEIPT EMAILS
-//     // ===============================
-//     const studentEmail = populatedPayment.student?.email;
-
-//     if (studentEmail) {
-//       // Student email
-//       await sendEmail({
-//         to: studentEmail,
-//         subject: "💳 Payment Received – Official Receipt",
-//         html: `
-//           <p>Dear ${populatedPayment.student.firstName || "Student"},</p>
-
-//           <p>Your payment has been <strong>successfully received and verified</strong>.</p>
-
-//           <p>
-//             Your <strong>official receipt</strong> is attached to this email as a PDF.
-//           </p>
-
-//           <p>
-//             You may also download it later from the portal:
-//             <br/>
-//             <a href="${signedUrl}">Download Receipt from Portal</a>
-//           </p>
-
-//           <br/>
-//           <p>Regards,<br/>Finance Office</p>
-//         `,
-//         attachments: [
-//           {
-//             filename: "Official_Payment_Receipt.pdf",
-//             path: pdfPath,
-//             contentType: "application/pdf",
-//           },
-//         ],
-//       });
-
-//       // VC + Registrar email
-//       await sendEmail({
-//         to: ["officialkwina@gmail.com", "annebupe@gmail.com"],
-//         subject: "📄 Payment Received – Receipt Issued",
-//         html: `
-//           <p>A student payment has been <strong>received and verified</strong>.</p>
-
-//           <p>
-//             <strong>Student:</strong>
-//             ${populatedPayment.student.firstName}
-//             ${populatedPayment.student.surname}
-//           </p>
-
-//           <p>
-//             <strong>Amount:</strong>
-//             ZMW ${populatedPayment.amount}
-//           </p>
-
-//           <p>
-//             <strong>Category:</strong>
-//             ${populatedPayment.category}
-//           </p>
-
-//           <p>
-//             The official receipt is attached to this email.
-//           </p>
-
-//           <p>
-//             Portal access:
-//             <br/>
-//             <a href="${signedUrl}">View Receipt in Portal</a>
-//           </p>
-//         `,
-//         attachments: [
-//           {
-//             filename: `Receipt_${payment._id}.pdf`,
-//             path: pdfPath,
-//             contentType: "application/pdf",
-//           },
-//         ],
-//       });
-
-//       console.log("📧 Payment receipt emails sent (Student, VC, Registrar)");
-//     }
-
-//     // ===============================
-//     // 4️⃣ CLEAN UP TEMP FILE
-//     // ===============================
-//     const fs = require("fs");
-//     if (fs.existsSync(pdfPath)) {
-//       fs.unlinkSync(pdfPath);
-//     }
-
-//     req.flash("success_msg", "Payment created and receipt issued.");
-//     res.redirect("/finance/payments");
-//   } catch (err) {
-//     console.error("Create payment error:", err);
-//     req.flash("error_msg", "Failed to initiate payment.");
-//     res.redirect("/finance/payments/new");
-//   }
-// };
-
-// ===============================
-// CREATE PAYMENT + AUTO RECEIPT
-// ===============================
-//
-
+// CREATE PAYMENT (Finance Controller - Updated)
 exports.createPayment = async (req, res) => {
   try {
     // DEBUG logging
@@ -1266,6 +996,8 @@ exports.createPayment = async (req, res) => {
       programme,
       totalDue,
       balanceAfterPayment,
+      paymentReceivedOn,
+      modeOfStudy, // ADD THIS: Mode of Study field
     } = req.body;
 
     // Validate required fields
@@ -1298,11 +1030,48 @@ exports.createPayment = async (req, res) => {
       return res.redirect("/finance/payments/new");
     }
 
+    // Parse payment received date (actual bank deposit date)
+    let parsedReceivedDate = new Date(); // Default to now
+    if (paymentReceivedOn) {
+      parsedReceivedDate = new Date(paymentReceivedOn);
+      // Validate date is not in the future
+      if (parsedReceivedDate > new Date()) {
+        req.flash(
+          "error_msg",
+          "Payment received date cannot be in the future.",
+        );
+        return res.redirect("/finance/payments/new");
+      }
+    }
+
     // ===============================
-    // 1️⃣ CREATE PAYMENT
+    // 1️⃣ GET STUDENT ACADEMIC INFORMATION
+    // ===============================
+    const studentData = await User.findById(student)
+      .select("firstName surname email studentId programme modeOfStudy")
+      .populate("programme", "name code");
+
+    if (!studentData) {
+      req.flash("error_msg", "Student not found.");
+      return res.redirect("/finance/payments/new");
+    }
+
+    // Get programme details
+    const programmeData = studentData.programme || {
+      name: "Not Assigned",
+      code: "N/A",
+    };
+    const studentModeOfStudy =
+      studentData.modeOfStudy || modeOfStudy || "Full Time";
+
+    // Generate reference number (like application controller)
+    const reference = `PAY-${Date.now().toString().slice(-8)}`;
+
+    // ===============================
+    // 2️⃣ CREATE PAYMENT
     // ===============================
     const payment = await Payment.create({
-      student,
+      student: studentData._id,
       category,
       description,
       amount: numericAmount,
@@ -1311,36 +1080,41 @@ exports.createPayment = async (req, res) => {
       method,
       semester: semester || null,
       academicYear: academicYear || null,
-      programme: programme || null,
+      programme: programmeData._id || programme || null,
+      modeOfStudy: studentModeOfStudy, // ADD: Save mode of study
+      reference: reference, // Use generated reference
+      currency: "ZMW",
       status: "Verified",
       verifiedBy: req.user._id,
       verifiedAt: new Date(),
+      paymentReceivedOn: parsedReceivedDate,
+    });
+
+    console.log("DEBUG - Payment created:", {
+      id: payment._id,
+      reference: payment.reference,
+      studentName: `${studentData.firstName} ${studentData.surname}`,
+      programme: programmeData.name,
+      modeOfStudy: studentModeOfStudy,
     });
 
     // ===============================
-    // 2️⃣ HANDLE PAYMENT PROOF UPLOAD
+    // 3️⃣ HANDLE PAYMENT PROOF UPLOAD
     // ===============================
     if (req.file) {
       try {
         const { uploadToGCS } = require("../config/gcsUpload");
 
-        // Get student info for naming
-        const Student = require("../models/User");
-        const studentData = await Student.findById(student).select(
-          "firstName surname"
-        );
-
         const uploaded = await uploadToGCS(
           req.file,
           {
-            firstName: studentData?.firstName || "Student",
-            surname: studentData?.surname || "Unknown",
+            firstName: studentData.firstName,
+            surname: studentData.surname,
           },
           "PAYMENT",
-          academicYear || new Date().getFullYear().toString()
+          academicYear || new Date().getFullYear().toString(),
         );
 
-        // Use existing proofOfPayment field
         payment.proofOfPayment = {
           gcsUrl: uploaded.publicUrl,
           gcsPath: uploaded.path,
@@ -1356,67 +1130,111 @@ exports.createPayment = async (req, res) => {
     }
 
     // ===============================
-    // 3️⃣ GENERATE RECEIPT
-    // ===============================
-    // const populatedPayment = await Payment.findById(payment._id)
-    //   .populate("student")
-    //   .populate("programme");
-
-    // const pdfPath = await generateReceiptPDF({
-    //   payment: populatedPayment,
-    //   application: null,
-    // });
-
-    // ===============================
-    // 3️⃣ GENERATE RECEIPT
+    // 4️⃣ GENERATE RECEIPT WITH ACADEMIC INFO
     // ===============================
     const populatedPayment = await Payment.findById(payment._id)
-      .populate("student")
-      .populate("programme");
+      .populate("student", "firstName surname email studentId")
+      .populate("verifiedBy", "firstName surname");
 
-    // Get application data if payment has application reference
-    let applicationData = null;
-    if (payment.application) {
-      try {
-        const Application = require("../models/Application");
-        applicationData = await Application.findById(payment.application)
-          .populate("firstChoice", "name code")
-          .populate("secondChoice", "name code")
-          .lean();
-      } catch (err) {
-        console.log(
-          "Could not load application data for receipt:",
-          err.message
-        );
-      }
-    }
+    // Prepare academic information for receipt
+    const academicInfo = {
+      programme: programmeData.name,
+      programmeCode: programmeData.code,
+      modeOfStudy: studentModeOfStudy,
+      semester: semester || "Not Specified",
+      academicYear: academicYear || new Date().getFullYear().toString(),
+    };
 
+    console.log("DEBUG - Academic info for receipt:", academicInfo);
+
+    // Generate receipt with academic info and reference as receipt number
+    // const pdfPath = await generateReceiptPDF({
+    //   payment: {
+    //     _id: populatedPayment._id,
+    //     reference: populatedPayment.reference, // This becomes the receipt number
+    //     amount: populatedPayment.amount,
+    //     method: populatedPayment.method,
+    //     status: populatedPayment.status,
+    //     verifiedAt: populatedPayment.verifiedAt,
+    //     paymentReceivedOn: populatedPayment.paymentReceivedOn,
+    //     category: populatedPayment.category,
+    //     description: populatedPayment.description,
+    //     totalDue: populatedPayment.totalDue,
+    //     balanceAfterPayment: populatedPayment.balanceAfterPayment,
+    //     student: populatedPayment.student,
+    //     verifiedBy: populatedPayment.verifiedBy,
+    //   },
+    //   academicInfo: academicInfo, // Pass academic info separately
+    // });
+
+    // In the createPayment function, update the generateReceiptPDF call:
+
+    // Generate receipt with academic info and reference as receipt number
     const pdfPath = await generateReceiptPDF({
-      payment: populatedPayment,
-      application: applicationData,
+      payment: {
+        _id: populatedPayment._id,
+        reference: populatedPayment.reference, // This becomes the receipt number
+        amount: populatedPayment.amount,
+        method: populatedPayment.method,
+        status: populatedPayment.status,
+        verifiedAt: populatedPayment.verifiedAt,
+        paymentReceivedOn: populatedPayment.paymentReceivedOn,
+        category: populatedPayment.category,
+        description: populatedPayment.description,
+        totalDue: populatedPayment.totalDue,
+        balanceAfterPayment: populatedPayment.balanceAfterPayment,
+        student: populatedPayment.student,
+        verifiedBy: populatedPayment.verifiedBy,
+        // Add academic fields directly to payment object
+        programme: programmeData, // Pass the populated programme object
+        modeOfStudy: studentModeOfStudy,
+        semester: semester || null,
+        academicYear: academicYear || null,
+      },
+      academicInfo: {
+        // Also pass as separate object for clarity
+        programme: programmeData.name,
+        programmeCode: programmeData.code,
+        modeOfStudy: studentModeOfStudy,
+        semester: semester || "",
+        academicYear: academicYear || new Date().getFullYear().toString(),
+      },
     });
 
-    const gcsPath = `receipts/payment_${payment._id}_${Date.now()}.pdf`;
+    const gcsPath = `receipts/payment_${payment.reference}_${Date.now()}.pdf`;
     await uploadFile(pdfPath, gcsPath);
 
     const signedUrl = await generateSignedUrl(gcsPath);
 
+    // Update payment with receipt info (use reference as receipt number)
     payment.receipt = {
+      receiptNumber: payment.reference, // Use reference as receipt number
       name: "Official Payment Receipt",
       gcsPath,
       gcsUrl: signedUrl,
       issuedAt: new Date(),
+      academicInfo: academicInfo, // Store academic info with receipt
     };
 
     await payment.save();
 
+    console.log("DEBUG - Receipt generated:", {
+      receiptNumber: payment.receipt.receiptNumber,
+      gcsPath: payment.receipt.gcsPath,
+    });
+
     // ===============================
-    // 4️⃣ SEND EMAILS
+    // 5️⃣ SEND EMAILS WITH ACADEMIC INFO
     // ===============================
     const studentEmail = populatedPayment.student?.email;
 
     if (studentEmail) {
-      // Student email
+      // Format dates for email
+      const receiptDate = new Date().toLocaleDateString();
+      const depositDate = populatedPayment.paymentReceivedOn
+        ? new Date(populatedPayment.paymentReceivedOn).toLocaleDateString()
+        : receiptDate;
+
       await sendEmail({
         to: studentEmail,
         subject: "💳 Payment Received – Official Receipt",
@@ -1424,65 +1242,56 @@ exports.createPayment = async (req, res) => {
           <p>Dear ${populatedPayment.student.firstName || "Student"},</p>
           <p>Your payment has been <strong>successfully received and verified</strong>.</p>
           
-          <p><strong>Amount Paid:</strong> ZMW ${numericAmount.toFixed(2)}</p>
-          <p><strong>Total Due:</strong> ZMW ${numericTotalDue.toFixed(2)}</p>
-          <p><strong>Balance Remaining:</strong> ZMW ${finalBalance.toFixed(
-            2
-          )}</p>
+          <!-- ACADEMIC INFORMATION -->
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <h4 style="margin-top: 0; color: #2c3e50;">Academic Information</h4>
+            <p><strong>Programme:</strong> ${academicInfo.programme} (${academicInfo.programmeCode})</p>
+            <p><strong>Mode of Study:</strong> ${academicInfo.modeOfStudy}</p>
+            <p><strong>Semester:</strong> ${academicInfo.semester}</p>
+            <p><strong>Academic Year:</strong> ${academicInfo.academicYear}</p>
+          </div>
+          
+          <!-- PAYMENT INFORMATION -->
+          <div style="background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <h4 style="margin-top: 0; color: #2c3e50;">Payment Information</h4>
+            <p><strong>Receipt Number:</strong> ${payment.reference}</p>
+            <p><strong>Amount Paid:</strong> ZMW ${numericAmount.toFixed(2)}</p>
+            <p><strong>Total Due:</strong> ZMW ${numericTotalDue.toFixed(2)}</p>
+            <p><strong>Balance Remaining:</strong> ZMW ${finalBalance.toFixed(2)}</p>
+            <p><strong>Payment Method:</strong> ${method}</p>
+            <p><strong>Date Deposited:</strong> ${depositDate}</p>
+            <p><strong>Date Verified:</strong> ${receiptDate}</p>
+          </div>
           
           <p>Your <strong>official receipt</strong> is attached to this email.</p>
-          <p><a href="${signedUrl}">Download Receipt from Portal</a></p>
+          <p><a href="${signedUrl}" style="background-color: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Download Receipt from Portal</a></p>
           
           ${
             finalBalance > 0
-              ? `<p><strong>Note:</strong> You have an outstanding balance of ZMW ${finalBalance.toFixed(
-                  2
-                )}</p>`
-              : ""
+              ? `<div style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                  <p style="margin: 0;"><strong>Note:</strong> You have an outstanding balance of ZMW ${finalBalance.toFixed(2)}</p>
+                </div>`
+              : `<div style="background-color: #d1ecf1; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #0c5460;">
+                  <p style="margin: 0;"><strong>Payment Status:</strong> Fully Paid ✅</p>
+                </div>`
           }
           
           <p>Regards,<br/>Finance Office</p>
         `,
         attachments: [
           {
-            filename: "Official_Payment_Receipt.pdf",
+            filename: `Receipt_${payment.reference}.pdf`, // Use reference in filename
             path: pdfPath,
             contentType: "application/pdf",
           },
         ],
       });
 
-      // // VC + Registrar email
-      // await sendEmail({
-      //   to: ["officialkwina@gmail.com", "annebupe@gmail.com"],
-      //   subject: "📄 Payment Received – Receipt Issued",
-      //   html: `
-      //     <p>A student payment has been <strong>received and verified</strong>.</p>
-      //     <p><strong>Student:</strong> ${populatedPayment.student.firstName} ${
-      //     populatedPayment.student.surname
-      //   }</p>
-      //     <p><strong>Amount:</strong> ZMW ${populatedPayment.amount}</p>
-      //     <p><strong>Category:</strong> ${populatedPayment.category}</p>
-      //     <p><strong>Balance Due:</strong> ZMW ${finalBalance.toFixed(2)}</p>
-      //     <p>The official receipt is attached.</p>
-      //     <p><a href="${signedUrl}">View Receipt in Portal</a></p>
-      //   `,
-      //   attachments: [
-      //     {
-      //       filename: `Receipt_${payment._id}.pdf`,
-      //       path: pdfPath,
-      //       contentType: "application/pdf",
-      //     },
-      //   ],
-      // });
-
-      // console.log("📧 Payment receipt emails sent (Student, VC, Registrar)");
-
-      console.log("📧 Payment receipt emails sent (Student)");
+      console.log("📧 Payment receipt email sent to student");
     }
 
     // ===============================
-    // 5️⃣ CLEAN UP
+    // 6️⃣ CLEAN UP
     // ===============================
     const fs = require("fs");
     if (fs.existsSync(pdfPath)) {
@@ -1491,7 +1300,7 @@ exports.createPayment = async (req, res) => {
 
     req.flash(
       "success_msg",
-      `Payment created successfully! Balance: ZMW ${finalBalance.toFixed(2)}`
+      `Payment created successfully! Receipt #${payment.reference} issued. Balance: ZMW ${finalBalance.toFixed(2)}`,
     );
     res.redirect("/finance/payments");
   } catch (err) {
@@ -1500,20 +1309,6 @@ exports.createPayment = async (req, res) => {
     res.redirect("/finance/payments/new");
   }
 };
-// ===============================
-// LIST ALL PAYMENTS
-// ===============================
-// exports.listPayments = async (req, res) => {
-//   const payments = await Payment.find()
-//     .populate("student", "firstName surname email")
-//     .sort({ createdAt: -1 });
-
-//   res.render("finance/payments", {
-//     title: "All Payments",
-//     payments,
-//     user: req.user,
-//   });
-// };
 
 // ===============================
 // LIST ALL PAYMENTS (FINANCE)
@@ -1645,97 +1440,6 @@ exports.viewPaymentReceipt = async (req, res) => {
 
 //Cancel receipt
 
-// exports.cancelReceipt = async (req, res) => {
-//   try {
-//     const paymentId = req.params.id;
-//     const { cancelReason } = req.body;
-
-//     // ===============================
-//     // 1️⃣ LOAD PAYMENT
-//     // ===============================
-//     const payment = await Payment.findById(paymentId)
-//       .populate("student", "firstName surname email")
-//       .exec();
-
-//     if (!payment) {
-//       req.flash("error_msg", "Payment not found.");
-//       return res.redirect("/finance/payments");
-//     }
-
-//     // ===============================
-//     // 2️⃣ VALIDATE CAN BE CANCELLED
-//     // ===============================
-//     if (!payment.receipt || !payment.receipt.gcsPath) {
-//       req.flash("error_msg", "No receipt found to cancel.");
-//       return res.redirect("/finance/payments");
-//     }
-
-//     if (payment.status === "Cancelled") {
-//       req.flash("error_msg", "Receipt is already cancelled.");
-//       return res.redirect("/finance/payments");
-//     }
-
-//     // ===============================
-//     // 3️⃣ UPDATE PAYMENT STATUS
-//     // ===============================
-//     const previousStatus = payment.status;
-//     payment.status = "Cancelled";
-//     payment.remarks = `Receipt cancelled: ${
-//       cancelReason || "No reason provided"
-//     } (Previously: ${previousStatus})`;
-//     payment.updatedAt = new Date();
-
-//     // Clear receipt data
-//     payment.receipt = null;
-
-//     // ===============================
-//     // 4️⃣ SAVE PAYMENT
-//     // ===============================
-//     await payment.save();
-
-//     // ===============================
-//     // 5️⃣ OPTIONAL: SEND NOTIFICATION EMAIL
-//     // ===============================
-//     const studentEmail = payment.student?.email;
-//     if (studentEmail) {
-//       await sendEmail({
-//         to: studentEmail,
-//         subject: "❌ Payment Receipt Cancelled",
-//         html: `
-//           <p>Dear ${payment.student.firstName || "Student"},</p>
-//           <p>Your payment receipt has been <strong>cancelled</strong> by the finance office.</p>
-
-//           <p><strong>Reason:</strong> ${cancelReason || "Not specified"}</p>
-//           <p><strong>Original Amount:</strong> ZMW ${payment.amount.toFixed(
-//             2
-//           )}</p>
-//           <p><strong>Payment Date:</strong> ${payment.createdAt.toLocaleDateString()}</p>
-
-//           <p>You will need to make a new payment to complete this transaction.</p>
-//           <p>Please contact the finance office if you have any questions.</p>
-
-//           <br/>
-//           <p>Regards,<br/>Finance Office</p>
-//         `,
-//       });
-//       console.log("📧 Cancellation email sent to student");
-//     }
-
-//     // ===============================
-//     // 6️⃣ SUCCESS REDIRECT
-//     // ===============================
-//     req.flash(
-//       "success_msg",
-//       "Receipt cancelled successfully. Payment status updated to 'Cancelled'."
-//     );
-//     return res.redirect("/finance/payments");
-//   } catch (error) {
-//     console.error("❌ CANCEL RECEIPT ERROR:", error);
-//     req.flash("error_msg", "Failed to cancel receipt.");
-//     return res.redirect("/finance/payments");
-//   }
-// };
-
 // Update the cancelReceipt function in financeController.js
 exports.cancelReceipt = async (req, res) => {
   try {
@@ -1799,7 +1503,7 @@ exports.cancelReceipt = async (req, res) => {
           
           <p><strong>Reason:</strong> ${cancelReason || "Not specified"}</p>
           <p><strong>Original Amount:</strong> ZMW ${payment.amount.toFixed(
-            2
+            2,
           )}</p>
           <p><strong>Payment Date:</strong> ${payment.createdAt.toLocaleDateString()}</p>
           
@@ -1818,7 +1522,7 @@ exports.cancelReceipt = async (req, res) => {
     // ===============================
     req.flash(
       "success_msg",
-      "Receipt cancelled successfully. Payment status updated to 'Cancelled'."
+      "Receipt cancelled successfully. Payment status updated to 'Cancelled'.",
     );
     return res.redirect("/finance/payments");
   } catch (error) {

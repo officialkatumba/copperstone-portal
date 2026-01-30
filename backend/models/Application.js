@@ -431,7 +431,15 @@ const applicationSchema = new mongoose.Schema(
     // ✅ Application progress
     status: {
       type: String,
-      enum: ["Pending", "Under Review", "Approved", "Rejected"],
+      enum: [
+        "Submitted",
+        "Pending",
+        "Under Review",
+        "Approved",
+        "Rejected",
+        "Withdrawn",
+        "Cancelled",
+      ],
       default: "Pending",
     },
     remarks: String,
@@ -439,7 +447,7 @@ const applicationSchema = new mongoose.Schema(
     submittedAt: { type: Date, default: Date.now },
     reviewedAt: Date,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Application", applicationSchema);

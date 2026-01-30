@@ -61,6 +61,18 @@
             </select>
           </div>
 
+
+          <div class="mb-3">
+            <label class="fw-semibold">Date Money was Deposited in Bank</label>
+            <input type="date" name="paymentReceivedOn" class="form-control"
+              max="<%= new Date().toISOString().split('T')[0] %>"
+              value="<%= new Date().toISOString().split('T')[0] %>" />
+            <div class="form-text">
+              Actual date when payment reached the bank account
+            </div>
+          </div>
+
+
           <input type="hidden" name="paymentDescription" value="Application Fee">
 
           <!-- <div class="mb-3" id="amountGroup">

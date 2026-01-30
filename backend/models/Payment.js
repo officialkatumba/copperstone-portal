@@ -479,6 +479,14 @@ const paymentSchema = new mongoose.Schema(
       ref: "User",
     },
 
+    // ==========================
+    // PAYMENT DATES
+    // ==========================
+    paymentReceivedOn: {
+      type: Date,
+      default: Date.now, // Actual date money was deposited in bank
+    },
+
     verifiedAt: Date,
 
     // ==========================
@@ -499,7 +507,8 @@ const paymentSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true }
+
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Payment", paymentSchema);

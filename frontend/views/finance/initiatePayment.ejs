@@ -131,6 +131,17 @@
                         </select>
                     </div>
 
+                    <!-- Add this after the payment method field in your form -->
+                    <div class="mb-3">
+                        <label class="fw-semibold">Date Money was Deposited in Bank</label>
+                        <input type="date" name="paymentReceivedOn" class="form-control"
+                            max="<%= new Date().toISOString().split('T')[0] %>"
+                            value="<%= new Date().toISOString().split('T')[0] %>" />
+                        <div class="form-text">
+                            Actual date when money reached the bank account (defaults to today)
+                        </div>
+                    </div>
+
                     <!-- Upload Proof Field (Hidden by default, shown only for Manual) -->
                     <div class="mb-3" id="uploadField" style="display: none;">
                         <label class="fw-semibold">Upload Payment Proof</label>
