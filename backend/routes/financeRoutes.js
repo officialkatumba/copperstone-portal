@@ -15,6 +15,9 @@ const {
   listPayments,
   viewPaymentReceipt,
   searchStudents,
+  showReportsPage,
+  generatePaymentReport,
+  quickStatsReport,
 } = require("../controllers/financeController");
 
 // Import multer middleware from your existing GCS config
@@ -34,14 +37,14 @@ router.get(
   "/applications",
   // ensureAuthenticated,
   // ensureFinanceOfficer,
-  listFinanceApplications
+  listFinanceApplications,
 );
 
 router.get(
   "/applications/:id",
   // ensureAuthenticated,
   // ensureFinanceOfficer,
-  viewFinanceApplicationDetail
+  viewFinanceApplicationDetail,
 );
 
 // ===============================
@@ -53,7 +56,7 @@ router.get(
   "/payments/new",
   // ensureAuthenticated,
   // ensureFinanceOfficer,
-  showInitiatePaymentForm
+  showInitiatePaymentForm,
 );
 
 // Create payment WITH FILE UPLOAD SUPPORT
@@ -62,7 +65,7 @@ router.post(
   // ensureAuthenticated,
   // ensureFinanceOfficer,
   multerUpload.single("paymentProof"), // ADD THIS MIDDLEWARE
-  createPayment
+  createPayment,
 );
 
 // List all payments
@@ -70,7 +73,7 @@ router.get(
   "/payments",
   // ensureAuthenticated,
   // ensureFinanceOfficer,
-  listPayments
+  listPayments,
 );
 
 // View receipt
@@ -78,7 +81,7 @@ router.get(
   "/payments/:id/receipt",
   // ensureAuthenticated,
   // ensureFinanceOfficer,
-  viewPaymentReceipt
+  viewPaymentReceipt,
 );
 
 // New route for searching students
@@ -116,7 +119,7 @@ router.post(
   "/payments/:id/verify",
   // ensureAuthenticated,
   // ensureFinanceOfficer,
-  verifyPaymentDirect // Add this controller
+  verifyPaymentDirect, // Add this controller
 );
 
 // In your finance routes file
@@ -124,7 +127,35 @@ router.post(
   "/payments/:id/cancel-receipt",
   // ensureAuthenticated,
   // ensureFinance,
-  cancelReceipt
+  cancelReceipt,
+);
+
+// ===============================
+// REPORT ROUTES
+// ===============================
+
+// Show reports page
+router.get(
+  "/reports",
+  // ensureAuthenticated,
+  // ensureFinanceOfficer,
+  showReportsPage,
+);
+
+// Generate payment report (HTML or PDF)
+router.get(
+  "/reports/generate",
+  // ensureAuthenticated,
+  // ensureFinanceOfficer,
+  generatePaymentReport,
+);
+
+// Quick stats API endpoint
+router.get(
+  "/reports/quick-stats",
+  // ensureAuthenticated,
+  // ensureFinanceOfficer,
+  quickStatsReport,
 );
 
 module.exports = router;

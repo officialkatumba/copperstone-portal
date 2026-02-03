@@ -1,0 +1,339 @@
+<%- include('../partials/header') %>
+    <%- include('../partials/navbar') %>
+
+        <div class="container my-4">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-file-alt me-2"></i> Payment Report</h4>
+                    <div>
+                        <a href="/finance/reports/generate?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=pdf"
+                            class="btn btn-light btn-sm" target="_blank">
+                            <i class="fas fa-download me-1"></i> Download PDF
+                        </a>
+                        <a href="/finance/reports" class="btn btn-outline-light btn-sm ms-2">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Report Header -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <h5>Date Range: <%= reportData.dateRange.formattedStart %> to <%=
+                                        reportData.dateRange.formattedEnd %>
+                            </h5>
+                            <p class="text-muted mb-0">Generated: <%= reportData.generatedAt %>
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="alert alert-success">
+                                <h4 class="mb-0">ZMW <%= reportData.summary.totalAmount.toFixed(2) %>
+                                </h4>
+                                <p class="mb-0 small">Total Amount (<%= reportData.summary.totalPayments %> payments)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-white bg-info mb-3">
+                                <div class="card-body text-center">
+                                    <h2 class="mb-1">
+                                        <%= reportData.summary.totalPayments %>
+                                    </h2>
+                                    <p class="mb-0">Total Payments</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success mb-3">
+                                <div class="card-body text-center">
+                                    <h2 class="mb-1">
+                                        <%= Object.keys(reportData.summary.categories).length %>
+                                    </h2>
+                                    <p class="mb-0">Categories</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <% const statuses=Object.keys(reportData.summary.statusCount); const
+                            verifiedCount=reportData.summary.statusCount['Verified'] || 0; const
+                            pendingCount=reportData.summary.statusCount['Pending'] || 0; const
+                            verifiedPercentage=reportData.summary.totalPayments> 0
+                            ? Math.round((verifiedCount / reportData.summary.totalPayments) * 100)
+                            : 0;
+                            %>
+
+                            <div class="col-md-3">
+                                <div class="card text-white bg-warning mb-3">
+                                    <div class="card-body text-center">
+                                        <h2 class="mb-1">
+                                            <%= verifiedPercentage %>%
+                                        </h2>
+                                        <p class="mb-0">Verified</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card text-white bg-secondary mb-3">
+                                    <div class="card-body text-center">
+                                        <h2 class="mb-1">
+                                            <%= statuses.length %>
+                                        </h2>
+                                        <p class="mb-0">Status Types</p>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+
+                    <!-- Category Breakdown -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Category Breakdown</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-end">Count</th>
+                                            <th class="text-end">Total Amount</th>
+                                            <th class="text-end">Percentage</th>
+                                            <th class="text-end">Average</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% const categories=Object.entries(reportData.summary.categories) .sort((a, b)=>
+                                            b[1].totalAmount - a[1].totalAmount);
+                                            %>
+
+                                            <% for (const [category, data] of categories) { %>
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge bg-secondary">
+                                                            <%= category %>
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <%= data.count %>
+                                                    </td>
+                                                    <td class="text-end">ZMW <%= data.totalAmount.toFixed(2) %>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <%= data.percentage %>%
+                                                    </td>
+                                                    <td class="text-end">ZMW <%= (data.totalAmount /
+                                                            data.count).toFixed(2) %>
+                                                    </td>
+                                                </tr>
+                                                <% } %>
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th>TOTAL</th>
+                                            <th class="text-end">
+                                                <%= reportData.summary.totalPayments %>
+                                            </th>
+                                            <th class="text-end">ZMW <%= reportData.summary.totalAmount.toFixed(2) %>
+                                            </th>
+                                            <th class="text-end">100%</th>
+                                            <th class="text-end">ZMW <%= (reportData.summary.totalAmount /
+                                                    reportData.summary.totalPayments).toFixed(2) %>
+                                            </th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Breakdown -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i> Status Breakdown</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <% for (const [status, count] of Object.entries(reportData.summary.statusCount)) { const
+                                    percentage=Math.round((count / reportData.summary.totalPayments) * 100); const
+                                    bgClass=status==='Verified' ? 'bg-success' : status==='Pending' ? 'bg-warning' :
+                                    status==='Rejected' ? 'bg-danger' : 'bg-secondary' ; %>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card <%= bgClass %> text-white">
+                                            <div class="card-body text-center">
+                                                <h3 class="mb-1">
+                                                    <%= count %>
+                                                </h3>
+                                                <p class="mb-1">
+                                                    <%= status %>
+                                                </p>
+                                                <p class="mb-0 small">
+                                                    <%= percentage %>% of total
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Payments -->
+                    <div class="card">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-list me-2"></i> Detailed Payments (<%=
+                                    reportData.payments.length %>)</h5>
+                            <button class="btn btn-sm btn-outline-primary" onclick="togglePaymentDetails()">
+                                <i class="fas fa-eye me-1"></i> Toggle Details
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive" id="paymentDetails">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Receipt #</th>
+                                            <th>Student</th>
+                                            <th>Category</th>
+                                            <th class="text-end">Amount</th>
+                                            <th>Method</th>
+                                            <th>Status</th>
+                                            <th>Verified By</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% reportData.payments.forEach(payment=> {
+                                            const date = new Date(payment.createdAt);
+                                            const statusClass = payment.status === 'Verified' ? 'success' :
+                                            payment.status === 'Pending' ? 'warning' :
+                                            payment.status === 'Rejected' ? 'danger' : 'secondary';
+                                            %>
+                                            <tr>
+                                                <td>
+                                                    <%= date.toLocaleDateString() %>
+                                                </td>
+                                                <td><code><%= payment.reference %></code></td>
+                                                <td>
+                                                    <%= payment.student.firstName %>
+                                                        <%= payment.student.surname %>
+                                                            <% if (payment.student.studentId) { %>
+                                                                <br><small class="text-muted">ID: <%=
+                                                                        payment.student.studentId %></small>
+                                                                <% } %>
+                                                </td>
+                                                <td><span class="badge bg-secondary">
+                                                        <%= payment.category %>
+                                                    </span></td>
+                                                <td class="text-end fw-bold">ZMW <%= payment.amount.toFixed(2) %>
+                                                </td>
+                                                <td>
+                                                    <%= payment.method %>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-<%= statusClass %>">
+                                                        <%= payment.status %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <% if (payment.verifiedBy) { %>
+                                                        <%= payment.verifiedBy.firstName %>
+                                                            <%= payment.verifiedBy.surname %>
+                                                                <% } else { %>
+                                                                    <span class="text-muted">N/A</span>
+                                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <a href="/finance/payments/<%= payment._id %>/receipt"
+                                                        class="btn btn-sm btn-outline-primary" title="View Receipt">
+                                                        <i class="fas fa-receipt"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="4" class="text-end"><strong>TOTAL:</strong></td>
+                                            <td class="text-end fw-bold">ZMW <%=
+                                                    reportData.summary.totalAmount.toFixed(2) %>
+                                            </td>
+                                            <td colspan="4"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Footer -->
+                    <div class="mt-4 text-center">
+                        <div class="alert alert-light border">
+                            <p class="mb-1"><strong>Report Summary:</strong></p>
+                            <p class="mb-0">
+                                Generated on <%= reportData.generatedAt %> |
+                                    <%= reportData.payments.length %> payments found |
+                                        Total Amount: ZMW <%= reportData.summary.totalAmount.toFixed(2) %>
+                            </p>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="/finance/reports" class="btn btn-outline-primary">
+                                <i class="fas fa-redo me-1"></i> Generate Another Report
+                            </a>
+                            <a href="/finance/reports/generate?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=pdf"
+                                class="btn btn-primary" target="_blank">
+                                <i class="fas fa-file-pdf me-1"></i> Download PDF Version
+                            </a>
+                            <button class="btn btn-success" onclick="window.print()">
+                                <i class="fas fa-print me-1"></i> Print Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function togglePaymentDetails() {
+                const details = document.getElementById('paymentDetails');
+                if (details.classList.contains('d-none')) {
+                    details.classList.remove('d-none');
+                } else {
+                    details.classList.add('d-none');
+                }
+            }
+
+            // Add print styles
+            const style = document.createElement('style');
+            style.textContent = `
+    @media print {
+      .btn, .card-header .d-flex, .alert, .text-end .alert {
+        display: none !important;
+      }
+      .card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+      }
+      .card-body {
+        padding: 0 !important;
+      }
+      table {
+        font-size: 11px !important;
+      }
+      h4, h5, h6 {
+        margin-top: 5px !important;
+        margin-bottom: 5px !important;
+      }
+    }
+  `;
+            document.head.appendChild(style);
+        </script>
+
+        <%- include('../partials/footer') %>
