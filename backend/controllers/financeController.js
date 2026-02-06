@@ -323,10 +323,50 @@ exports.viewReceipt = async (req, res) => {
 // SHOW INITIATE PAYMENT FORM
 // ===============================
 
+// exports.showInitiatePaymentForm = async (req, res) => {
+//   const students = await User.find({ role: "Student" })
+//     .select("firstName surname email")
+//     .sort({ surname: 1 });
+
+//   res.render("finance/initiatePayment", {
+//     title: "Initiate Payment",
+//     students,
+//     user: req.user,
+//   });
+// };
+
 exports.showInitiatePaymentForm = async (req, res) => {
-  const students = await User.find({ role: "Student" })
-    .select("firstName surname email")
+  const users = await User.find({ role: "Student" })
+    .select("firstName surname email studentProfile.studentId")
     .sort({ surname: 1 });
+
+  // Get applications to include modeOfStudy
+  const studentIds = users.map((user) => user._id);
+
+  const applications = await Application.find({
+    applicant: { $in: studentIds },
+  })
+    .select("applicant modeOfStudy")
+    .lean();
+
+  // Create a map of applicant ID to modeOfStudy
+  const modeOfStudyMap = {};
+  applications.forEach((app) => {
+    modeOfStudyMap[app.applicant.toString()] = app.modeOfStudy;
+  });
+
+  // Combine user data with modeOfStudy
+  const students = users.map((user) => {
+    const userObj = user.toObject();
+    return {
+      _id: userObj._id,
+      firstName: userObj.firstName,
+      surname: userObj.surname,
+      email: userObj.email,
+      studentId: userObj.studentProfile?.studentId,
+      modeOfStudy: modeOfStudyMap[userObj._id.toString()] || "Not specified",
+    };
+  });
 
   res.render("finance/initiatePayment", {
     title: "Initiate Payment",
@@ -336,22 +376,76 @@ exports.showInitiatePaymentForm = async (req, res) => {
 };
 
 // Add a new endpoint for searching students
+// exports.searchStudents = async (req, res) => {
+//   try {
+//     const searchTerm = req.query.search || "";
+
+//     const students = await User.find({
+//       role: "Student",
+//       $or: [
+//         { firstName: { $regex: searchTerm, $options: "i" } },
+//         { surname: { $regex: searchTerm, $options: "i" } },
+//         { email: { $regex: searchTerm, $options: "i" } },
+//         { studentId: { $regex: searchTerm, $options: "i" } }, // if you have studentId field
+//       ],
+//     })
+//       .select("firstName surname email studentId")
+//       .limit(10)
+//       .sort({ surname: 1 });
+
+//     res.json(students);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Failed to search students" });
+//   }
+// };
+
+// Add a new endpoint for searching students
 exports.searchStudents = async (req, res) => {
   try {
     const searchTerm = req.query.search || "";
 
-    const students = await User.find({
+    const users = await User.find({
       role: "Student",
       $or: [
         { firstName: { $regex: searchTerm, $options: "i" } },
         { surname: { $regex: searchTerm, $options: "i" } },
         { email: { $regex: searchTerm, $options: "i" } },
-        { studentId: { $regex: searchTerm, $options: "i" } }, // if you have studentId field
+        { "studentProfile.studentId": { $regex: searchTerm, $options: "i" } },
       ],
     })
-      .select("firstName surname email studentId")
+      .select("firstName surname email studentProfile.studentId")
       .limit(10)
       .sort({ surname: 1 });
+
+    // Get applications for these users to fetch modeOfStudy
+    const studentIds = users.map((user) => user._id);
+
+    const applications = await Application.find({
+      applicant: { $in: studentIds },
+    })
+      .select("applicant modeOfStudy")
+      .lean();
+
+    // Create a map of applicant ID to modeOfStudy
+    const modeOfStudyMap = {};
+    applications.forEach((app) => {
+      modeOfStudyMap[app.applicant.toString()] = app.modeOfStudy;
+    });
+
+    // Combine user data with modeOfStudy
+    const students = users.map((user) => {
+      const studentObj = user.toObject();
+      return {
+        _id: studentObj._id,
+        firstName: studentObj.firstName,
+        surname: studentObj.surname,
+        email: studentObj.email,
+        studentId: studentObj.studentProfile?.studentId,
+        modeOfStudy:
+          modeOfStudyMap[studentObj._id.toString()] || "Not specified",
+      };
+    });
 
     res.json(students);
   } catch (error) {
@@ -360,10 +454,711 @@ exports.searchStudents = async (req, res) => {
   }
 };
 
-// CREATE PAYMENT (Finance Controller - Updated)
+// // CREATE PAYMENT (Finance Controller - Updated)
+// exports.createPayment = async (req, res) => {
+//   try {
+//     // DEBUG logging
+//     console.log("DEBUG - Form data received");
+//     console.log("req.body:", req.body);
+//     console.log("req.file:", req.file ? "File present" : "No file");
+
+//     const {
+//       student,
+//       category,
+//       description,
+//       amount,
+//       method,
+//       semester,
+//       academicYear,
+//       programme,
+//       totalDue,
+//       balanceAfterPayment,
+//       paymentReceivedOn,
+//       modeOfStudy, // ADD THIS: Mode of Study field
+//     } = req.body;
+
+//     // Validate required fields
+//     if (
+//       !student ||
+//       !category ||
+//       !description ||
+//       !amount ||
+//       !method ||
+//       !totalDue
+//     ) {
+//       req.flash("error_msg", "All required fields must be filled.");
+//       return res.redirect("/finance/payments/new");
+//     }
+
+//     // Convert to numbers
+//     const numericTotalDue = parseFloat(totalDue);
+//     const numericAmount = parseFloat(amount);
+//     const numericBalance = parseFloat(balanceAfterPayment || 0);
+
+//     // Calculate balance if not provided
+//     const calculatedBalance = numericTotalDue - numericAmount;
+//     const finalBalance = isNaN(numericBalance)
+//       ? calculatedBalance
+//       : numericBalance;
+
+//     // Validate
+//     if (numericAmount > numericTotalDue) {
+//       req.flash("error_msg", "Payment amount cannot exceed total due.");
+//       return res.redirect("/finance/payments/new");
+//     }
+
+//     // Parse payment received date (actual bank deposit date)
+//     let parsedReceivedDate = new Date(); // Default to now
+//     if (paymentReceivedOn) {
+//       parsedReceivedDate = new Date(paymentReceivedOn);
+//       // Validate date is not in the future
+//       if (parsedReceivedDate > new Date()) {
+//         req.flash(
+//           "error_msg",
+//           "Payment received date cannot be in the future.",
+//         );
+//         return res.redirect("/finance/payments/new");
+//       }
+//     }
+
+//     // ===============================
+//     // 1️⃣ GET STUDENT ACADEMIC INFORMATION
+//     // ===============================
+//     const studentData = await User.findById(student)
+//       .select("firstName surname email studentId programme modeOfStudy")
+//       .populate("programme", "name code");
+
+//     if (!studentData) {
+//       req.flash("error_msg", "Student not found.");
+//       return res.redirect("/finance/payments/new");
+//     }
+
+//     // Get programme details
+//     const programmeData = studentData.programme || {
+//       name: "Not Assigned",
+//       code: "N/A",
+//     };
+//     const studentModeOfStudy =
+//       studentData.modeOfStudy || modeOfStudy || "Full Time";
+
+//     // Generate reference number (like application controller)
+//     const reference = `PAY-${Date.now().toString().slice(-8)}`;
+
+//     // ===============================
+//     // 2️⃣ CREATE PAYMENT
+//     // ===============================
+//     const payment = await Payment.create({
+//       student: studentData._id,
+//       category,
+//       description,
+//       amount: numericAmount,
+//       totalDue: numericTotalDue,
+//       balanceAfterPayment: finalBalance,
+//       method,
+//       semester: semester || null,
+//       academicYear: academicYear || null,
+//       programme: programmeData._id || programme || null,
+//       modeOfStudy: studentModeOfStudy, // ADD: Save mode of study
+//       reference: reference, // Use generated reference
+//       currency: "ZMW",
+//       status: "Verified",
+//       verifiedBy: req.user._id,
+//       verifiedAt: new Date(),
+//       paymentReceivedOn: parsedReceivedDate,
+//     });
+
+//     console.log("DEBUG - Payment created:", {
+//       id: payment._id,
+//       reference: payment.reference,
+//       studentName: `${studentData.firstName} ${studentData.surname}`,
+//       programme: programmeData.name,
+//       modeOfStudy: studentModeOfStudy,
+//     });
+
+//     // ===============================
+//     // 3️⃣ HANDLE PAYMENT PROOF UPLOAD
+//     // ===============================
+//     if (req.file) {
+//       try {
+//         const { uploadToGCS } = require("../config/gcsUpload");
+
+//         const uploaded = await uploadToGCS(
+//           req.file,
+//           {
+//             firstName: studentData.firstName,
+//             surname: studentData.surname,
+//           },
+//           "PAYMENT",
+//           academicYear || new Date().getFullYear().toString(),
+//         );
+
+//         payment.proofOfPayment = {
+//           gcsUrl: uploaded.publicUrl,
+//           gcsPath: uploaded.path,
+//           uploadedAt: new Date(),
+//         };
+
+//         await payment.save();
+//         console.log("Payment proof uploaded successfully");
+//       } catch (uploadError) {
+//         console.error("Payment proof upload failed:", uploadError);
+//         // Continue without proof
+//       }
+//     }
+
+//     // ===============================
+//     // 4️⃣ GENERATE RECEIPT WITH ACADEMIC INFO
+//     // ===============================
+//     const populatedPayment = await Payment.findById(payment._id)
+//       .populate("student", "firstName surname email studentId")
+//       .populate("verifiedBy", "firstName surname");
+
+//     // Prepare academic information for receipt
+//     const academicInfo = {
+//       programme: programmeData.name,
+//       programmeCode: programmeData.code,
+//       modeOfStudy: studentModeOfStudy,
+//       semester: semester || "Not Specified",
+//       academicYear: academicYear || new Date().getFullYear().toString(),
+//     };
+
+//     console.log("DEBUG - Academic info for receipt:", academicInfo);
+
+//     // Generate receipt with academic info and reference as receipt number
+//     // const pdfPath = await generateReceiptPDF({
+//     //   payment: {
+//     //     _id: populatedPayment._id,
+//     //     reference: populatedPayment.reference, // This becomes the receipt number
+//     //     amount: populatedPayment.amount,
+//     //     method: populatedPayment.method,
+//     //     status: populatedPayment.status,
+//     //     verifiedAt: populatedPayment.verifiedAt,
+//     //     paymentReceivedOn: populatedPayment.paymentReceivedOn,
+//     //     category: populatedPayment.category,
+//     //     description: populatedPayment.description,
+//     //     totalDue: populatedPayment.totalDue,
+//     //     balanceAfterPayment: populatedPayment.balanceAfterPayment,
+//     //     student: populatedPayment.student,
+//     //     verifiedBy: populatedPayment.verifiedBy,
+//     //   },
+//     //   academicInfo: academicInfo, // Pass academic info separately
+//     // });
+
+//     // In the createPayment function, update the generateReceiptPDF call:
+
+//     // Generate receipt with academic info and reference as receipt number
+//     const pdfPath = await generateReceiptPDF({
+//       payment: {
+//         _id: populatedPayment._id,
+//         reference: populatedPayment.reference, // This becomes the receipt number
+//         amount: populatedPayment.amount,
+//         method: populatedPayment.method,
+//         status: populatedPayment.status,
+//         verifiedAt: populatedPayment.verifiedAt,
+//         paymentReceivedOn: populatedPayment.paymentReceivedOn,
+//         category: populatedPayment.category,
+//         description: populatedPayment.description,
+//         totalDue: populatedPayment.totalDue,
+//         balanceAfterPayment: populatedPayment.balanceAfterPayment,
+//         student: populatedPayment.student,
+//         verifiedBy: populatedPayment.verifiedBy,
+//         // Add academic fields directly to payment object
+//         programme: programmeData, // Pass the populated programme object
+//         modeOfStudy: studentModeOfStudy,
+//         semester: semester || null,
+//         academicYear: academicYear || null,
+//       },
+//       academicInfo: {
+//         // Also pass as separate object for clarity
+//         programme: programmeData.name,
+//         programmeCode: programmeData.code,
+//         modeOfStudy: studentModeOfStudy,
+//         semester: semester || "",
+//         academicYear: academicYear || new Date().getFullYear().toString(),
+//       },
+//     });
+
+//     const gcsPath = `receipts/payment_${payment.reference}_${Date.now()}.pdf`;
+//     await uploadFile(pdfPath, gcsPath);
+
+//     const signedUrl = await generateSignedUrl(gcsPath);
+
+//     // Update payment with receipt info (use reference as receipt number)
+//     payment.receipt = {
+//       receiptNumber: payment.reference, // Use reference as receipt number
+//       name: "Official Payment Receipt",
+//       gcsPath,
+//       gcsUrl: signedUrl,
+//       issuedAt: new Date(),
+//       academicInfo: academicInfo, // Store academic info with receipt
+//     };
+
+//     await payment.save();
+
+//     console.log("DEBUG - Receipt generated:", {
+//       receiptNumber: payment.receipt.receiptNumber,
+//       gcsPath: payment.receipt.gcsPath,
+//     });
+
+//     // ===============================
+//     // 5️⃣ SEND EMAILS WITH ACADEMIC INFO
+//     // ===============================
+//     const studentEmail = populatedPayment.student?.email;
+
+//     if (studentEmail) {
+//       // Format dates for email
+//       const receiptDate = new Date().toLocaleDateString();
+//       const depositDate = populatedPayment.paymentReceivedOn
+//         ? new Date(populatedPayment.paymentReceivedOn).toLocaleDateString()
+//         : receiptDate;
+
+//       await sendEmail({
+//         to: studentEmail,
+//         subject: "💳 Payment Received – Official Receipt",
+//         html: `
+//           <p>Dear ${populatedPayment.student.firstName || "Student"},</p>
+//           <p>Your payment has been <strong>successfully received and verified</strong>.</p>
+
+//           <!-- ACADEMIC INFORMATION -->
+//           <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+//             <h4 style="margin-top: 0; color: #2c3e50;">Academic Information</h4>
+//             <p><strong>Programme:</strong> ${academicInfo.programme} (${academicInfo.programmeCode})</p>
+//             <p><strong>Mode of Study:</strong> ${academicInfo.modeOfStudy}</p>
+//             <p><strong>Semester:</strong> ${academicInfo.semester}</p>
+//             <p><strong>Academic Year:</strong> ${academicInfo.academicYear}</p>
+//           </div>
+
+//           <!-- PAYMENT INFORMATION -->
+//           <div style="background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+//             <h4 style="margin-top: 0; color: #2c3e50;">Payment Information</h4>
+//             <p><strong>Receipt Number:</strong> ${payment.reference}</p>
+//             <p><strong>Amount Paid:</strong> ZMW ${numericAmount.toFixed(2)}</p>
+//             <p><strong>Total Due:</strong> ZMW ${numericTotalDue.toFixed(2)}</p>
+//             <p><strong>Balance Remaining:</strong> ZMW ${finalBalance.toFixed(2)}</p>
+//             <p><strong>Payment Method:</strong> ${method}</p>
+//             <p><strong>Date Deposited:</strong> ${depositDate}</p>
+//             <p><strong>Date Verified:</strong> ${receiptDate}</p>
+//           </div>
+
+//           <p>Your <strong>official receipt</strong> is attached to this email.</p>
+//           <p><a href="${signedUrl}" style="background-color: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Download Receipt from Portal</a></p>
+
+//           ${
+//             finalBalance > 0
+//               ? `<div style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
+//                   <p style="margin: 0;"><strong>Note:</strong> You have an outstanding balance of ZMW ${finalBalance.toFixed(2)}</p>
+//                 </div>`
+//               : `<div style="background-color: #d1ecf1; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #0c5460;">
+//                   <p style="margin: 0;"><strong>Payment Status:</strong> Fully Paid ✅</p>
+//                 </div>`
+//           }
+
+//           <p>Regards,<br/>Finance Office</p>
+//         `,
+//         attachments: [
+//           {
+//             filename: `Receipt_${payment.reference}.pdf`, // Use reference in filename
+//             path: pdfPath,
+//             contentType: "application/pdf",
+//           },
+//         ],
+//       });
+
+//       console.log("📧 Payment receipt email sent to student");
+//     }
+
+//     // ===============================
+//     // 6️⃣ CLEAN UP
+//     // ===============================
+//     const fs = require("fs");
+//     if (fs.existsSync(pdfPath)) {
+//       fs.unlinkSync(pdfPath);
+//     }
+
+//     req.flash(
+//       "success_msg",
+//       `Payment created successfully! Receipt #${payment.reference} issued. Balance: ZMW ${finalBalance.toFixed(2)}`,
+//     );
+//     res.redirect("/finance/payments");
+//   } catch (err) {
+//     console.error("Create payment error:", err);
+//     req.flash("error_msg", "Failed to initiate payment.");
+//     res.redirect("/finance/payments/new");
+//   }
+// };
+
+// // CREATE PAYMENT (Finance Controller - Updated with 80% validation and expected date)
+// exports.createPayment = async (req, res) => {
+//   try {
+//     console.log("DEBUG - Form data received");
+//     console.log("req.body:", req.body);
+//     console.log("req.file:", req.file ? "File present" : "No file");
+
+//     const {
+//       student,
+//       category,
+//       description,
+//       amount,
+//       method,
+//       semester,
+//       academicYear,
+//       programme,
+//       totalDue,
+//       balanceAfterPayment,
+//       paymentReceivedOn,
+//       modeOfStudy,
+//       expectedPaymentDate,
+//     } = req.body;
+
+//     // Validate required fields
+//     if (
+//       !student ||
+//       !category ||
+//       !description ||
+//       !amount ||
+//       !method ||
+//       !totalDue
+//     ) {
+//       req.flash("error_msg", "All required fields must be filled.");
+//       return res.redirect("/finance/payments/new");
+//     }
+
+//     // Convert to numbers
+//     const numericTotalDue = parseFloat(totalDue);
+//     const numericAmount = parseFloat(amount);
+//     const numericBalance = parseFloat(balanceAfterPayment || 0);
+
+//     // Calculate balance if not provided
+//     const calculatedBalance = numericTotalDue - numericAmount;
+//     const finalBalance = isNaN(numericBalance)
+//       ? calculatedBalance
+//       : numericBalance;
+
+//     // ===============================
+//     // VALIDATION: 80% MINIMUM PAYMENT
+//     // ===============================
+//     const minPaymentRequired = numericTotalDue * 0.8;
+
+//     if (numericAmount < minPaymentRequired) {
+//       req.flash(
+//         "error_msg",
+//         `Minimum payment required is 80% of total due (ZMW ${minPaymentRequired.toFixed(2)}).`,
+//       );
+//       return res.redirect("/finance/payments/new");
+//     }
+
+//     // ===============================
+//     // VALIDATION: EXPECTED DATE FOR BALANCE
+//     // ===============================
+//     let parsedExpectedDate = null;
+//     if (finalBalance > 0) {
+//       // Require expected payment date when there's a balance
+//       if (!expectedPaymentDate) {
+//         req.flash(
+//           "error_msg",
+//           "Expected date of payment is required when there is an outstanding balance.",
+//         );
+//         return res.redirect("/finance/payments/new");
+//       }
+
+//       // Parse and validate expected date
+//       parsedExpectedDate = new Date(expectedPaymentDate);
+//       const today = new Date();
+//       today.setHours(0, 0, 0, 0);
+//       parsedExpectedDate.setHours(0, 0, 0, 0);
+
+//       if (parsedExpectedDate <= today) {
+//         req.flash("error_msg", "Expected payment date must be a future date.");
+//         return res.redirect("/finance/payments/new");
+//       }
+//     }
+
+//     // Validate amount doesn't exceed total due
+//     if (numericAmount > numericTotalDue) {
+//       req.flash("error_msg", "Payment amount cannot exceed total due.");
+//       return res.redirect("/finance/payments/new");
+//     }
+
+//     // Parse payment received date
+//     let parsedReceivedDate = new Date();
+//     if (paymentReceivedOn) {
+//       parsedReceivedDate = new Date(paymentReceivedOn);
+//       if (parsedReceivedDate > new Date()) {
+//         req.flash(
+//           "error_msg",
+//           "Payment received date cannot be in the future.",
+//         );
+//         return res.redirect("/finance/payments/new");
+//       }
+//     }
+
+//     // ===============================
+//     // 1️⃣ GET STUDENT INFORMATION
+//     // ===============================
+//     const studentData = await User.findById(student)
+//       .select("firstName surname email studentId programme modeOfStudy")
+//       .populate("programme", "name code");
+
+//     if (!studentData) {
+//       req.flash("error_msg", "Student not found.");
+//       return res.redirect("/finance/payments/new");
+//     }
+
+//     // Get programme details
+//     const programmeData = studentData.programme || {
+//       name: "Not Assigned",
+//       code: "N/A",
+//     };
+//     const studentModeOfStudy =
+//       studentData.modeOfStudy || modeOfStudy || "Full Time";
+
+//     // Generate reference number
+//     const reference = `PAY-${Date.now().toString().slice(-8)}`;
+
+//     // ===============================
+//     // 2️⃣ CREATE PAYMENT WITH EXPECTED DATE
+//     // ===============================
+//     const paymentData = {
+//       student: studentData._id,
+//       category,
+//       description,
+//       amount: numericAmount,
+//       totalDue: numericTotalDue,
+//       balanceAfterPayment: finalBalance,
+//       method,
+//       semester: semester || null,
+//       academicYear: academicYear || null,
+//       programme: programmeData._id || programme || null,
+//       modeOfStudy: studentModeOfStudy,
+//       reference: reference,
+//       currency: "ZMW",
+//       status: "Verified",
+//       verifiedBy: req.user._id,
+//       verifiedAt: new Date(),
+//       paymentReceivedOn: parsedReceivedDate,
+//     };
+
+//     // Add expected payment date only if there's a balance
+//     if (parsedExpectedDate) {
+//       paymentData.expectedPaymentDate = parsedExpectedDate;
+//     }
+
+//     const payment = await Payment.create(paymentData);
+
+//     console.log("DEBUG - Payment created:", {
+//       id: payment._id,
+//       reference: payment.reference,
+//       studentName: `${studentData.firstName} ${studentData.surname}`,
+//       amount: numericAmount,
+//       totalDue: numericTotalDue,
+//       balance: finalBalance,
+//       minRequired: minPaymentRequired,
+//       expectedPaymentDate: parsedExpectedDate
+//         ? parsedExpectedDate.toISOString()
+//         : "N/A",
+//     });
+
+//     // ===============================
+//     // 3️⃣ HANDLE PAYMENT PROOF UPLOAD
+//     // ===============================
+//     if (req.file) {
+//       try {
+//         const { uploadToGCS } = require("../config/gcsUpload");
+
+//         const uploaded = await uploadToGCS(
+//           req.file,
+//           {
+//             firstName: studentData.firstName,
+//             surname: studentData.surname,
+//           },
+//           "PAYMENT",
+//           academicYear || new Date().getFullYear().toString(),
+//         );
+
+//         payment.proofOfPayment = {
+//           gcsUrl: uploaded.publicUrl,
+//           gcsPath: uploaded.path,
+//           uploadedAt: new Date(),
+//         };
+
+//         await payment.save();
+//         console.log("Payment proof uploaded successfully");
+//       } catch (uploadError) {
+//         console.error("Payment proof upload failed:", uploadError);
+//       }
+//     }
+
+//     // ===============================
+//     // 4️⃣ GENERATE RECEIPT WITH EXPECTED DATE INFO
+//     // ===============================
+//     const populatedPayment = await Payment.findById(payment._id)
+//       .populate("student", "firstName surname email studentId")
+//       .populate("verifiedBy", "firstName surname");
+
+//     // Prepare academic information for receipt
+//     const academicInfo = {
+//       programme: programmeData.name,
+//       programmeCode: programmeData.code,
+//       modeOfStudy: studentModeOfStudy,
+//       semester: semester || "Not Specified",
+//       academicYear: academicYear || new Date().getFullYear().toString(),
+//     };
+
+//     // Generate receipt
+//     const pdfPath = await generateReceiptPDF({
+//       payment: {
+//         _id: populatedPayment._id,
+//         reference: populatedPayment.reference,
+//         amount: populatedPayment.amount,
+//         method: populatedPayment.method,
+//         status: populatedPayment.status,
+//         verifiedAt: populatedPayment.verifiedAt,
+//         paymentReceivedOn: populatedPayment.paymentReceivedOn,
+//         category: populatedPayment.category,
+//         description: populatedPayment.description,
+//         totalDue: populatedPayment.totalDue,
+//         balanceAfterPayment: populatedPayment.balanceAfterPayment,
+//         expectedPaymentDate: populatedPayment.expectedPaymentDate,
+//         student: populatedPayment.student,
+//         verifiedBy: populatedPayment.verifiedBy,
+//         programme: programmeData,
+//         modeOfStudy: studentModeOfStudy,
+//         semester: semester || null,
+//         academicYear: academicYear || null,
+//       },
+//       academicInfo: {
+//         programme: programmeData.name,
+//         programmeCode: programmeData.code,
+//         modeOfStudy: studentModeOfStudy,
+//         semester: semester || "",
+//         academicYear: academicYear || new Date().getFullYear().toString(),
+//       },
+//     });
+
+//     const gcsPath = `receipts/payment_${payment.reference}_${Date.now()}.pdf`;
+//     await uploadFile(pdfPath, gcsPath);
+//     const signedUrl = await generateSignedUrl(gcsPath);
+
+//     // Update payment with receipt info
+//     payment.receipt = {
+//       receiptNumber: payment.reference,
+//       name: "Official Payment Receipt",
+//       gcsPath,
+//       gcsUrl: signedUrl,
+//       issuedAt: new Date(),
+//       academicInfo: academicInfo,
+//     };
+
+//     await payment.save();
+
+//     console.log("DEBUG - Receipt generated:", {
+//       receiptNumber: payment.receipt.receiptNumber,
+//     });
+
+//     // ===============================
+//     // 5️⃣ SEND EMAILS WITH EXPECTED DATE INFO
+//     // ===============================
+//     const studentEmail = populatedPayment.student?.email;
+
+//     if (studentEmail) {
+//       // Format dates for email
+//       const receiptDate = new Date().toLocaleDateString();
+//       const depositDate = populatedPayment.paymentReceivedOn
+//         ? new Date(populatedPayment.paymentReceivedOn).toLocaleDateString()
+//         : receiptDate;
+//       const expectedDateStr = parsedExpectedDate
+//         ? parsedExpectedDate.toLocaleDateString()
+//         : "Not specified";
+
+//       await sendEmail({
+//         to: studentEmail,
+//         subject: `💳 Payment Received – Receipt #${payment.reference}`,
+//         html: `
+//           <p>Dear ${populatedPayment.student.firstName || "Student"},</p>
+//           <p>Your payment has been <strong>successfully received and verified</strong>.</p>
+
+//           <!-- ACADEMIC INFORMATION -->
+//           <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+//             <h4 style="margin-top: 0; color: #2c3e50;">Academic Information</h4>
+//             <p><strong>Programme:</strong> ${academicInfo.programme} (${academicInfo.programmeCode})</p>
+//             <p><strong>Mode of Study:</strong> ${academicInfo.modeOfStudy}</p>
+//             <p><strong>Semester:</strong> ${academicInfo.semester}</p>
+//             <p><strong>Academic Year:</strong> ${academicInfo.academicYear}</p>
+//           </div>
+
+//           <!-- PAYMENT INFORMATION -->
+//           <div style="background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+//             <h4 style="margin-top: 0; color: #2c3e50;">Payment Information</h4>
+//             <p><strong>Receipt Number:</strong> ${payment.reference}</p>
+//             <p><strong>Amount Paid:</strong> ZMW ${numericAmount.toFixed(2)}</p>
+//             <p><strong>Total Due:</strong> ZMW ${numericTotalDue.toFixed(2)}</p>
+//             <p><strong>Balance Remaining:</strong> ZMW ${finalBalance.toFixed(2)}</p>
+//             ${finalBalance > 0 ? `<p><strong>Expected Payment Date:</strong> ${expectedDateStr}</p>` : ""}
+//             <p><strong>Payment Method:</strong> ${method}</p>
+//             <p><strong>Date Deposited:</strong> ${depositDate}</p>
+//             <p><strong>Date Verified:</strong> ${receiptDate}</p>
+//           </div>
+
+//           <p>Your <strong>official receipt</strong> is attached to this email.</p>
+//           <p><a href="${signedUrl}" style="background-color: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Download Receipt from Portal</a></p>
+
+//           ${
+//             finalBalance > 0
+//               ? `<div style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
+//                 <p style="margin: 0;"><strong>Note:</strong> You have an outstanding balance of ZMW ${finalBalance.toFixed(2)}</p>
+//                 <p style="margin: 5px 0 0 0;"><strong>Expected Payment Date:</strong> ${expectedDateStr}</p>
+//               </div>`
+//               : `<div style="background-color: #d1ecf1; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #0c5460;">
+//                 <p style="margin: 0;"><strong>Payment Status:</strong> Fully Paid ✅</p>
+//               </div>`
+//           }
+
+//           ${
+//             finalBalance > 0
+//               ? `<p><strong>Important:</strong> Please ensure the remaining balance is paid by <strong>${expectedDateStr}</strong> to avoid any penalties.</p>`
+//               : ""
+//           }
+
+//           <p>Regards,<br/>Finance Office</p>
+//         `,
+//         attachments: [
+//           {
+//             filename: `Receipt_${payment.reference}.pdf`,
+//             path: pdfPath,
+//             contentType: "application/pdf",
+//           },
+//         ],
+//       });
+
+//       console.log("📧 Payment receipt email sent to student");
+//     }
+
+//     // ===============================
+//     // 6️⃣ CLEAN UP
+//     // ===============================
+//     const fs = require("fs");
+//     if (fs.existsSync(pdfPath)) {
+//       fs.unlinkSync(pdfPath);
+//     }
+
+//     const successMessage = `Payment created successfully! Receipt #${payment.reference} issued. Balance: ZMW ${finalBalance.toFixed(2)}`;
+//     req.flash(
+//       "success_msg",
+//       finalBalance > 0
+//         ? `${successMessage} (Expected by: ${parsedExpectedDate.toLocaleDateString()})`
+//         : successMessage,
+//     );
+//     res.redirect("/finance/payments");
+//   } catch (err) {
+//     console.error("Create payment error:", err);
+//     req.flash("error_msg", "Failed to initiate payment.");
+//     res.redirect("/finance/payments/new");
+//   }
+// };
+
+// CREATE PAYMENT (Finance Controller - Updated with 80% validation and expected date)
 exports.createPayment = async (req, res) => {
   try {
-    // DEBUG logging
     console.log("DEBUG - Form data received");
     console.log("req.body:", req.body);
     console.log("req.file:", req.file ? "File present" : "No file");
@@ -380,7 +1175,8 @@ exports.createPayment = async (req, res) => {
       totalDue,
       balanceAfterPayment,
       paymentReceivedOn,
-      modeOfStudy, // ADD THIS: Mode of Study field
+      modeOfStudy,
+      expectedPaymentDate,
     } = req.body;
 
     // Validate required fields
@@ -407,17 +1203,55 @@ exports.createPayment = async (req, res) => {
       ? calculatedBalance
       : numericBalance;
 
-    // Validate
+    // ===============================
+    // VALIDATION: 80% MINIMUM PAYMENT
+    // ===============================
+    const minPaymentRequired = numericTotalDue * 0.8;
+
+    if (numericAmount < minPaymentRequired) {
+      req.flash(
+        "error_msg",
+        `Minimum payment required is 80% of total due (ZMW ${minPaymentRequired.toFixed(2)}).`,
+      );
+      return res.redirect("/finance/payments/new");
+    }
+
+    // ===============================
+    // VALIDATION: EXPECTED DATE FOR BALANCE
+    // ===============================
+    let parsedExpectedDate = null;
+    if (finalBalance > 0) {
+      // Require expected payment date when there's a balance
+      if (!expectedPaymentDate) {
+        req.flash(
+          "error_msg",
+          "Expected date of payment is required when there is an outstanding balance.",
+        );
+        return res.redirect("/finance/payments/new");
+      }
+
+      // Parse and validate expected date
+      parsedExpectedDate = new Date(expectedPaymentDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      parsedExpectedDate.setHours(0, 0, 0, 0);
+
+      if (parsedExpectedDate <= today) {
+        req.flash("error_msg", "Expected payment date must be a future date.");
+        return res.redirect("/finance/payments/new");
+      }
+    }
+
+    // Validate amount doesn't exceed total due
     if (numericAmount > numericTotalDue) {
       req.flash("error_msg", "Payment amount cannot exceed total due.");
       return res.redirect("/finance/payments/new");
     }
 
-    // Parse payment received date (actual bank deposit date)
-    let parsedReceivedDate = new Date(); // Default to now
+    // Parse payment received date
+    let parsedReceivedDate = new Date();
     if (paymentReceivedOn) {
       parsedReceivedDate = new Date(paymentReceivedOn);
-      // Validate date is not in the future
       if (parsedReceivedDate > new Date()) {
         req.flash(
           "error_msg",
@@ -428,7 +1262,7 @@ exports.createPayment = async (req, res) => {
     }
 
     // ===============================
-    // 1️⃣ GET STUDENT ACADEMIC INFORMATION
+    // 1️⃣ GET STUDENT INFORMATION
     // ===============================
     const studentData = await User.findById(student)
       .select("firstName surname email studentId programme modeOfStudy")
@@ -447,13 +1281,13 @@ exports.createPayment = async (req, res) => {
     const studentModeOfStudy =
       studentData.modeOfStudy || modeOfStudy || "Full Time";
 
-    // Generate reference number (like application controller)
+    // Generate reference number
     const reference = `PAY-${Date.now().toString().slice(-8)}`;
 
     // ===============================
-    // 2️⃣ CREATE PAYMENT
+    // 2️⃣ CREATE PAYMENT WITH EXPECTED DATE
     // ===============================
-    const payment = await Payment.create({
+    const paymentData = {
       student: studentData._id,
       category,
       description,
@@ -464,21 +1298,33 @@ exports.createPayment = async (req, res) => {
       semester: semester || null,
       academicYear: academicYear || null,
       programme: programmeData._id || programme || null,
-      modeOfStudy: studentModeOfStudy, // ADD: Save mode of study
-      reference: reference, // Use generated reference
+      modeOfStudy: studentModeOfStudy,
+      reference: reference,
       currency: "ZMW",
       status: "Verified",
       verifiedBy: req.user._id,
       verifiedAt: new Date(),
       paymentReceivedOn: parsedReceivedDate,
-    });
+    };
+
+    // Add expected payment date only if there's a balance
+    if (parsedExpectedDate) {
+      paymentData.expectedPaymentDate = parsedExpectedDate;
+    }
+
+    const payment = await Payment.create(paymentData);
 
     console.log("DEBUG - Payment created:", {
       id: payment._id,
       reference: payment.reference,
       studentName: `${studentData.firstName} ${studentData.surname}`,
-      programme: programmeData.name,
-      modeOfStudy: studentModeOfStudy,
+      amount: numericAmount,
+      totalDue: numericTotalDue,
+      balance: finalBalance,
+      minRequired: minPaymentRequired,
+      expectedPaymentDate: parsedExpectedDate
+        ? parsedExpectedDate.toISOString()
+        : "N/A",
     });
 
     // ===============================
@@ -508,12 +1354,11 @@ exports.createPayment = async (req, res) => {
         console.log("Payment proof uploaded successfully");
       } catch (uploadError) {
         console.error("Payment proof upload failed:", uploadError);
-        // Continue without proof
       }
     }
 
     // ===============================
-    // 4️⃣ GENERATE RECEIPT WITH ACADEMIC INFO
+    // 4️⃣ GENERATE RECEIPT WITH EXPECTED DATE INFO
     // ===============================
     const populatedPayment = await Payment.findById(payment._id)
       .populate("student", "firstName surname email studentId")
@@ -528,35 +1373,11 @@ exports.createPayment = async (req, res) => {
       academicYear: academicYear || new Date().getFullYear().toString(),
     };
 
-    console.log("DEBUG - Academic info for receipt:", academicInfo);
-
-    // Generate receipt with academic info and reference as receipt number
-    // const pdfPath = await generateReceiptPDF({
-    //   payment: {
-    //     _id: populatedPayment._id,
-    //     reference: populatedPayment.reference, // This becomes the receipt number
-    //     amount: populatedPayment.amount,
-    //     method: populatedPayment.method,
-    //     status: populatedPayment.status,
-    //     verifiedAt: populatedPayment.verifiedAt,
-    //     paymentReceivedOn: populatedPayment.paymentReceivedOn,
-    //     category: populatedPayment.category,
-    //     description: populatedPayment.description,
-    //     totalDue: populatedPayment.totalDue,
-    //     balanceAfterPayment: populatedPayment.balanceAfterPayment,
-    //     student: populatedPayment.student,
-    //     verifiedBy: populatedPayment.verifiedBy,
-    //   },
-    //   academicInfo: academicInfo, // Pass academic info separately
-    // });
-
-    // In the createPayment function, update the generateReceiptPDF call:
-
-    // Generate receipt with academic info and reference as receipt number
+    // Generate receipt
     const pdfPath = await generateReceiptPDF({
       payment: {
         _id: populatedPayment._id,
-        reference: populatedPayment.reference, // This becomes the receipt number
+        reference: populatedPayment.reference,
         amount: populatedPayment.amount,
         method: populatedPayment.method,
         status: populatedPayment.status,
@@ -566,16 +1387,15 @@ exports.createPayment = async (req, res) => {
         description: populatedPayment.description,
         totalDue: populatedPayment.totalDue,
         balanceAfterPayment: populatedPayment.balanceAfterPayment,
+        expectedPaymentDate: populatedPayment.expectedPaymentDate,
         student: populatedPayment.student,
         verifiedBy: populatedPayment.verifiedBy,
-        // Add academic fields directly to payment object
-        programme: programmeData, // Pass the populated programme object
+        programme: programmeData,
         modeOfStudy: studentModeOfStudy,
         semester: semester || null,
         academicYear: academicYear || null,
       },
       academicInfo: {
-        // Also pass as separate object for clarity
         programme: programmeData.name,
         programmeCode: programmeData.code,
         modeOfStudy: studentModeOfStudy,
@@ -586,28 +1406,26 @@ exports.createPayment = async (req, res) => {
 
     const gcsPath = `receipts/payment_${payment.reference}_${Date.now()}.pdf`;
     await uploadFile(pdfPath, gcsPath);
-
     const signedUrl = await generateSignedUrl(gcsPath);
 
-    // Update payment with receipt info (use reference as receipt number)
+    // Update payment with receipt info
     payment.receipt = {
-      receiptNumber: payment.reference, // Use reference as receipt number
+      receiptNumber: payment.reference,
       name: "Official Payment Receipt",
       gcsPath,
       gcsUrl: signedUrl,
       issuedAt: new Date(),
-      academicInfo: academicInfo, // Store academic info with receipt
+      academicInfo: academicInfo,
     };
 
     await payment.save();
 
     console.log("DEBUG - Receipt generated:", {
       receiptNumber: payment.receipt.receiptNumber,
-      gcsPath: payment.receipt.gcsPath,
     });
 
     // ===============================
-    // 5️⃣ SEND EMAILS WITH ACADEMIC INFO
+    // 5️⃣ SEND EMAILS WITH EXPECTED DATE INFO
     // ===============================
     const studentEmail = populatedPayment.student?.email;
 
@@ -617,10 +1435,13 @@ exports.createPayment = async (req, res) => {
       const depositDate = populatedPayment.paymentReceivedOn
         ? new Date(populatedPayment.paymentReceivedOn).toLocaleDateString()
         : receiptDate;
+      const expectedDateStr = parsedExpectedDate
+        ? parsedExpectedDate.toLocaleDateString()
+        : "Not specified";
 
       await sendEmail({
         to: studentEmail,
-        subject: "💳 Payment Received – Official Receipt",
+        subject: `💳 Payment Received – Receipt #${payment.reference}`,
         html: `
           <p>Dear ${populatedPayment.student.firstName || "Student"},</p>
           <p>Your payment has been <strong>successfully received and verified</strong>.</p>
@@ -641,6 +1462,7 @@ exports.createPayment = async (req, res) => {
             <p><strong>Amount Paid:</strong> ZMW ${numericAmount.toFixed(2)}</p>
             <p><strong>Total Due:</strong> ZMW ${numericTotalDue.toFixed(2)}</p>
             <p><strong>Balance Remaining:</strong> ZMW ${finalBalance.toFixed(2)}</p>
+            ${finalBalance > 0 ? `<p><strong>Expected Payment Date:</strong> ${expectedDateStr}</p>` : ""}
             <p><strong>Payment Method:</strong> ${method}</p>
             <p><strong>Date Deposited:</strong> ${depositDate}</p>
             <p><strong>Date Verified:</strong> ${receiptDate}</p>
@@ -652,18 +1474,25 @@ exports.createPayment = async (req, res) => {
           ${
             finalBalance > 0
               ? `<div style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
-                  <p style="margin: 0;"><strong>Note:</strong> You have an outstanding balance of ZMW ${finalBalance.toFixed(2)}</p>
-                </div>`
+                <p style="margin: 0;"><strong>Note:</strong> You have an outstanding balance of ZMW ${finalBalance.toFixed(2)}</p>
+                <p style="margin: 5px 0 0 0;"><strong>Expected Payment Date:</strong> ${expectedDateStr}</p>
+              </div>`
               : `<div style="background-color: #d1ecf1; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #0c5460;">
-                  <p style="margin: 0;"><strong>Payment Status:</strong> Fully Paid ✅</p>
-                </div>`
+                <p style="margin: 0;"><strong>Payment Status:</strong> Fully Paid ✅</p>
+              </div>`
+          }
+          
+          ${
+            finalBalance > 0
+              ? `<p><strong>Important:</strong> Please ensure the remaining balance is paid by <strong>${expectedDateStr}</strong> to avoid any penalties.</p>`
+              : ""
           }
           
           <p>Regards,<br/>Finance Office</p>
         `,
         attachments: [
           {
-            filename: `Receipt_${payment.reference}.pdf`, // Use reference in filename
+            filename: `Receipt_${payment.reference}.pdf`,
             path: pdfPath,
             contentType: "application/pdf",
           },
@@ -681,9 +1510,12 @@ exports.createPayment = async (req, res) => {
       fs.unlinkSync(pdfPath);
     }
 
+    const successMessage = `Payment created successfully! Receipt #${payment.reference} issued. Balance: ZMW ${finalBalance.toFixed(2)}`;
     req.flash(
       "success_msg",
-      `Payment created successfully! Receipt #${payment.reference} issued. Balance: ZMW ${finalBalance.toFixed(2)}`,
+      finalBalance > 0
+        ? `${successMessage} (Expected by: ${parsedExpectedDate.toLocaleDateString()})`
+        : successMessage,
     );
     res.redirect("/finance/payments");
   } catch (err) {
@@ -693,13 +1525,117 @@ exports.createPayment = async (req, res) => {
   }
 };
 
+// // ===============================
+// // LIST ALL PAYMENTS (FINANCE)
+// // ===============================
+// exports.listPayments = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 20; // START AT 20
+//     const search = (req.query.search || "").trim();
+//     const category = (req.query.category || "").trim();
+
+//     const skip = (page - 1) * limit;
+
+//     // ============================
+//     // BUILD QUERY
+//     // ============================
+//     const query = {};
+
+//     // CATEGORY FILTER
+//     if (category) {
+//       query.category = category;
+//     }
+
+//     // STUDENT SEARCH (name OR email)
+//     if (search) {
+//       const students = await User.find({
+//         role: "Student",
+//         $or: [
+//           { firstName: new RegExp(search, "i") },
+//           { surname: new RegExp(search, "i") },
+//           { email: new RegExp(search, "i") },
+//         ],
+//       }).select("_id");
+
+//       query.student = { $in: students.map((s) => s._id) };
+//     }
+
+//     // ============================
+//     // PAYMENTS
+//     // ============================
+//     const payments = await Payment.find(query)
+//       .populate("student", "firstName surname email")
+//       .sort({ createdAt: -1 })
+//       .skip(skip)
+//       .limit(limit);
+
+//     const totalCount = await Payment.countDocuments(query);
+//     const totalPages = Math.ceil(totalCount / limit);
+
+//     // ============================
+//     // SUMMARY TOTALS
+//     // ============================
+//     const now = new Date();
+//     const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+//     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+//     const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+//     const sum = async (from) => {
+//       const r = await Payment.aggregate([
+//         { $match: { createdAt: { $gte: from } } },
+//         { $group: { _id: null, total: { $sum: "$amount" } } },
+//       ]);
+//       return r.length ? r[0].total : 0;
+//     };
+
+//     const [totalToday, totalMonth, totalYear, totalAll] = await Promise.all([
+//       sum(startOfToday),
+//       sum(startOfMonth),
+//       sum(startOfYear),
+//       sum(new Date(0)),
+//     ]);
+
+//     res.render("finance/payments", {
+//       title: "All Payments",
+//       payments,
+
+//       // summary
+//       totalToday,
+//       totalMonth,
+//       totalYear,
+//       totalAll,
+
+//       today: new Date().toLocaleDateString(),
+//       monthRange: `${startOfMonth.toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
+//       yearRange: `${startOfYear.getFullYear()} - ${new Date().getFullYear()}`,
+
+//       // filters
+//       search,
+//       category,
+
+//       // pagination
+//       currentPage: page,
+//       totalPages,
+//       totalCount,
+//       limit,
+
+//       user: req.user,
+//     });
+//   } catch (err) {
+//     console.error("List payments error:", err);
+//     req.flash("error_msg", "Failed to load payments.");
+//     res.redirect("/dashboard");
+//   }
+// };
+
 // ===============================
-// LIST ALL PAYMENTS (FINANCE)
+// LIST ALL PAYMENTS (FINANCE) - UPDATED
 // ===============================
 exports.listPayments = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20; // START AT 20
+    const limit = parseInt(req.query.limit) || 20;
     const search = (req.query.search || "").trim();
     const category = (req.query.category || "").trim();
 
@@ -715,7 +1651,7 @@ exports.listPayments = async (req, res) => {
       query.category = category;
     }
 
-    // STUDENT SEARCH (name OR email)
+    // STUDENT SEARCH (name OR email OR mobile)
     if (search) {
       const students = await User.find({
         role: "Student",
@@ -723,6 +1659,7 @@ exports.listPayments = async (req, res) => {
           { firstName: new RegExp(search, "i") },
           { surname: new RegExp(search, "i") },
           { email: new RegExp(search, "i") },
+          { mobile: new RegExp(search, "i") }, // ADDED: Search by mobile too
         ],
       }).select("_id");
 
@@ -730,10 +1667,38 @@ exports.listPayments = async (req, res) => {
     }
 
     // ============================
-    // PAYMENTS
+    // PAYMENTS WITH PROPER POPULATION
+    // ============================
+    // const payments = await Payment.find(query)
+    //   .populate({
+    //     path: "student",
+    //     select: "firstName surname email mobile studentId", // ADDED: mobile and studentId
+    //   })
+    //   .populate({
+    //     path: "verifiedBy",
+    //     select: "firstName surname email", // ADDED: To show who verified
+    //   })
+    //   .sort({ createdAt: -1 })
+    //   .skip(skip)
+    //   .limit(limit);
+
+    // const totalCount = await Payment.countDocuments(query);
+    // const totalPages = Math.ceil(totalCount / limit);
+
+    // ============================
+    // PAYMENTS WITH GUARANTEED STUDENT POPULATION (FIXES MOBILE ISSUE)
     // ============================
     const payments = await Payment.find(query)
-      .populate("student", "firstName surname email")
+      .populate({
+        path: "student",
+        model: "User", // 👈 force proper population
+        select: "firstName surname email mobile studentProfile.studentId",
+      })
+      .populate({
+        path: "verifiedBy",
+        model: "User",
+        select: "firstName surname email",
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -788,7 +1753,7 @@ exports.listPayments = async (req, res) => {
       totalCount,
       limit,
 
-      user: req.user,
+      user: req.user, // This is the logged-in user, not the student
     });
   } catch (err) {
     console.error("List payments error:", err);

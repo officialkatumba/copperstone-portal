@@ -15,8 +15,8 @@
                 </div>
 
                 <form action="/finance/payments" method="POST" id="paymentForm" enctype="multipart/form-data">
-
                     <input type="hidden" name="source" value="finance">
+
                     <!-- Searchable Student Dropdown -->
                     <div class="mb-3">
                         <label class="fw-semibold">Student</label>
@@ -40,28 +40,34 @@
                         </div>
                     </div>
 
-                    <!-- Category with Fee Suggestions -->
+                    <!-- Add this after the student selection -->
+                    <div class="mb-3" id="modeOfStudyField" style="display: none;">
+                        <label class="fw-semibold">Mode of Study</label>
+                        <div class="form-control bg-light" style="cursor: not-allowed;">
+                            <span id="modeOfStudyText"></span>
+                        </div>
+                        <div class="form-text">
+                            Student's mode of study (from application)
+                        </div>
+                    </div>
+
                     <!-- Category with Fee Suggestions -->
                     <div class="mb-3">
                         <label class="fw-semibold">Category</label>
                         <select name="category" id="category" class="form-select" required
                             onchange="updateFeeSuggestion()">
                             <option value="">Select Category</option>
-                            <% [ {name: "Application Fee" , typicalAmount: 50}, {name: "Registration Fee" ,
-                                typicalAmount: 100}, {name: "Semester Registration Fee" , typicalAmount: 500},
-                                {name: "Tuition Fee (Semester)" , typicalAmount: 5000}, {name: "Tuition Fee (Full Year)"
-                                , typicalAmount: 10000}, {name: "Exam Fee" , typicalAmount: 200},
-                                {name: "Supplementary Exam" , typicalAmount: 150}, {name: "Deferred Exam" ,
-                                typicalAmount: 150}, <!-- Added this line -->
-                                {name: "Project Fee" , typicalAmount: 1000},
-                                {name: "Student Management Fee" , typicalAmount: 300}, {name: "Medical Fee" ,
-                                typicalAmount: 150}, {name: "Library Fee" , typicalAmount: 100}, {name: "Internet Fee" ,
-                                typicalAmount: 200}, {name: "Maintenance Fee" , typicalAmount: 250},
-                                {name: "Distance Learning Logistics Fee" , typicalAmount: 500}, {name: "Research Fee" ,
-                                typicalAmount: 1000}, {name: "Graduation Fee" , typicalAmount: 800}, {name: "Boarding" ,
-                                typicalAmount: 1200}, {name: "Penalty" , typicalAmount: 100}, {name: "Other" ,
-                                typicalAmount: 0} ].forEach(c=> { %>
-                                <option value="<%= c.name %>" data-typical="<%= c.typicalAmount %>">
+                            <% [ {name: "Application Fee" , typicalAmount: 50, minPercent: 100},
+                                {name: "Registration Fee" , typicalAmount: 100, minPercent: 100},
+                                {name: "Tuition Fee (Semester)" , typicalAmount: 5000, minPercent: 80},
+                                {name: "Exam Fee" , typicalAmount: 200, minPercent: 100}, {name: "Supplementary Exam" ,
+                                typicalAmount: 150, minPercent: 100}, {name: "Deferred Exam" , typicalAmount: 150,
+                                minPercent: 100}, {name: "Student Management Fee" , typicalAmount: 300, minPercent:
+                                100}, {name: "Graduation Fee" , typicalAmount: 800, minPercent: 100}, {name: "Boarding"
+                                , typicalAmount: 1200, minPercent: 100}, {name: "Other" , typicalAmount: 0, minPercent:
+                                100} ].forEach(c=> { %>
+                                <option value="<%= c.name %>" data-typical="<%= c.typicalAmount %>"
+                                    data-min-percent="<%= c.minPercent %>">
                                     <%= c.name %>
                                         <% if (c.typicalAmount> 0) { %>(Typically: ZMW <%= c.typicalAmount %>)<% } %>
                                 </option>
@@ -101,9 +107,12 @@
                             <button type="button" class="btn btn-outline-secondary" onclick="payFullAmount()">
                                 Pay Full Amount
                             </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="payMinimum()">
+                                Pay Minimum
+                            </button>
                         </div>
-                        <div class="form-text">
-                            Enter the payment amount being made now
+                        <div class="form-text" id="minimumPaymentText">
+                            Minimum payment required: 100% of total due
                         </div>
                     </div>
 
@@ -118,6 +127,17 @@
                         <div id="balanceMessage" class="form-text">
                             This is calculated automatically: (Total Due - Payment Amount)
                         </div>
+                        <div id="minimumPaymentMessage" class="form-text" style="display: none;"></div>
+                    </div>
+
+                    <!-- Expected Date of Payment (Hidden by default) -->
+                    <div class="mb-3" id="expectedDateField" style="display: none;">
+                        <label class="fw-semibold">Expected Date of Next Payment</label>
+                        <input type="date" name="expectedPaymentDate" id="expectedPaymentDate" class="form-control"
+                            min="<%= new Date().toISOString().split('T')[0] %>" />
+                        <div class="form-text">
+                            Please specify when the remaining balance is expected to be paid
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -131,7 +151,7 @@
                         </select>
                     </div>
 
-                    <!-- Add this after the payment method field in your form -->
+                    <!-- Date Money was Deposited in Bank -->
                     <div class="mb-3">
                         <label class="fw-semibold">Date Money was Deposited in Bank</label>
                         <input type="date" name="paymentReceivedOn" class="form-control"
@@ -174,7 +194,7 @@
                     <!-- Hidden field for typical fee -->
                     <input type="hidden" id="typicalFee" value="0">
 
-                    <button type="submit" class="btn btn-success w-100">
+                    <button type="submit" class="btn btn-success w-100" id="submitButton">
                         <i class="fas fa-check-circle me-1"></i> Create Payment
                     </button>
                 </form>
@@ -182,7 +202,6 @@
         </div>
 
         <script>
-
             console.log("✅ InitiatePayment JS loaded");
 
             document.addEventListener('DOMContentLoaded', function () {
@@ -194,6 +213,7 @@
                 const clearSelectionBtn = document.getElementById('clearSelection');
                 const uploadField = document.getElementById('uploadField');
                 const paymentMethodSelect = document.getElementById('paymentMethod');
+                const submitButton = document.getElementById('submitButton');
                 let searchTimeout;
 
                 // Function to toggle upload field based on payment method
@@ -211,30 +231,101 @@
                     }
                 };
 
-                // Global calculation function
+                // Global calculation function with dynamic minimum percentage based on category
                 window.calculateBalance = function () {
                     const totalDue = parseFloat(document.getElementById('totalDue').value) || 0;
                     const paymentAmount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+                    const categorySelect = document.getElementById('category');
+                    const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+                    const minPercent = parseFloat(selectedCategory.getAttribute('data-min-percent')) || 100;
+                    const minPaymentRequired = totalDue * (minPercent / 100);
                     const balanceAfter = totalDue - paymentAmount;
 
                     const balanceField = document.getElementById('balanceAfterPayment');
                     const balanceMessage = document.getElementById('balanceMessage');
+                    const minPaymentMessage = document.getElementById('minimumPaymentMessage');
+                    const expectedDateField = document.getElementById('expectedDateField');
+                    const expectedDateInput = document.getElementById('expectedPaymentDate');
 
                     balanceField.value = balanceAfter.toFixed(2);
 
-                    // Update message color based on balance
-                    if (balanceAfter < 0) {
-                        balanceMessage.innerHTML = '<span class="text-danger">⚠️ Payment exceeds total due! Please check amounts.</span>';
-                        balanceField.style.backgroundColor = '#f8d7da';
-                        balanceField.style.color = '#721c24';
-                    } else if (balanceAfter > 0) {
-                        balanceMessage.innerHTML = '<span class="text-warning">Balance remaining after this payment</span>';
-                        balanceField.style.backgroundColor = '#fff3cd';
-                        balanceField.style.color = '#856404';
+                    // Reset messages and styling
+                    minPaymentMessage.style.display = 'none';
+                    expectedDateField.style.display = 'none';
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-check-circle me-1"></i> Create Payment';
+
+                    // Set minimum date for expected payment (tomorrow)
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                    if (expectedDateInput) {
+                        expectedDateInput.min = tomorrowStr;
+                    }
+
+                    // Update form text for minimum payment
+                    const minimumPaymentText = document.getElementById('minimumPaymentText');
+                    if (minimumPaymentText) {
+                        minimumPaymentText.innerHTML = `Minimum payment required: ${minPercent}% of total due`;
+                    }
+
+                    // Validation logic
+                    if (totalDue > 0 && paymentAmount > 0) {
+                        // Check if payment is less than minimum required percentage
+                        if (paymentAmount < minPaymentRequired) {
+                            minPaymentMessage.innerHTML = `<span class="text-danger">⚠️ Minimum payment required is ${minPercent}% (ZMW ${minPaymentRequired.toFixed(2)})</span>`;
+                            minPaymentMessage.style.display = 'block';
+                            submitButton.disabled = true;
+                            submitButton.innerHTML = `<i class="fas fa-times-circle me-1"></i> Payment Below Minimum (${minPercent}%)`;
+                            balanceField.style.backgroundColor = '#f8d7da';
+                            balanceField.style.color = '#721c24';
+                            balanceMessage.innerHTML = `<span class="text-danger">Payment rejected - below ${minPercent}% requirement</span>`;
+                        }
+                        // Check if there's a balance (payment is at least minimum but not 100%)
+                        else if (balanceAfter > 0 && paymentAmount >= minPaymentRequired) {
+                            balanceMessage.innerHTML = '<span class="text-warning">Balance remaining after this payment</span>';
+                            balanceField.style.backgroundColor = '#fff3cd';
+                            balanceField.style.color = '#856404';
+
+                            // Show expected date field
+                            expectedDateField.style.display = 'block';
+
+                            // Validate expected date is required
+                            if (expectedDateInput) {
+                                expectedDateInput.required = true;
+                            }
+                        }
+                        // Full payment (100%)
+                        else if (balanceAfter === 0) {
+                            balanceMessage.innerHTML = '<span class="text-success">✓ Full payment - No balance remaining</span>';
+                            balanceField.style.backgroundColor = '#d1e7dd';
+                            balanceField.style.color = '#0f5132';
+
+                            // Hide expected date field and make it not required
+                            expectedDateField.style.display = 'none';
+                            if (expectedDateInput) {
+                                expectedDateInput.required = false;
+                                expectedDateInput.value = '';
+                            }
+                        }
+
+                        // Check for overpayment
+                        if (balanceAfter < 0) {
+                            balanceMessage.innerHTML = '<span class="text-danger">⚠️ Payment exceeds total due! Please check amounts.</span>';
+                            balanceField.style.backgroundColor = '#f8d7da';
+                            balanceField.style.color = '#721c24';
+                            submitButton.disabled = true;
+                            submitButton.innerHTML = '<i class="fas fa-times-circle me-1"></i> Payment Exceeds Due Amount';
+                        }
                     } else {
-                        balanceMessage.innerHTML = '<span class="text-success">✓ Full payment - No balance remaining</span>';
-                        balanceField.style.backgroundColor = '#d1e7dd';
-                        balanceField.style.color = '#0f5132';
+                        // Reset to default state
+                        balanceMessage.innerHTML = 'This is calculated automatically: (Total Due - Payment Amount)';
+                        balanceField.style.backgroundColor = '#e9ecef';
+                        balanceField.style.color = '';
+                        expectedDateField.style.display = 'none';
+                        if (expectedDateInput) {
+                            expectedDateInput.required = false;
+                        }
                     }
                 };
 
@@ -256,6 +347,19 @@
                     }
                 };
 
+                // Function to pay minimum based on category percentage
+                window.payMinimum = function () {
+                    const totalDue = parseFloat(document.getElementById('totalDue').value) || 0;
+                    if (totalDue > 0) {
+                        const categorySelect = document.getElementById('category');
+                        const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+                        const minPercent = parseFloat(selectedCategory.getAttribute('data-min-percent')) || 100;
+                        const minPayment = totalDue * (minPercent / 100);
+                        document.getElementById('paymentAmount').value = minPayment.toFixed(2);
+                        calculateBalance();
+                    }
+                };
+
                 // Function to update fee suggestion based on category
                 window.updateFeeSuggestion = function () {
                     const categorySelect = document.getElementById('category');
@@ -272,6 +376,50 @@
                         feeSuggestion.style.display = 'none';
                     }
                 };
+
+                // Form validation on submit
+                document.getElementById('paymentForm').addEventListener('submit', function (e) {
+                    const totalDue = parseFloat(document.getElementById('totalDue').value) || 0;
+                    const paymentAmount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+                    const categorySelect = document.getElementById('category');
+                    const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+                    const minPercent = parseFloat(selectedCategory.getAttribute('data-min-percent')) || 100;
+                    const minPaymentRequired = totalDue * (minPercent / 100);
+                    const balanceAfter = totalDue - paymentAmount;
+                    const expectedDateInput = document.getElementById('expectedPaymentDate');
+
+                    // Validate minimum payment based on category
+                    if (paymentAmount < minPaymentRequired) {
+                        e.preventDefault();
+                        alert(`Minimum payment required is ${minPercent}% of total due (ZMW ${minPaymentRequired.toFixed(2)})`);
+                        document.getElementById('paymentAmount').focus();
+                        return false;
+                    }
+
+                    // Validate expected date when there's a balance
+                    if (balanceAfter > 0 && (!expectedDateInput.value || expectedDateInput.value === '')) {
+                        e.preventDefault();
+                        alert('Expected date of payment is required when there is an outstanding balance.');
+                        expectedDateInput.focus();
+                        return false;
+                    }
+
+                    // Validate expected date is future date
+                    if (balanceAfter > 0 && expectedDateInput.value) {
+                        const expectedDate = new Date(expectedDateInput.value);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+
+                        if (expectedDate <= today) {
+                            e.preventDefault();
+                            alert('Expected payment date must be a future date.');
+                            expectedDateInput.focus();
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
 
                 // Debounced search function
                 studentSearch.addEventListener('input', function () {
@@ -296,6 +444,7 @@
                 });
 
                 // Search students function
+                // Search students function
                 async function searchStudents(searchTerm) {
                     try {
                         const response = await fetch(`/finance/search-students?search=${encodeURIComponent(searchTerm)}`);
@@ -308,12 +457,16 @@
                         }
 
                         studentDropdown.innerHTML = students.map(student => `
-                <button type="button" class="dropdown-item" data-id="${student._id}" data-text="${student.firstName} ${student.surname} - ${student.email}">
-                    <strong>${student.firstName} ${student.surname}</strong><br>
-                    <small class="text-muted">${student.email}</small>
-                    ${student.studentId ? `<br><small class="text-muted">ID: ${student.studentId}</small>` : ''}
-                </button>
-            `).join('');
+            <button type="button" class="dropdown-item" 
+                    data-id="${student._id}" 
+                    data-text="${student.firstName} ${student.surname} - ${student.email}"
+                    data-mode="${student.modeOfStudy || ''}">
+                <strong>${student.firstName} ${student.surname}</strong><br>
+                <small class="text-muted">${student.email}</small>
+                ${student.modeOfStudy ? `<br><small class="text-muted">Mode: ${student.modeOfStudy}</small>` : ''}
+                ${student.studentId ? `<br><small class="text-muted">ID: ${student.studentId}</small>` : ''}
+            </button>
+        `).join('');
 
                         studentDropdown.style.display = 'block';
 
@@ -322,12 +475,25 @@
                             item.addEventListener('click', function () {
                                 const studentId = this.getAttribute('data-id');
                                 const studentText = this.getAttribute('data-text');
+                                const modeOfStudy = this.getAttribute('data-mode');
 
                                 selectedStudentId.value = studentId;
                                 selectedStudentText.textContent = studentText;
                                 selectedStudentInfo.style.display = 'block';
                                 studentSearch.value = '';
                                 studentDropdown.style.display = 'none';
+
+                                // Display mode of study if available
+                                const modeOfStudyField = document.getElementById('modeOfStudyField');
+                                const modeOfStudyText = document.getElementById('modeOfStudyText');
+
+                                if (modeOfStudy && modeOfStudy !== 'Not specified' && modeOfStudy !== '') {
+                                    modeOfStudyText.textContent = modeOfStudy;
+                                    modeOfStudyField.style.display = 'block';
+                                } else {
+                                    modeOfStudyText.textContent = 'Not specified';
+                                    modeOfStudyField.style.display = 'block';
+                                }
 
                                 // Validate form
                                 document.getElementById('paymentForm').reportValidity();
@@ -341,6 +507,32 @@
                     }
                 }
 
+                // Also update clearSelectionBtn to hide mode of study field
+                clearSelectionBtn.addEventListener('click', function () {
+                    selectedStudentId.value = '';
+                    selectedStudentText.textContent = '';
+                    selectedStudentInfo.style.display = 'none';
+                    studentSearch.value = '';
+
+                    // Hide mode of study field
+                    document.getElementById('modeOfStudyField').style.display = 'none';
+                    document.getElementById('modeOfStudyText').textContent = '';
+
+                    // Reset calculation fields
+                    document.getElementById('totalDue').value = '';
+                    document.getElementById('paymentAmount').value = '';
+                    document.getElementById('balanceAfterPayment').value = '';
+                    document.getElementById('balanceMessage').innerHTML = 'This is calculated automatically: (Total Due - Payment Amount)';
+                    document.getElementById('minimumPaymentMessage').style.display = 'none';
+                    document.getElementById('expectedDateField').style.display = 'none';
+                    document.getElementById('balanceAfterPayment').style.backgroundColor = '#e9ecef';
+                    document.getElementById('balanceAfterPayment').style.color = '';
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-check-circle me-1"></i> Create Payment';
+
+                    studentSearch.focus();
+                });
+
                 // Clear selection
                 clearSelectionBtn.addEventListener('click', function () {
                     selectedStudentId.value = '';
@@ -353,8 +545,12 @@
                     document.getElementById('paymentAmount').value = '';
                     document.getElementById('balanceAfterPayment').value = '';
                     document.getElementById('balanceMessage').innerHTML = 'This is calculated automatically: (Total Due - Payment Amount)';
+                    document.getElementById('minimumPaymentMessage').style.display = 'none';
+                    document.getElementById('expectedDateField').style.display = 'none';
                     document.getElementById('balanceAfterPayment').style.backgroundColor = '#e9ecef';
                     document.getElementById('balanceAfterPayment').style.color = '';
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-check-circle me-1"></i> Create Payment';
 
                     studentSearch.focus();
                 });
@@ -401,7 +597,7 @@
 
                 // Initialize calculation and toggle function
                 calculateBalance();
-                toggleUploadField(); // Initial call to set correct state
+                toggleUploadField();
             });
         </script>
 
@@ -425,6 +621,30 @@
 
             #balanceAfterPayment:read-only {
                 cursor: not-allowed;
+            }
+
+            #minimumPaymentMessage {
+                font-weight: bold;
+                margin-top: 5px;
+            }
+
+            #expectedDateField {
+                background-color: #fff3cd;
+                padding: 15px;
+                border-radius: 5px;
+                border-left: 4px solid #ffc107;
+            }
+
+            .btn-outline-secondary:hover {
+                background-color: #6c757d;
+                color: white;
+            }
+
+            button[type="submit"]:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                background-color: #6c757d !important;
+                border-color: #6c757d !important;
             }
         </style>
 

@@ -375,6 +375,12 @@ const paymentSchema = new mongoose.Schema(
       min: 0,
     },
 
+    // Expected payment date for balance
+    expectedPaymentDate: {
+      type: Date,
+      default: null,
+    },
+
     currency: {
       type: String,
       default: "ZMW",

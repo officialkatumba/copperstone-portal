@@ -92,7 +92,6 @@ const {
   updateApplicationStatus,
   viewAcceptanceLetter, // ADD THIS IMPORT
   deleteApplication,
-  deleteDuplicateApplications,
   findDuplicateApplicants,
 } = require("../controllers/admissionsController");
 
@@ -134,35 +133,14 @@ router.get(
   viewAcceptanceLetter, // USE THE CONTROLLER FUNCTION
 );
 
-// Add these imports at the top
-// const {
-//   // ... existing imports
-//   deleteApplication,
-//   deleteDuplicateApplications,
-//   findDuplicateApplicants
-// } = require("../controllers/admissionsController");
-
-// Add these routes after the existing ones:
-
 // Delete single application
-router.delete(
-  "/applications/:id/delete",
-  ensureAuthenticated,
-  deleteApplication,
-);
+// router.delete(
+//   "/applications/:id/delete",
+//   ensureAuthenticated,
+//   deleteApplication,
+// );
 
-// Delete all duplicates for a specific applicant
-router.post(
-  "/applications/duplicates/:applicantId/delete",
-  ensureAuthenticated,
-  deleteDuplicateApplications,
-);
-
-// View duplicate applications
-router.get(
-  "/applications/duplicates",
-  ensureAuthenticated,
-  findDuplicateApplicants,
-);
+// Change this line in admissionsRoutes.js:
+router.post("/applications/:id/delete", ensureAuthenticated, deleteApplication);
 
 module.exports = router;

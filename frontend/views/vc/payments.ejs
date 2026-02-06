@@ -531,183 +531,304 @@
                 </div>
                 <% } %>
         </div>
-
         <!-- ===================================== -->
         <!-- PAYMENT MODALS (VIEW ONLY - VC CAN'T VERIFY/CANCEL) -->
         <!-- ===================================== -->
         <% if (payments && payments.length> 0) { %>
             <% payments.forEach(function(payment) { %>
                 <div class="modal fade" id="paymentModal<%= payment._id %>" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
+                    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+                        <div class="modal-content rounded-3">
+                            <!-- Modal Header -->
                             <div class="modal-header" style="background-color: var(--primary-purple); color: white;">
-                                <h5 class="modal-title fw-bold">
+                                <h5 class="modal-title fw-bold mb-0">
                                     <i class="fas fa-file-invoice-dollar me-2"></i>Payment Details
                                 </h5>
                                 <button type="button" class="btn-close btn-close-white"
                                     data-bs-dismiss="modal"></button>
                             </div>
 
-                            <div class="modal-body">
-                                <!-- Student Header -->
-                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
-                                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3"
-                                        style="width:60px; height:60px;">
-                                        <i class="fas fa-user-graduate fa-2x text-primary"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="mb-1">
-                                            <%= payment.student.firstName %>
-                                                <%= payment.student.surname %>
-                                        </h5>
-                                        <p class="text-muted mb-1">
-                                            <%= payment.student.email %>
-                                        </p>
-                                        <% if (payment.student.studentProfile &&
-                                            payment.student.studentProfile.nurteNumber) { %>
-                                            <span class="badge bg-info">NURTE: <%=
-                                                    payment.student.studentProfile.nurteNumber %></span>
-                                            <% } %>
-                                    </div>
-                                </div>
-
-                                <!-- Payment Details Grid -->
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Payment ID</small>
-                                            <code><%= payment._id %></code>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Category</small>
-                                            <h6 class="mb-0">
-                                                <%= payment.category %>
+                            <div class="modal-body p-4">
+                                <!-- Reference & Status -->
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <small class="text-muted d-block">Reference</small>
+                                            <h6 class="mb-0 text-primary fw-bold">
+                                                <%= payment.reference %>
                                             </h6>
                                         </div>
-
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Description</small>
-                                            <p class="mb-0">
-                                                <%= payment.description || 'No description provided' %>
-                                            </p>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Payment Method</small>
-                                            <span class="badge bg-info text-white">
-                                                <%= payment.method %>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Total Amount Due</small>
-                                            <h4 class="text-success">ZMW <%= Number(payment.totalDue || payment.amount
-                                                    || 0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2}) %>
-                                            </h4>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Amount Paid</small>
-                                            <h4 class="text-primary">ZMW <%= Number(payment.amount ||
-                                                    0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2}) %>
-                                            </h4>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Balance Outstanding</small>
-                                            <h4 class="text-warning">ZMW <%= Number(payment.balanceAfterPayment ||
-                                                    0).toLocaleString('en-US', {minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2}) %>
-                                            </h4>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <small class="text-muted d-block">Status</small>
-                                            <% const statusClass=payment.status==='Verified' ||
-                                                payment.status==='Fully Paid' ? 'bg-success' :
-                                                payment.status==='Partially Paid' ? 'bg-warning text-dark' :
-                                                payment.status==='Pending' ? 'bg-secondary' :
-                                                payment.status==='Cancelled' || payment.status==='Rejected'
-                                                ? 'bg-danger' : 'bg-light text-dark' ; %>
-                                                <span class="badge <%= statusClass %> fs-6 p-2">
+                                        <div class="text-end">
+                                            <% let statusClass, statusIcon; if (payment.status==='Verified' ||
+                                                payment.status==='Fully Paid' ) { statusClass='bg-success' ;
+                                                statusIcon='fas fa-check-circle' ; } else if
+                                                (payment.status==='Partially Paid' ) {
+                                                statusClass='bg-warning text-dark' ; statusIcon='fas fa-clock' ; } else
+                                                if (payment.status==='Pending' ) { statusClass='bg-secondary' ;
+                                                statusIcon='fas fa-clock' ; } else if (payment.status==='Cancelled' ||
+                                                payment.status==='Rejected' ) { statusClass='bg-danger' ;
+                                                statusIcon='fas fa-times-circle' ; } else {
+                                                statusClass='bg-light text-dark' ; statusIcon='fas fa-question-circle' ;
+                                                } %>
+                                                <small class="text-muted d-block">Status</small>
+                                                <span class="badge <%= statusClass %>">
+                                                    <i class="<%= statusIcon %> me-1"></i>
                                                     <%= payment.status %>
                                                 </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Academic Details -->
-                                <% if (payment.semester || payment.academicYear) { %>
-                                    <div class="border-top pt-3 mt-3">
-                                        <h6 class="fw-bold mb-3">Academic Information</h6>
-                                        <div class="row">
-                                            <% if (payment.semester) { %>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Semester</small>
-                                                    <span>Semester <%= payment.semester %></span>
+                                <!-- Amounts Section -->
+                                <div class="mb-4">
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Total Due</small>
+                                            <h6 class="text-success fw-bold">
+                                                ZMW <%= Number(payment.totalDue || 0).toFixed(2) %>
+                                            </h6>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Amount Paid</small>
+                                            <h6 class="text-primary fw-bold">
+                                                ZMW <%= Number(payment.amount || 0).toFixed(2) %>
+                                            </h6>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Balance</small>
+                                            <h6
+                                                class="<%= payment.balanceAfterPayment > 0 ? 'text-warning' : 'text-success' %> fw-bold">
+                                                ZMW <%= Number(payment.balanceAfterPayment || 0).toFixed(2) %>
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Expected Payment Date (if balance exists) -->
+                                <% if (payment.expectedPaymentDate && payment.balanceAfterPayment> 0) { %>
+                                    <div class="mb-4">
+                                        <div class="alert alert-warning py-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-calendar-alt me-2"></i>
+                                                <div>
+                                                    <small class="text-muted d-block mb-1">Expected Payment Date</small>
+                                                    <strong>
+                                                        <%= new Date(payment.expectedPaymentDate).toLocaleDateString()
+                                                            %>
+                                                    </strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Remaining balance: ZMW <%=
+                                                            Number(payment.balanceAfterPayment).toFixed(2) %>
+                                                    </small>
                                                 </div>
-                                                <% } %>
-                                                    <% if (payment.academicYear) { %>
-                                                        <div class="col-md-6">
-                                                            <small class="text-muted d-block">Academic Year</small>
-                                                            <span>
-                                                                <%= payment.academicYear %>
-                                                            </span>
-                                                        </div>
-                                                        <% } %>
+                                            </div>
                                         </div>
                                     </div>
                                     <% } %>
 
-                                        <!-- Receipt Section (View Only) -->
-                                        <% if (payment.receipt && payment.receipt.gcsUrl) { %>
-                                            <div class="border-top pt-3 mt-3">
-                                                <h6 class="fw-bold mb-3">Receipt</h6>
-                                                <a href="<%= payment.receipt.gcsUrl %>" target="_blank"
-                                                    class="btn btn-success">
-                                                    <i class="fas fa-file-pdf me-1"></i> View Receipt
-                                                </a>
-                                                <a href="<%= payment.receipt.gcsUrl %>" download
-                                                    class="btn btn-outline-success ms-2">
-                                                    <i class="fas fa-download me-1"></i> Download
-                                                </a>
+                                        <!-- Student Information -->
+                                        <div class="mb-4">
+                                            <h6 class="fw-bold mb-3 border-bottom pb-2">
+                                                <i class="fas fa-user-graduate me-2"></i> Student Details
+                                            </h6>
+                                            <div class="ps-3">
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block">Name</small>
+                                                    <span class="fw-semibold">
+                                                        <%= payment.student.firstName %>
+                                                            <%= payment.student.surname %>
+                                                    </span>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block">Email</small>
+                                                    <span>
+                                                        <%= payment.student.email %>
+                                                    </span>
+                                                </div>
+                                                <% if (payment.student && typeof payment.student==='object' &&
+                                                    payment.student.mobile) { %>
+                                                    <div class="mb-2">
+                                                        <small class="text-muted d-block">Mobile</small>
+                                                        <span>
+                                                            <%= payment.student.mobile %>
+                                                        </span>
+                                                    </div>
+                                                    <% } else { %>
+                                                        <div class="mb-2">
+                                                            <small class="text-muted d-block">Mobile</small>
+                                                            <span class="text-muted">Not available</span>
+                                                        </div>
+                                                        <% } %>
+
+                                                            <% if (payment.student.studentId) { %>
+                                                                <div>
+                                                                    <small class="text-muted d-block">Student ID</small>
+                                                                    <span class="badge bg-info">
+                                                                        <%= payment.student.studentId %>
+                                                                    </span>
+                                                                </div>
+                                                                <% } %>
+                                            </div>
+                                        </div>
+
+                                        <!-- Payment Information -->
+                                        <div class="mb-4">
+                                            <h6 class="fw-bold mb-3 border-bottom pb-2">
+                                                <i class="fas fa-credit-card me-2"></i> Payment Details
+                                            </h6>
+                                            <div class="ps-3">
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block">Category</small>
+                                                    <span class="fw-semibold">
+                                                        <%= payment.category %>
+                                                    </span>
+                                                </div>
+                                                <% if (payment.description) { %>
+                                                    <div class="mb-2">
+                                                        <small class="text-muted d-block">Description</small>
+                                                        <span>
+                                                            <%= payment.description %>
+                                                        </span>
+                                                    </div>
+                                                    <% } %>
+                                                        <div class="mb-2">
+                                                            <small class="text-muted d-block">Payment Method</small>
+                                                            <span class="badge bg-primary">
+                                                                <%= payment.method %>
+                                                            </span>
+                                                        </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Academic Information -->
+                                        <% if (payment.semester || payment.academicYear || payment.modeOfStudy) { %>
+                                            <div class="mb-4">
+                                                <h6 class="fw-bold mb-3 border-bottom pb-2">
+                                                    <i class="fas fa-book me-2"></i> Academic Information
+                                                </h6>
+                                                <div class="ps-3">
+                                                    <div class="row g-2">
+                                                        <% if (payment.semester) { %>
+                                                            <div class="col-6">
+                                                                <small class="text-muted d-block">Semester</small>
+                                                                <span>Semester <%= payment.semester %></span>
+                                                            </div>
+                                                            <% } %>
+                                                                <% if (payment.academicYear) { %>
+                                                                    <div class="col-6">
+                                                                        <small class="text-muted d-block">Academic
+                                                                            Year</small>
+                                                                        <span>
+                                                                            <%= payment.academicYear %>
+                                                                        </span>
+                                                                    </div>
+                                                                    <% } %>
+                                                                        <% if (payment.modeOfStudy) { %>
+                                                                            <div class="col-12">
+                                                                                <small class="text-muted d-block">Mode
+                                                                                    of Study</small>
+                                                                                <span>
+                                                                                    <%= payment.modeOfStudy %>
+                                                                                </span>
+                                                                            </div>
+                                                                            <% } %>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <% } %>
 
-                                                <!-- Payment History -->
-                                                <div class="border-top pt-3 mt-3">
-                                                    <h6 class="fw-bold mb-3">Payment Timeline</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <small class="text-muted d-block">Created</small>
-                                                            <span>
-                                                                <%= new Date(payment.createdAt).toLocaleString() %>
-                                                            </span>
-                                                        </div>
-                                                        <% if (payment.verifiedAt) { %>
-                                                            <div class="col-md-6">
-                                                                <small class="text-muted d-block">Verified</small>
-                                                                <span>
-                                                                    <%= new Date(payment.verifiedAt).toLocaleString() %>
-                                                                </span>
-                                                            </div>
-                                                            <% } %>
+                                                <!-- Timeline -->
+                                                <div class="mb-4">
+                                                    <h6 class="fw-bold mb-3 border-bottom pb-2">
+                                                        <i class="fas fa-history me-2"></i> Timeline
+                                                    </h6>
+                                                    <div class="ps-3">
+                                                        <% const timeline=[ { label: 'Payment Created' , date:
+                                                            payment.createdAt }, { label: 'Bank Deposit' , date:
+                                                            payment.paymentReceivedOn }, { label: 'Payment Verified' ,
+                                                            date: payment.verifiedAt } ].filter(item=> item.date); %>
+
+                                                            <% timeline.forEach((item, index)=> { %>
+                                                                <div class="mb-2">
+                                                                    <small class="text-muted d-block">
+                                                                        <%= item.label %>
+                                                                    </small>
+                                                                    <span>
+                                                                        <%= new Date(item.date).toLocaleString() %>
+                                                                    </span>
+                                                                </div>
+                                                                <% }); %>
                                                     </div>
                                                 </div>
+
+                                                <!-- Verified By -->
+                                                <% if (payment.verifiedBy) { %>
+                                                    <div class="mb-4">
+                                                        <h6 class="fw-bold mb-3 border-bottom pb-2">
+                                                            <i class="fas fa-user-check me-2"></i> Verified By
+                                                        </h6>
+                                                        <div class="ps-3">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="me-3">
+                                                                    <i class="fas fa-user-tie fa-lg text-muted"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <small class="text-muted d-block">Finance
+                                                                        Officer</small>
+                                                                    <span class="fw-semibold">
+                                                                        <%= payment.verifiedBy.firstName %>
+                                                                            <%= payment.verifiedBy.surname %>
+                                                                    </span>
+                                                                    <br>
+                                                                    <small class="text-muted">
+                                                                        <%= new
+                                                                            Date(payment.verifiedAt).toLocaleDateString()
+                                                                            %>
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <% } %>
+
+                                                        <!-- Receipt -->
+                                                        <% if (payment.receipt && payment.receipt.gcsUrl) { %>
+                                                            <div class="mt-4 pt-3 border-top">
+                                                                <div
+                                                                    class="d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <h6 class="fw-bold mb-1">
+                                                                            <i class="fas fa-receipt me-2"></i> Receipt
+                                                                        </h6>
+                                                                        <small class="text-muted">
+                                                                            Issued: <%= new
+                                                                                Date(payment.receipt.issuedAt).toLocaleDateString()
+                                                                                %>
+                                                                        </small>
+                                                                    </div>
+                                                                    <div>
+                                                                        <a href="<%= payment.receipt.gcsUrl %>"
+                                                                            target="_blank"
+                                                                            class="btn btn-sm btn-success">
+                                                                            <i class="fas fa-eye me-1"></i> View
+                                                                        </a>
+                                                                        <a href="<%= payment.receipt.gcsUrl %>" download
+                                                                            class="btn btn-sm btn-outline-success ms-1">
+                                                                            <i class="fas fa-download me-1"></i>
+                                                                            Download
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <% } %>
                             </div>
 
+                            <!-- Modal Footer -->
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <% if (payment.receipt && payment.receipt.gcsUrl) { %>
-                                    <a href="<%= payment.receipt.gcsUrl %>" target="_blank" class="btn btn-primary">
-                                        <i class="fas fa-print me-1"></i> Print Receipt
-                                    </a>
-                                    <% } %>
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-1"></i> Close
+                                </button>
                             </div>
                         </div>
                     </div>

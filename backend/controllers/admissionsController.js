@@ -502,53 +502,99 @@ exports.viewAcceptanceLetter = async (req, res) => {
 };
 
 // Delete single application (Admissions Officer)
+// exports.deleteApplication = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     // Check if user has permission (Admissions Officer or Admin)
+//     if (!["AdmissionsOfficer", "Admin"].includes(req.user.role)) {
+//       req.flash("error_msg", "Unauthorized access.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     const application = await Application.findById(id).populate(
+//       "applicant",
+//       "firstName surname email",
+//     );
+
+//     if (!application) {
+//       req.flash("error_msg", "Application not found.");
+//       return res.redirect("/admissions/applications");
+//     }
+
+//     // Don't allow deletion of approved applications
+//     if (application.status === "Approved") {
+//       req.flash("error_msg", "Cannot delete an approved application.");
+//       return res.redirect(`/admissions/applications/${id}`);
+//     }
+
+//     // Store applicant info for flash message
+//     const applicantName = application.applicant
+//       ? `${application.applicant.firstName} ${application.applicant.surname}`
+//       : "Unknown Applicant";
+
+//     // Delete the application
+//     await Application.findByIdAndDelete(id);
+
+//     // Log the deletion
+//     console.log(`Application deleted by ${req.user.email}:`, {
+//       applicationId: id,
+//       applicant: applicantName,
+//       programme: application.firstChoice,
+//       status: application.status,
+//       deletedAt: new Date(),
+//     });
+
+//     req.flash(
+//       "success_msg",
+//       `Application for ${applicantName} deleted successfully.`,
+//     );
+//     res.redirect("/admissions/applications");
+//   } catch (err) {
+//     console.error("Error deleting application:", err);
+//     req.flash("error_msg", "Failed to delete application.");
+//     res.redirect("/admissions/applications");
+//   }
+// };
+
+// Update the existing deleteApplication function in admissionsController.js
+// backend/controllers/admissionsController.js
 exports.deleteApplication = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if user has permission (Admissions Officer or Admin)
-    if (!["AdmissionsOfficer", "Admin"].includes(req.user.role)) {
-      req.flash("error_msg", "Unauthorized access.");
-      return res.redirect("/admissions/applications");
-    }
-
-    const application = await Application.findById(id).populate(
-      "applicant",
-      "firstName surname email",
-    );
+    // Find the application first
+    const application = await Application.findById(id);
 
     if (!application) {
       req.flash("error_msg", "Application not found.");
       return res.redirect("/admissions/applications");
     }
 
-    // Don't allow deletion of approved applications
+    // Simple check - don't delete approved applications
     if (application.status === "Approved") {
       req.flash("error_msg", "Cannot delete an approved application.");
       return res.redirect(`/admissions/applications/${id}`);
     }
 
-    // Store applicant info for flash message
-    const applicantName = application.applicant
-      ? `${application.applicant.firstName} ${application.applicant.surname}`
-      : "Unknown Applicant";
+    // Get applicant name for flash message
+    const applicant = await User.findById(application.applicant).select(
+      "firstName surname",
+    );
+    const applicantName = applicant
+      ? `${applicant.firstName} ${applicant.surname}`
+      : "Unknown";
 
-    // Delete the application
+    // Delete the application (simple - no fancy cleanup)
     await Application.findByIdAndDelete(id);
 
-    // Log the deletion
-    console.log(`Application deleted by ${req.user.email}:`, {
-      applicationId: id,
-      applicant: applicantName,
-      programme: application.firstChoice,
-      status: application.status,
-      deletedAt: new Date(),
-    });
-
+    // Flash success message
     req.flash(
       "success_msg",
-      `Application for ${applicantName} deleted successfully.`,
+      `Application for ${applicantName} has been deleted.`,
     );
+
+    // Redirect to applications list
     res.redirect("/admissions/applications");
   } catch (err) {
     console.error("Error deleting application:", err);
