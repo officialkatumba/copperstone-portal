@@ -1899,7 +1899,424 @@ exports.showReportsPage = async (req, res) => {
   }
 };
 
-// Generate payment report
+// // Generate payment report
+// exports.generatePaymentReport = async (req, res) => {
+//   try {
+//     const { startDate, endDate, outputFormat = "html" } = req.query;
+
+//     // Default to current month if no dates provided
+//     const defaultStartDate = new Date();
+//     defaultStartDate.setDate(1); // First day of current month
+
+//     const defaultEndDate = new Date();
+
+//     const start = startDate ? new Date(startDate) : defaultStartDate;
+//     const end = endDate ? new Date(endDate) : defaultEndDate;
+
+//     // Set end date to end of day
+//     end.setHours(23, 59, 59, 999);
+
+//     // Build query for date range
+//     const query = {
+//       createdAt: {
+//         $gte: start,
+//         $lte: end,
+//       },
+//     };
+
+//     // Fetch payments with population
+//     const payments = await Payment.find(query)
+//       .populate("student", "firstName surname email studentId")
+//       .populate("verifiedBy", "firstName surname")
+//       .sort({ createdAt: -1 })
+//       .lean();
+
+//     // Calculate summary statistics
+//     const summary = payments.reduce(
+//       (acc, payment) => {
+//         const category = payment.category || "Uncategorized";
+
+//         if (!acc.categories[category]) {
+//           acc.categories[category] = {
+//             count: 0,
+//             totalAmount: 0,
+//             payments: [],
+//           };
+//         }
+
+//         acc.categories[category].count++;
+//         acc.categories[category].totalAmount += payment.amount;
+//         acc.categories[category].payments.push(payment);
+
+//         acc.totalAmount += payment.amount;
+//         acc.totalPayments++;
+
+//         // Count by status
+//         acc.statusCount[payment.status] =
+//           (acc.statusCount[payment.status] || 0) + 1;
+
+//         return acc;
+//       },
+//       {
+//         totalAmount: 0,
+//         totalPayments: 0,
+//         categories: {},
+//         statusCount: {},
+//       },
+//     );
+
+//     // Calculate category percentages
+//     for (const category in summary.categories) {
+//       summary.categories[category].percentage = (
+//         (summary.categories[category].totalAmount / summary.totalAmount) *
+//         100
+//       ).toFixed(1);
+//     }
+
+//     // Format dates for display
+//     const formattedStart = start.toLocaleDateString("en-GB", {
+//       day: "2-digit",
+//       month: "short",
+//       year: "numeric",
+//     });
+
+//     const formattedEnd = end.toLocaleDateString("en-GB", {
+//       day: "2-digit",
+//       month: "short",
+//       year: "numeric",
+//     });
+
+//     // Prepare data for response
+//     const reportData = {
+//       payments,
+//       summary,
+//       dateRange: {
+//         start: start.toISOString().split("T")[0],
+//         end: end.toISOString().split("T")[0],
+//         formattedStart,
+//         formattedEnd,
+//       },
+//       generatedAt: new Date().toLocaleString(),
+//     };
+
+//     // If PDF output requested
+//     if (outputFormat === "pdf") {
+//       // Generate PDF report
+//       const pdfPath = await generatePaymentReportPDF(reportData);
+
+//       // Generate signed URL for download
+//       const gcsPath = `reports/payment_report_${Date.now()}.pdf`;
+//       await uploadFile(pdfPath, gcsPath);
+//       const signedUrl = await generateSignedUrl(gcsPath);
+
+//       // Clean up temp file
+//       const fs = require("fs");
+//       if (fs.existsSync(pdfPath)) {
+//         fs.unlinkSync(pdfPath);
+//       }
+
+//       return res.json({
+//         success: true,
+//         message: "PDF report generated successfully",
+//         downloadUrl: signedUrl,
+//         reportData: {
+//           dateRange: `${formattedStart} to ${formattedEnd}`,
+//           totalPayments: summary.totalPayments,
+//           totalAmount: summary.totalAmount.toFixed(2),
+//         },
+//       });
+//     }
+
+//     // HTML output (render page)
+//     res.render("finance/reportResults", {
+//       title: "Payment Report",
+//       user: req.user,
+//       reportData,
+//       outputFormat: "html",
+//     });
+//   } catch (err) {
+//     console.error("Generate report error:", err);
+
+//     if (req.query.outputFormat === "pdf") {
+//       return res.status(500).json({
+//         success: false,
+//         error: "Failed to generate PDF report",
+//       });
+//     }
+
+//     req.flash("error_msg", "Failed to generate report.");
+//     res.redirect("/finance/reports");
+//   }
+// };
+
+// // Helper function to generate PDF report
+// async function generatePaymentReportPDF(reportData) {
+//   const PDFDocument = require("pdfkit");
+//   const fs = require("fs");
+//   const path = require("path");
+
+//   // Create temp file path
+//   const tempDir = path.join(__dirname, "../temp");
+//   if (!fs.existsSync(tempDir)) {
+//     fs.mkdirSync(tempDir, { recursive: true });
+//   }
+
+//   const pdfPath = path.join(tempDir, `payment_report_${Date.now()}.pdf`);
+
+//   return new Promise((resolve, reject) => {
+//     try {
+//       const doc = new PDFDocument({ margin: 50, size: "A4" });
+//       const stream = fs.createWriteStream(pdfPath);
+//       doc.pipe(stream);
+
+//       // Add header
+//       doc.fontSize(20).text("Payment Report", { align: "center" });
+//       doc.moveDown(0.5);
+//       doc
+//         .fontSize(12)
+//         .text(
+//           `Date Range: ${reportData.dateRange.formattedStart} to ${reportData.dateRange.formattedEnd}`,
+//           { align: "center" },
+//         );
+//       doc
+//         .fontSize(10)
+//         .text(`Generated: ${reportData.generatedAt}`, { align: "center" });
+//       doc.moveDown();
+
+//       // Summary section
+//       doc.fontSize(14).text("SUMMARY", { underline: true });
+//       doc.moveDown(0.5);
+
+//       doc
+//         .fontSize(11)
+//         .text(`Total Payments: ${reportData.summary.totalPayments}`);
+//       doc.text(
+//         `Total Amount: ZMW ${reportData.summary.totalAmount.toFixed(2)}`,
+//       );
+//       doc.moveDown();
+
+//       // Category breakdown
+//       doc.fontSize(14).text("CATEGORY BREAKDOWN", { underline: true });
+//       doc.moveDown(0.5);
+
+//       let yPos = doc.y;
+//       for (const [category, data] of Object.entries(
+//         reportData.summary.categories,
+//       )) {
+//         doc.fontSize(10).text(`${category}:`, { continued: true });
+//         doc.text(
+//           ` ${data.count} payments, ZMW ${data.totalAmount.toFixed(2)} (${data.percentage}%)`,
+//         );
+//         yPos = doc.y;
+//       }
+
+//       doc.moveDown();
+
+//       // Status breakdown
+//       doc.fontSize(14).text("STATUS BREAKDOWN", { underline: true });
+//       doc.moveDown(0.5);
+
+//       for (const [status, count] of Object.entries(
+//         reportData.summary.statusCount,
+//       )) {
+//         doc.fontSize(10).text(`${status}: ${count}`);
+//       }
+
+//       doc.moveDown();
+
+//       // Detailed payments table
+//       doc.fontSize(14).text("DETAILED PAYMENTS", { underline: true });
+//       doc.moveDown(0.5);
+
+//       // Table headers
+//       const tableTop = doc.y;
+//       const colWidths = [80, 100, 80, 60, 80];
+//       const headers = ["Date", "Student", "Category", "Amount", "Status"];
+
+//       doc.fontSize(9).font("Helvetica-Bold");
+//       headers.forEach((header, i) => {
+//         doc.text(
+//           header,
+//           50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0),
+//           tableTop,
+//           {
+//             width: colWidths[i],
+//             align: "left",
+//           },
+//         );
+//       });
+
+//       doc.moveDown(0.5);
+
+//       // Table rows
+//       doc.font("Helvetica");
+//       let currentY = doc.y;
+
+//       reportData.payments.forEach((payment, index) => {
+//         if (currentY > 700) {
+//           // Page break check
+//           doc.addPage();
+//           currentY = 50;
+//         }
+
+//         const row = [
+//           new Date(payment.createdAt).toLocaleDateString(),
+//           payment.student
+//             ? `${payment.student.firstName} ${payment.student.surname}`
+//             : "N/A",
+//           payment.category,
+//           `ZMW ${payment.amount.toFixed(2)}`,
+//           payment.status,
+//         ];
+
+//         row.forEach((cell, i) => {
+//           doc
+//             .fontSize(9)
+//             .text(
+//               cell,
+//               50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0),
+//               currentY,
+//               {
+//                 width: colWidths[i],
+//                 align: "left",
+//               },
+//             );
+//         });
+
+//         currentY += 20;
+//         doc.y = currentY;
+//       });
+
+//       // Footer
+//       doc.moveDown(2);
+//       doc
+//         .fontSize(8)
+//         .text(
+//           `Report generated by Finance System on ${reportData.generatedAt}`,
+//           { align: "center" },
+//         );
+
+//       doc.end();
+
+//       stream.on("finish", () => resolve(pdfPath));
+//       stream.on("error", reject);
+//     } catch (error) {
+//       reject(error);
+//     }
+//   });
+// }
+
+// // ===============================
+// // SIMPLE REPORT (Alternative - Quick Stats)
+// // ===============================
+// exports.quickStatsReport = async (req, res) => {
+//   try {
+//     const { startDate, endDate } = req.query;
+
+//     const start = startDate
+//       ? new Date(startDate)
+//       : new Date(new Date().getFullYear(), 0, 1); // Start of year
+//     const end = endDate ? new Date(endDate) : new Date();
+//     end.setHours(23, 59, 59, 999);
+
+//     // Aggregate statistics
+//     const stats = await Payment.aggregate([
+//       {
+//         $match: {
+//           createdAt: { $gte: start, $lte: end },
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: null,
+//           totalPayments: { $sum: 1 },
+//           totalAmount: { $sum: "$amount" },
+//           averageAmount: { $avg: "$amount" },
+//           maxAmount: { $max: "$amount" },
+//           minAmount: { $min: "$amount" },
+//         },
+//       },
+//     ]);
+
+//     // Category breakdown
+//     const categoryStats = await Payment.aggregate([
+//       {
+//         $match: {
+//           createdAt: { $gte: start, $lte: end },
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$category",
+//           count: { $sum: 1 },
+//           total: { $sum: "$amount" },
+//           average: { $avg: "$amount" },
+//         },
+//       },
+//       { $sort: { total: -1 } },
+//     ]);
+
+//     // Status breakdown
+//     const statusStats = await Payment.aggregate([
+//       {
+//         $match: {
+//           createdAt: { $gte: start, $lte: end },
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$status",
+//           count: { $sum: 1 },
+//           total: { $sum: "$amount" },
+//         },
+//       },
+//     ]);
+
+//     // Recent payments
+//     const recentPayments = await Payment.find({
+//       createdAt: { $gte: start, $lte: end },
+//     })
+//       .populate("student", "firstName surname")
+//       .sort({ createdAt: -1 })
+//       .limit(10)
+//       .lean();
+
+//     const result = {
+//       dateRange: {
+//         start: start.toISOString().split("T")[0],
+//         end: end.toISOString().split("T")[0],
+//         formattedStart: start.toLocaleDateString(),
+//         formattedEnd: end.toLocaleDateString(),
+//       },
+//       summary: stats[0] || {
+//         totalPayments: 0,
+//         totalAmount: 0,
+//         averageAmount: 0,
+//         maxAmount: 0,
+//         minAmount: 0,
+//       },
+//       categoryStats,
+//       statusStats,
+//       recentPayments,
+//       generatedAt: new Date().toLocaleString(),
+//     };
+
+//     res.json({
+//       success: true,
+//       report: result,
+//     });
+//   } catch (err) {
+//     console.error("Quick stats error:", err);
+//     res.status(500).json({
+//       success: false,
+//       error: "Failed to generate quick stats",
+//     });
+//   }
+// };
+
+///////////////////////////////////////////
+
+// Generate payment report - UPDATED WITH BALANCE
 exports.generatePaymentReport = async (req, res) => {
   try {
     const { startDate, endDate, outputFormat = "html" } = req.query;
@@ -1931,7 +2348,7 @@ exports.generatePaymentReport = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Calculate summary statistics
+    // Calculate summary statistics INCLUDING BALANCE
     const summary = payments.reduce(
       (acc, payment) => {
         const category = payment.category || "Uncategorized";
@@ -1940,16 +2357,28 @@ exports.generatePaymentReport = async (req, res) => {
           acc.categories[category] = {
             count: 0,
             totalAmount: 0,
+            totalDue: 0,
+            totalBalance: 0,
             payments: [],
           };
         }
 
         acc.categories[category].count++;
         acc.categories[category].totalAmount += payment.amount;
+        acc.categories[category].totalDue += payment.totalDue || 0;
+        acc.categories[category].totalBalance +=
+          payment.balanceAfterPayment || 0;
         acc.categories[category].payments.push(payment);
 
         acc.totalAmount += payment.amount;
         acc.totalPayments++;
+
+        // Balance calculations
+        acc.totalDue += payment.totalDue || 0;
+        acc.totalBalance += payment.balanceAfterPayment || 0;
+
+        // Calculate average balance
+        acc.totalPaid = acc.totalDue - acc.totalBalance;
 
         // Count by status
         acc.statusCount[payment.status] =
@@ -1960,18 +2389,43 @@ exports.generatePaymentReport = async (req, res) => {
       {
         totalAmount: 0,
         totalPayments: 0,
+        totalDue: 0,
+        totalBalance: 0,
+        totalPaid: 0,
         categories: {},
         statusCount: {},
       },
     );
 
-    // Calculate category percentages
+    // Calculate category percentages with balance
     for (const category in summary.categories) {
       summary.categories[category].percentage = (
         (summary.categories[category].totalAmount / summary.totalAmount) *
         100
       ).toFixed(1);
+
+      // Balance percentage
+      summary.categories[category].balancePercentage =
+        summary.totalDue > 0
+          ? (
+              (summary.categories[category].totalBalance /
+                summary.totalBalance) *
+              100
+            ).toFixed(1)
+          : 0;
     }
+
+    // Calculate payment completion percentage
+    summary.completionPercentage =
+      summary.totalDue > 0
+        ? Math.round((summary.totalPaid / summary.totalDue) * 100)
+        : 0;
+
+    // Calculate average balance per payment
+    summary.averageBalance =
+      summary.totalPayments > 0
+        ? (summary.totalBalance / summary.totalPayments).toFixed(2)
+        : 0;
 
     // Format dates for display
     const formattedStart = start.toLocaleDateString("en-GB", {
@@ -2001,7 +2455,7 @@ exports.generatePaymentReport = async (req, res) => {
 
     // If PDF output requested
     if (outputFormat === "pdf") {
-      // Generate PDF report
+      // Generate PDF report WITH BALANCE
       const pdfPath = await generatePaymentReportPDF(reportData);
 
       // Generate signed URL for download
@@ -2023,6 +2477,8 @@ exports.generatePaymentReport = async (req, res) => {
           dateRange: `${formattedStart} to ${formattedEnd}`,
           totalPayments: summary.totalPayments,
           totalAmount: summary.totalAmount.toFixed(2),
+          totalDue: summary.totalDue.toFixed(2),
+          totalBalance: summary.totalBalance.toFixed(2),
         },
       });
     }
@@ -2049,7 +2505,7 @@ exports.generatePaymentReport = async (req, res) => {
   }
 };
 
-// Helper function to generate PDF report
+// Helper function to generate PDF report WITH BALANCE
 async function generatePaymentReportPDF(reportData) {
   const PDFDocument = require("pdfkit");
   const fs = require("fs");
@@ -2083,55 +2539,131 @@ async function generatePaymentReportPDF(reportData) {
         .text(`Generated: ${reportData.generatedAt}`, { align: "center" });
       doc.moveDown();
 
-      // Summary section
-      doc.fontSize(14).text("SUMMARY", { underline: true });
+      // Summary section WITH BALANCE
+      doc.fontSize(14).text("FINANCIAL SUMMARY", { underline: true });
       doc.moveDown(0.5);
 
-      doc
-        .fontSize(11)
-        .text(`Total Payments: ${reportData.summary.totalPayments}`);
+      // Summary in columns
+      const col1 = 50;
+      const col2 = 250;
+
+      doc.fontSize(11);
       doc.text(
-        `Total Amount: ZMW ${reportData.summary.totalAmount.toFixed(2)}`,
+        `Total Payments: ${reportData.summary.totalPayments}`,
+        col1,
+        doc.y,
+      );
+      doc.text(
+        `Total Amount Paid: ZMW ${reportData.summary.totalAmount.toFixed(2)}`,
+        col2,
+        doc.y,
       );
       doc.moveDown();
 
-      // Category breakdown
+      doc.text(
+        `Total Due: ZMW ${reportData.summary.totalDue.toFixed(2)}`,
+        col1,
+        doc.y,
+      );
+      doc.text(
+        `Total Balance: ZMW ${reportData.summary.totalBalance.toFixed(2)}`,
+        col2,
+        doc.y,
+      );
+      doc.moveDown();
+
+      doc.text(
+        `Total Paid: ZMW ${reportData.summary.totalPaid.toFixed(2)}`,
+        col1,
+        doc.y,
+      );
+      doc.text(
+        `Completion: ${reportData.summary.completionPercentage}%`,
+        col2,
+        doc.y,
+      );
+      doc.moveDown();
+
+      // Category breakdown WITH BALANCE
       doc.fontSize(14).text("CATEGORY BREAKDOWN", { underline: true });
       doc.moveDown(0.5);
 
-      let yPos = doc.y;
+      // Category table headers
+      const catTableTop = doc.y;
+      const catColWidths = [100, 60, 70, 70, 70, 70];
+
+      doc.fontSize(9).font("Helvetica-Bold");
+      ["Category", "Count", "Amount", "Due", "Balance", "%"].forEach(
+        (header, i) => {
+          doc.text(
+            header,
+            50 + catColWidths.slice(0, i).reduce((a, b) => a + b, 0),
+            catTableTop,
+            {
+              width: catColWidths[i],
+              align: "left",
+            },
+          );
+        },
+      );
+
+      doc.moveDown(0.5);
+      doc.font("Helvetica");
+
+      // Category rows
+      let currentY = doc.y;
       for (const [category, data] of Object.entries(
         reportData.summary.categories,
       )) {
-        doc.fontSize(10).text(`${category}:`, { continued: true });
-        doc.text(
-          ` ${data.count} payments, ZMW ${data.totalAmount.toFixed(2)} (${data.percentage}%)`,
-        );
-        yPos = doc.y;
+        if (currentY > 700) {
+          doc.addPage();
+          currentY = 50;
+        }
+
+        const row = [
+          category,
+          data.count.toString(),
+          `ZMW ${data.totalAmount.toFixed(2)}`,
+          `ZMW ${data.totalDue.toFixed(2)}`,
+          `ZMW ${data.totalBalance.toFixed(2)}`,
+          `${data.percentage}%`,
+        ];
+
+        row.forEach((cell, i) => {
+          doc
+            .fontSize(8)
+            .text(
+              cell,
+              50 + catColWidths.slice(0, i).reduce((a, b) => a + b, 0),
+              currentY,
+              {
+                width: catColWidths[i],
+                align: "left",
+              },
+            );
+        });
+
+        currentY += 20;
       }
 
       doc.moveDown();
 
-      // Status breakdown
-      doc.fontSize(14).text("STATUS BREAKDOWN", { underline: true });
-      doc.moveDown(0.5);
-
-      for (const [status, count] of Object.entries(
-        reportData.summary.statusCount,
-      )) {
-        doc.fontSize(10).text(`${status}: ${count}`);
-      }
-
-      doc.moveDown();
-
-      // Detailed payments table
+      // Detailed payments table WITH BALANCE
       doc.fontSize(14).text("DETAILED PAYMENTS", { underline: true });
       doc.moveDown(0.5);
 
       // Table headers
       const tableTop = doc.y;
-      const colWidths = [80, 100, 80, 60, 80];
-      const headers = ["Date", "Student", "Category", "Amount", "Status"];
+      const colWidths = [70, 80, 60, 60, 60, 60, 60];
+      const headers = [
+        "Date",
+        "Student",
+        "Amount",
+        "Due",
+        "Balance",
+        "Status",
+        "Method",
+      ];
 
       doc.fontSize(9).font("Helvetica-Bold");
       headers.forEach((header, i) => {
@@ -2150,11 +2682,10 @@ async function generatePaymentReportPDF(reportData) {
 
       // Table rows
       doc.font("Helvetica");
-      let currentY = doc.y;
+      currentY = doc.y;
 
       reportData.payments.forEach((payment, index) => {
         if (currentY > 700) {
-          // Page break check
           doc.addPage();
           currentY = 50;
         }
@@ -2162,16 +2693,18 @@ async function generatePaymentReportPDF(reportData) {
         const row = [
           new Date(payment.createdAt).toLocaleDateString(),
           payment.student
-            ? `${payment.student.firstName} ${payment.student.surname}`
+            ? `${payment.student.firstName.substring(0, 8)} ${payment.student.surname.substring(0, 1)}.`
             : "N/A",
-          payment.category,
           `ZMW ${payment.amount.toFixed(2)}`,
+          `ZMW ${(payment.totalDue || 0).toFixed(2)}`,
+          `ZMW ${(payment.balanceAfterPayment || 0).toFixed(2)}`,
           payment.status,
+          payment.method,
         ];
 
         row.forEach((cell, i) => {
           doc
-            .fontSize(9)
+            .fontSize(8)
             .text(
               cell,
               50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0),
@@ -2186,6 +2719,26 @@ async function generatePaymentReportPDF(reportData) {
         currentY += 20;
         doc.y = currentY;
       });
+
+      // Balance summary at the end
+      doc.moveDown(2);
+      doc.fontSize(10).font("Helvetica-Bold");
+      doc.text("BALANCE SUMMARY", { align: "center" });
+      doc.moveDown(0.5);
+      doc.font("Helvetica");
+
+      const balanceY = doc.y;
+      doc.text(
+        `Total Collected: ZMW ${reportData.summary.totalAmount.toFixed(2)}`,
+        100,
+        balanceY,
+      );
+      doc.text(
+        `Outstanding Balance: ZMW ${reportData.summary.totalBalance.toFixed(2)}`,
+        300,
+        balanceY,
+      );
+      doc.moveDown();
 
       // Footer
       doc.moveDown(2);
@@ -2206,9 +2759,7 @@ async function generatePaymentReportPDF(reportData) {
   });
 }
 
-// ===============================
-// SIMPLE REPORT (Alternative - Quick Stats)
-// ===============================
+// Quick stats report - UPDATED WITH BALANCE
 exports.quickStatsReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -2219,7 +2770,7 @@ exports.quickStatsReport = async (req, res) => {
     const end = endDate ? new Date(endDate) : new Date();
     end.setHours(23, 59, 59, 999);
 
-    // Aggregate statistics
+    // Aggregate statistics WITH BALANCE
     const stats = await Payment.aggregate([
       {
         $match: {
@@ -2231,6 +2782,8 @@ exports.quickStatsReport = async (req, res) => {
           _id: null,
           totalPayments: { $sum: 1 },
           totalAmount: { $sum: "$amount" },
+          totalDue: { $sum: "$totalDue" },
+          totalBalance: { $sum: "$balanceAfterPayment" },
           averageAmount: { $avg: "$amount" },
           maxAmount: { $max: "$amount" },
           minAmount: { $min: "$amount" },
@@ -2238,7 +2791,25 @@ exports.quickStatsReport = async (req, res) => {
       },
     ]);
 
-    // Category breakdown
+    // Calculate derived stats
+    const baseStats = stats[0] || {
+      totalPayments: 0,
+      totalAmount: 0,
+      totalDue: 0,
+      totalBalance: 0,
+      averageAmount: 0,
+      maxAmount: 0,
+      minAmount: 0,
+    };
+
+    // Calculate completion percentage
+    const totalPaid = baseStats.totalDue - baseStats.totalBalance;
+    const completionPercentage =
+      baseStats.totalDue > 0
+        ? Math.round((totalPaid / baseStats.totalDue) * 100)
+        : 0;
+
+    // Category breakdown WITH BALANCE
     const categoryStats = await Payment.aggregate([
       {
         $match: {
@@ -2250,6 +2821,8 @@ exports.quickStatsReport = async (req, res) => {
           _id: "$category",
           count: { $sum: 1 },
           total: { $sum: "$amount" },
+          totalDue: { $sum: "$totalDue" },
+          totalBalance: { $sum: "$balanceAfterPayment" },
           average: { $avg: "$amount" },
         },
       },
@@ -2268,18 +2841,10 @@ exports.quickStatsReport = async (req, res) => {
           _id: "$status",
           count: { $sum: 1 },
           total: { $sum: "$amount" },
+          totalBalance: { $sum: "$balanceAfterPayment" },
         },
       },
     ]);
-
-    // Recent payments
-    const recentPayments = await Payment.find({
-      createdAt: { $gte: start, $lte: end },
-    })
-      .populate("student", "firstName surname")
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .lean();
 
     const result = {
       dateRange: {
@@ -2288,16 +2853,13 @@ exports.quickStatsReport = async (req, res) => {
         formattedStart: start.toLocaleDateString(),
         formattedEnd: end.toLocaleDateString(),
       },
-      summary: stats[0] || {
-        totalPayments: 0,
-        totalAmount: 0,
-        averageAmount: 0,
-        maxAmount: 0,
-        minAmount: 0,
+      summary: {
+        ...baseStats,
+        totalPaid,
+        completionPercentage,
       },
       categoryStats,
       statusStats,
-      recentPayments,
       generatedAt: new Date().toLocaleString(),
     };
 
