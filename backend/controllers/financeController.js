@@ -454,708 +454,6 @@ exports.searchStudents = async (req, res) => {
   }
 };
 
-// // CREATE PAYMENT (Finance Controller - Updated)
-// exports.createPayment = async (req, res) => {
-//   try {
-//     // DEBUG logging
-//     console.log("DEBUG - Form data received");
-//     console.log("req.body:", req.body);
-//     console.log("req.file:", req.file ? "File present" : "No file");
-
-//     const {
-//       student,
-//       category,
-//       description,
-//       amount,
-//       method,
-//       semester,
-//       academicYear,
-//       programme,
-//       totalDue,
-//       balanceAfterPayment,
-//       paymentReceivedOn,
-//       modeOfStudy, // ADD THIS: Mode of Study field
-//     } = req.body;
-
-//     // Validate required fields
-//     if (
-//       !student ||
-//       !category ||
-//       !description ||
-//       !amount ||
-//       !method ||
-//       !totalDue
-//     ) {
-//       req.flash("error_msg", "All required fields must be filled.");
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     // Convert to numbers
-//     const numericTotalDue = parseFloat(totalDue);
-//     const numericAmount = parseFloat(amount);
-//     const numericBalance = parseFloat(balanceAfterPayment || 0);
-
-//     // Calculate balance if not provided
-//     const calculatedBalance = numericTotalDue - numericAmount;
-//     const finalBalance = isNaN(numericBalance)
-//       ? calculatedBalance
-//       : numericBalance;
-
-//     // Validate
-//     if (numericAmount > numericTotalDue) {
-//       req.flash("error_msg", "Payment amount cannot exceed total due.");
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     // Parse payment received date (actual bank deposit date)
-//     let parsedReceivedDate = new Date(); // Default to now
-//     if (paymentReceivedOn) {
-//       parsedReceivedDate = new Date(paymentReceivedOn);
-//       // Validate date is not in the future
-//       if (parsedReceivedDate > new Date()) {
-//         req.flash(
-//           "error_msg",
-//           "Payment received date cannot be in the future.",
-//         );
-//         return res.redirect("/finance/payments/new");
-//       }
-//     }
-
-//     // ===============================
-//     // 1️⃣ GET STUDENT ACADEMIC INFORMATION
-//     // ===============================
-//     const studentData = await User.findById(student)
-//       .select("firstName surname email studentId programme modeOfStudy")
-//       .populate("programme", "name code");
-
-//     if (!studentData) {
-//       req.flash("error_msg", "Student not found.");
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     // Get programme details
-//     const programmeData = studentData.programme || {
-//       name: "Not Assigned",
-//       code: "N/A",
-//     };
-//     const studentModeOfStudy =
-//       studentData.modeOfStudy || modeOfStudy || "Full Time";
-
-//     // Generate reference number (like application controller)
-//     const reference = `PAY-${Date.now().toString().slice(-8)}`;
-
-//     // ===============================
-//     // 2️⃣ CREATE PAYMENT
-//     // ===============================
-//     const payment = await Payment.create({
-//       student: studentData._id,
-//       category,
-//       description,
-//       amount: numericAmount,
-//       totalDue: numericTotalDue,
-//       balanceAfterPayment: finalBalance,
-//       method,
-//       semester: semester || null,
-//       academicYear: academicYear || null,
-//       programme: programmeData._id || programme || null,
-//       modeOfStudy: studentModeOfStudy, // ADD: Save mode of study
-//       reference: reference, // Use generated reference
-//       currency: "ZMW",
-//       status: "Verified",
-//       verifiedBy: req.user._id,
-//       verifiedAt: new Date(),
-//       paymentReceivedOn: parsedReceivedDate,
-//     });
-
-//     console.log("DEBUG - Payment created:", {
-//       id: payment._id,
-//       reference: payment.reference,
-//       studentName: `${studentData.firstName} ${studentData.surname}`,
-//       programme: programmeData.name,
-//       modeOfStudy: studentModeOfStudy,
-//     });
-
-//     // ===============================
-//     // 3️⃣ HANDLE PAYMENT PROOF UPLOAD
-//     // ===============================
-//     if (req.file) {
-//       try {
-//         const { uploadToGCS } = require("../config/gcsUpload");
-
-//         const uploaded = await uploadToGCS(
-//           req.file,
-//           {
-//             firstName: studentData.firstName,
-//             surname: studentData.surname,
-//           },
-//           "PAYMENT",
-//           academicYear || new Date().getFullYear().toString(),
-//         );
-
-//         payment.proofOfPayment = {
-//           gcsUrl: uploaded.publicUrl,
-//           gcsPath: uploaded.path,
-//           uploadedAt: new Date(),
-//         };
-
-//         await payment.save();
-//         console.log("Payment proof uploaded successfully");
-//       } catch (uploadError) {
-//         console.error("Payment proof upload failed:", uploadError);
-//         // Continue without proof
-//       }
-//     }
-
-//     // ===============================
-//     // 4️⃣ GENERATE RECEIPT WITH ACADEMIC INFO
-//     // ===============================
-//     const populatedPayment = await Payment.findById(payment._id)
-//       .populate("student", "firstName surname email studentId")
-//       .populate("verifiedBy", "firstName surname");
-
-//     // Prepare academic information for receipt
-//     const academicInfo = {
-//       programme: programmeData.name,
-//       programmeCode: programmeData.code,
-//       modeOfStudy: studentModeOfStudy,
-//       semester: semester || "Not Specified",
-//       academicYear: academicYear || new Date().getFullYear().toString(),
-//     };
-
-//     console.log("DEBUG - Academic info for receipt:", academicInfo);
-
-//     // Generate receipt with academic info and reference as receipt number
-//     // const pdfPath = await generateReceiptPDF({
-//     //   payment: {
-//     //     _id: populatedPayment._id,
-//     //     reference: populatedPayment.reference, // This becomes the receipt number
-//     //     amount: populatedPayment.amount,
-//     //     method: populatedPayment.method,
-//     //     status: populatedPayment.status,
-//     //     verifiedAt: populatedPayment.verifiedAt,
-//     //     paymentReceivedOn: populatedPayment.paymentReceivedOn,
-//     //     category: populatedPayment.category,
-//     //     description: populatedPayment.description,
-//     //     totalDue: populatedPayment.totalDue,
-//     //     balanceAfterPayment: populatedPayment.balanceAfterPayment,
-//     //     student: populatedPayment.student,
-//     //     verifiedBy: populatedPayment.verifiedBy,
-//     //   },
-//     //   academicInfo: academicInfo, // Pass academic info separately
-//     // });
-
-//     // In the createPayment function, update the generateReceiptPDF call:
-
-//     // Generate receipt with academic info and reference as receipt number
-//     const pdfPath = await generateReceiptPDF({
-//       payment: {
-//         _id: populatedPayment._id,
-//         reference: populatedPayment.reference, // This becomes the receipt number
-//         amount: populatedPayment.amount,
-//         method: populatedPayment.method,
-//         status: populatedPayment.status,
-//         verifiedAt: populatedPayment.verifiedAt,
-//         paymentReceivedOn: populatedPayment.paymentReceivedOn,
-//         category: populatedPayment.category,
-//         description: populatedPayment.description,
-//         totalDue: populatedPayment.totalDue,
-//         balanceAfterPayment: populatedPayment.balanceAfterPayment,
-//         student: populatedPayment.student,
-//         verifiedBy: populatedPayment.verifiedBy,
-//         // Add academic fields directly to payment object
-//         programme: programmeData, // Pass the populated programme object
-//         modeOfStudy: studentModeOfStudy,
-//         semester: semester || null,
-//         academicYear: academicYear || null,
-//       },
-//       academicInfo: {
-//         // Also pass as separate object for clarity
-//         programme: programmeData.name,
-//         programmeCode: programmeData.code,
-//         modeOfStudy: studentModeOfStudy,
-//         semester: semester || "",
-//         academicYear: academicYear || new Date().getFullYear().toString(),
-//       },
-//     });
-
-//     const gcsPath = `receipts/payment_${payment.reference}_${Date.now()}.pdf`;
-//     await uploadFile(pdfPath, gcsPath);
-
-//     const signedUrl = await generateSignedUrl(gcsPath);
-
-//     // Update payment with receipt info (use reference as receipt number)
-//     payment.receipt = {
-//       receiptNumber: payment.reference, // Use reference as receipt number
-//       name: "Official Payment Receipt",
-//       gcsPath,
-//       gcsUrl: signedUrl,
-//       issuedAt: new Date(),
-//       academicInfo: academicInfo, // Store academic info with receipt
-//     };
-
-//     await payment.save();
-
-//     console.log("DEBUG - Receipt generated:", {
-//       receiptNumber: payment.receipt.receiptNumber,
-//       gcsPath: payment.receipt.gcsPath,
-//     });
-
-//     // ===============================
-//     // 5️⃣ SEND EMAILS WITH ACADEMIC INFO
-//     // ===============================
-//     const studentEmail = populatedPayment.student?.email;
-
-//     if (studentEmail) {
-//       // Format dates for email
-//       const receiptDate = new Date().toLocaleDateString();
-//       const depositDate = populatedPayment.paymentReceivedOn
-//         ? new Date(populatedPayment.paymentReceivedOn).toLocaleDateString()
-//         : receiptDate;
-
-//       await sendEmail({
-//         to: studentEmail,
-//         subject: "💳 Payment Received – Official Receipt",
-//         html: `
-//           <p>Dear ${populatedPayment.student.firstName || "Student"},</p>
-//           <p>Your payment has been <strong>successfully received and verified</strong>.</p>
-
-//           <!-- ACADEMIC INFORMATION -->
-//           <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-//             <h4 style="margin-top: 0; color: #2c3e50;">Academic Information</h4>
-//             <p><strong>Programme:</strong> ${academicInfo.programme} (${academicInfo.programmeCode})</p>
-//             <p><strong>Mode of Study:</strong> ${academicInfo.modeOfStudy}</p>
-//             <p><strong>Semester:</strong> ${academicInfo.semester}</p>
-//             <p><strong>Academic Year:</strong> ${academicInfo.academicYear}</p>
-//           </div>
-
-//           <!-- PAYMENT INFORMATION -->
-//           <div style="background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 15px 0;">
-//             <h4 style="margin-top: 0; color: #2c3e50;">Payment Information</h4>
-//             <p><strong>Receipt Number:</strong> ${payment.reference}</p>
-//             <p><strong>Amount Paid:</strong> ZMW ${numericAmount.toFixed(2)}</p>
-//             <p><strong>Total Due:</strong> ZMW ${numericTotalDue.toFixed(2)}</p>
-//             <p><strong>Balance Remaining:</strong> ZMW ${finalBalance.toFixed(2)}</p>
-//             <p><strong>Payment Method:</strong> ${method}</p>
-//             <p><strong>Date Deposited:</strong> ${depositDate}</p>
-//             <p><strong>Date Verified:</strong> ${receiptDate}</p>
-//           </div>
-
-//           <p>Your <strong>official receipt</strong> is attached to this email.</p>
-//           <p><a href="${signedUrl}" style="background-color: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Download Receipt from Portal</a></p>
-
-//           ${
-//             finalBalance > 0
-//               ? `<div style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
-//                   <p style="margin: 0;"><strong>Note:</strong> You have an outstanding balance of ZMW ${finalBalance.toFixed(2)}</p>
-//                 </div>`
-//               : `<div style="background-color: #d1ecf1; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #0c5460;">
-//                   <p style="margin: 0;"><strong>Payment Status:</strong> Fully Paid ✅</p>
-//                 </div>`
-//           }
-
-//           <p>Regards,<br/>Finance Office</p>
-//         `,
-//         attachments: [
-//           {
-//             filename: `Receipt_${payment.reference}.pdf`, // Use reference in filename
-//             path: pdfPath,
-//             contentType: "application/pdf",
-//           },
-//         ],
-//       });
-
-//       console.log("📧 Payment receipt email sent to student");
-//     }
-
-//     // ===============================
-//     // 6️⃣ CLEAN UP
-//     // ===============================
-//     const fs = require("fs");
-//     if (fs.existsSync(pdfPath)) {
-//       fs.unlinkSync(pdfPath);
-//     }
-
-//     req.flash(
-//       "success_msg",
-//       `Payment created successfully! Receipt #${payment.reference} issued. Balance: ZMW ${finalBalance.toFixed(2)}`,
-//     );
-//     res.redirect("/finance/payments");
-//   } catch (err) {
-//     console.error("Create payment error:", err);
-//     req.flash("error_msg", "Failed to initiate payment.");
-//     res.redirect("/finance/payments/new");
-//   }
-// };
-
-// // CREATE PAYMENT (Finance Controller - Updated with 80% validation and expected date)
-// exports.createPayment = async (req, res) => {
-//   try {
-//     console.log("DEBUG - Form data received");
-//     console.log("req.body:", req.body);
-//     console.log("req.file:", req.file ? "File present" : "No file");
-
-//     const {
-//       student,
-//       category,
-//       description,
-//       amount,
-//       method,
-//       semester,
-//       academicYear,
-//       programme,
-//       totalDue,
-//       balanceAfterPayment,
-//       paymentReceivedOn,
-//       modeOfStudy,
-//       expectedPaymentDate,
-//     } = req.body;
-
-//     // Validate required fields
-//     if (
-//       !student ||
-//       !category ||
-//       !description ||
-//       !amount ||
-//       !method ||
-//       !totalDue
-//     ) {
-//       req.flash("error_msg", "All required fields must be filled.");
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     // Convert to numbers
-//     const numericTotalDue = parseFloat(totalDue);
-//     const numericAmount = parseFloat(amount);
-//     const numericBalance = parseFloat(balanceAfterPayment || 0);
-
-//     // Calculate balance if not provided
-//     const calculatedBalance = numericTotalDue - numericAmount;
-//     const finalBalance = isNaN(numericBalance)
-//       ? calculatedBalance
-//       : numericBalance;
-
-//     // ===============================
-//     // VALIDATION: 80% MINIMUM PAYMENT
-//     // ===============================
-//     const minPaymentRequired = numericTotalDue * 0.8;
-
-//     if (numericAmount < minPaymentRequired) {
-//       req.flash(
-//         "error_msg",
-//         `Minimum payment required is 80% of total due (ZMW ${minPaymentRequired.toFixed(2)}).`,
-//       );
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     // ===============================
-//     // VALIDATION: EXPECTED DATE FOR BALANCE
-//     // ===============================
-//     let parsedExpectedDate = null;
-//     if (finalBalance > 0) {
-//       // Require expected payment date when there's a balance
-//       if (!expectedPaymentDate) {
-//         req.flash(
-//           "error_msg",
-//           "Expected date of payment is required when there is an outstanding balance.",
-//         );
-//         return res.redirect("/finance/payments/new");
-//       }
-
-//       // Parse and validate expected date
-//       parsedExpectedDate = new Date(expectedPaymentDate);
-//       const today = new Date();
-//       today.setHours(0, 0, 0, 0);
-//       parsedExpectedDate.setHours(0, 0, 0, 0);
-
-//       if (parsedExpectedDate <= today) {
-//         req.flash("error_msg", "Expected payment date must be a future date.");
-//         return res.redirect("/finance/payments/new");
-//       }
-//     }
-
-//     // Validate amount doesn't exceed total due
-//     if (numericAmount > numericTotalDue) {
-//       req.flash("error_msg", "Payment amount cannot exceed total due.");
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     // Parse payment received date
-//     let parsedReceivedDate = new Date();
-//     if (paymentReceivedOn) {
-//       parsedReceivedDate = new Date(paymentReceivedOn);
-//       if (parsedReceivedDate > new Date()) {
-//         req.flash(
-//           "error_msg",
-//           "Payment received date cannot be in the future.",
-//         );
-//         return res.redirect("/finance/payments/new");
-//       }
-//     }
-
-//     // ===============================
-//     // 1️⃣ GET STUDENT INFORMATION
-//     // ===============================
-//     const studentData = await User.findById(student)
-//       .select("firstName surname email studentId programme modeOfStudy")
-//       .populate("programme", "name code");
-
-//     if (!studentData) {
-//       req.flash("error_msg", "Student not found.");
-//       return res.redirect("/finance/payments/new");
-//     }
-
-//     // Get programme details
-//     const programmeData = studentData.programme || {
-//       name: "Not Assigned",
-//       code: "N/A",
-//     };
-//     const studentModeOfStudy =
-//       studentData.modeOfStudy || modeOfStudy || "Full Time";
-
-//     // Generate reference number
-//     const reference = `PAY-${Date.now().toString().slice(-8)}`;
-
-//     // ===============================
-//     // 2️⃣ CREATE PAYMENT WITH EXPECTED DATE
-//     // ===============================
-//     const paymentData = {
-//       student: studentData._id,
-//       category,
-//       description,
-//       amount: numericAmount,
-//       totalDue: numericTotalDue,
-//       balanceAfterPayment: finalBalance,
-//       method,
-//       semester: semester || null,
-//       academicYear: academicYear || null,
-//       programme: programmeData._id || programme || null,
-//       modeOfStudy: studentModeOfStudy,
-//       reference: reference,
-//       currency: "ZMW",
-//       status: "Verified",
-//       verifiedBy: req.user._id,
-//       verifiedAt: new Date(),
-//       paymentReceivedOn: parsedReceivedDate,
-//     };
-
-//     // Add expected payment date only if there's a balance
-//     if (parsedExpectedDate) {
-//       paymentData.expectedPaymentDate = parsedExpectedDate;
-//     }
-
-//     const payment = await Payment.create(paymentData);
-
-//     console.log("DEBUG - Payment created:", {
-//       id: payment._id,
-//       reference: payment.reference,
-//       studentName: `${studentData.firstName} ${studentData.surname}`,
-//       amount: numericAmount,
-//       totalDue: numericTotalDue,
-//       balance: finalBalance,
-//       minRequired: minPaymentRequired,
-//       expectedPaymentDate: parsedExpectedDate
-//         ? parsedExpectedDate.toISOString()
-//         : "N/A",
-//     });
-
-//     // ===============================
-//     // 3️⃣ HANDLE PAYMENT PROOF UPLOAD
-//     // ===============================
-//     if (req.file) {
-//       try {
-//         const { uploadToGCS } = require("../config/gcsUpload");
-
-//         const uploaded = await uploadToGCS(
-//           req.file,
-//           {
-//             firstName: studentData.firstName,
-//             surname: studentData.surname,
-//           },
-//           "PAYMENT",
-//           academicYear || new Date().getFullYear().toString(),
-//         );
-
-//         payment.proofOfPayment = {
-//           gcsUrl: uploaded.publicUrl,
-//           gcsPath: uploaded.path,
-//           uploadedAt: new Date(),
-//         };
-
-//         await payment.save();
-//         console.log("Payment proof uploaded successfully");
-//       } catch (uploadError) {
-//         console.error("Payment proof upload failed:", uploadError);
-//       }
-//     }
-
-//     // ===============================
-//     // 4️⃣ GENERATE RECEIPT WITH EXPECTED DATE INFO
-//     // ===============================
-//     const populatedPayment = await Payment.findById(payment._id)
-//       .populate("student", "firstName surname email studentId")
-//       .populate("verifiedBy", "firstName surname");
-
-//     // Prepare academic information for receipt
-//     const academicInfo = {
-//       programme: programmeData.name,
-//       programmeCode: programmeData.code,
-//       modeOfStudy: studentModeOfStudy,
-//       semester: semester || "Not Specified",
-//       academicYear: academicYear || new Date().getFullYear().toString(),
-//     };
-
-//     // Generate receipt
-//     const pdfPath = await generateReceiptPDF({
-//       payment: {
-//         _id: populatedPayment._id,
-//         reference: populatedPayment.reference,
-//         amount: populatedPayment.amount,
-//         method: populatedPayment.method,
-//         status: populatedPayment.status,
-//         verifiedAt: populatedPayment.verifiedAt,
-//         paymentReceivedOn: populatedPayment.paymentReceivedOn,
-//         category: populatedPayment.category,
-//         description: populatedPayment.description,
-//         totalDue: populatedPayment.totalDue,
-//         balanceAfterPayment: populatedPayment.balanceAfterPayment,
-//         expectedPaymentDate: populatedPayment.expectedPaymentDate,
-//         student: populatedPayment.student,
-//         verifiedBy: populatedPayment.verifiedBy,
-//         programme: programmeData,
-//         modeOfStudy: studentModeOfStudy,
-//         semester: semester || null,
-//         academicYear: academicYear || null,
-//       },
-//       academicInfo: {
-//         programme: programmeData.name,
-//         programmeCode: programmeData.code,
-//         modeOfStudy: studentModeOfStudy,
-//         semester: semester || "",
-//         academicYear: academicYear || new Date().getFullYear().toString(),
-//       },
-//     });
-
-//     const gcsPath = `receipts/payment_${payment.reference}_${Date.now()}.pdf`;
-//     await uploadFile(pdfPath, gcsPath);
-//     const signedUrl = await generateSignedUrl(gcsPath);
-
-//     // Update payment with receipt info
-//     payment.receipt = {
-//       receiptNumber: payment.reference,
-//       name: "Official Payment Receipt",
-//       gcsPath,
-//       gcsUrl: signedUrl,
-//       issuedAt: new Date(),
-//       academicInfo: academicInfo,
-//     };
-
-//     await payment.save();
-
-//     console.log("DEBUG - Receipt generated:", {
-//       receiptNumber: payment.receipt.receiptNumber,
-//     });
-
-//     // ===============================
-//     // 5️⃣ SEND EMAILS WITH EXPECTED DATE INFO
-//     // ===============================
-//     const studentEmail = populatedPayment.student?.email;
-
-//     if (studentEmail) {
-//       // Format dates for email
-//       const receiptDate = new Date().toLocaleDateString();
-//       const depositDate = populatedPayment.paymentReceivedOn
-//         ? new Date(populatedPayment.paymentReceivedOn).toLocaleDateString()
-//         : receiptDate;
-//       const expectedDateStr = parsedExpectedDate
-//         ? parsedExpectedDate.toLocaleDateString()
-//         : "Not specified";
-
-//       await sendEmail({
-//         to: studentEmail,
-//         subject: `💳 Payment Received – Receipt #${payment.reference}`,
-//         html: `
-//           <p>Dear ${populatedPayment.student.firstName || "Student"},</p>
-//           <p>Your payment has been <strong>successfully received and verified</strong>.</p>
-
-//           <!-- ACADEMIC INFORMATION -->
-//           <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-//             <h4 style="margin-top: 0; color: #2c3e50;">Academic Information</h4>
-//             <p><strong>Programme:</strong> ${academicInfo.programme} (${academicInfo.programmeCode})</p>
-//             <p><strong>Mode of Study:</strong> ${academicInfo.modeOfStudy}</p>
-//             <p><strong>Semester:</strong> ${academicInfo.semester}</p>
-//             <p><strong>Academic Year:</strong> ${academicInfo.academicYear}</p>
-//           </div>
-
-//           <!-- PAYMENT INFORMATION -->
-//           <div style="background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 15px 0;">
-//             <h4 style="margin-top: 0; color: #2c3e50;">Payment Information</h4>
-//             <p><strong>Receipt Number:</strong> ${payment.reference}</p>
-//             <p><strong>Amount Paid:</strong> ZMW ${numericAmount.toFixed(2)}</p>
-//             <p><strong>Total Due:</strong> ZMW ${numericTotalDue.toFixed(2)}</p>
-//             <p><strong>Balance Remaining:</strong> ZMW ${finalBalance.toFixed(2)}</p>
-//             ${finalBalance > 0 ? `<p><strong>Expected Payment Date:</strong> ${expectedDateStr}</p>` : ""}
-//             <p><strong>Payment Method:</strong> ${method}</p>
-//             <p><strong>Date Deposited:</strong> ${depositDate}</p>
-//             <p><strong>Date Verified:</strong> ${receiptDate}</p>
-//           </div>
-
-//           <p>Your <strong>official receipt</strong> is attached to this email.</p>
-//           <p><a href="${signedUrl}" style="background-color: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">Download Receipt from Portal</a></p>
-
-//           ${
-//             finalBalance > 0
-//               ? `<div style="background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
-//                 <p style="margin: 0;"><strong>Note:</strong> You have an outstanding balance of ZMW ${finalBalance.toFixed(2)}</p>
-//                 <p style="margin: 5px 0 0 0;"><strong>Expected Payment Date:</strong> ${expectedDateStr}</p>
-//               </div>`
-//               : `<div style="background-color: #d1ecf1; padding: 10px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #0c5460;">
-//                 <p style="margin: 0;"><strong>Payment Status:</strong> Fully Paid ✅</p>
-//               </div>`
-//           }
-
-//           ${
-//             finalBalance > 0
-//               ? `<p><strong>Important:</strong> Please ensure the remaining balance is paid by <strong>${expectedDateStr}</strong> to avoid any penalties.</p>`
-//               : ""
-//           }
-
-//           <p>Regards,<br/>Finance Office</p>
-//         `,
-//         attachments: [
-//           {
-//             filename: `Receipt_${payment.reference}.pdf`,
-//             path: pdfPath,
-//             contentType: "application/pdf",
-//           },
-//         ],
-//       });
-
-//       console.log("📧 Payment receipt email sent to student");
-//     }
-
-//     // ===============================
-//     // 6️⃣ CLEAN UP
-//     // ===============================
-//     const fs = require("fs");
-//     if (fs.existsSync(pdfPath)) {
-//       fs.unlinkSync(pdfPath);
-//     }
-
-//     const successMessage = `Payment created successfully! Receipt #${payment.reference} issued. Balance: ZMW ${finalBalance.toFixed(2)}`;
-//     req.flash(
-//       "success_msg",
-//       finalBalance > 0
-//         ? `${successMessage} (Expected by: ${parsedExpectedDate.toLocaleDateString()})`
-//         : successMessage,
-//     );
-//     res.redirect("/finance/payments");
-//   } catch (err) {
-//     console.error("Create payment error:", err);
-//     req.flash("error_msg", "Failed to initiate payment.");
-//     res.redirect("/finance/payments/new");
-//   }
-// };
-
 // CREATE PAYMENT (Finance Controller - Updated with 80% validation and expected date)
 exports.createPayment = async (req, res) => {
   try {
@@ -1884,13 +1182,44 @@ exports.cancelReceipt = async (req, res) => {
 // FINANCE REPORTS FEATURE
 // ===============================
 
-// Show reports page
+// ===============================
+// HELPER FUNCTIONS
+// ===============================
+
+// Format numbers with thousand separators
+function formatNumber(num) {
+  if (num === undefined || num === null) return "0.00";
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// Download image for PDF header
+function downloadImage(url) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith("https") ? https : http;
+    client
+      .get(url, (response) => {
+        if (response.statusCode !== 200) {
+          reject(new Error(`Failed to download image: ${response.statusCode}`));
+          return;
+        }
+        const chunks = [];
+        response.on("data", (chunk) => chunks.push(chunk));
+        response.on("end", () => resolve(Buffer.concat(chunks)));
+        response.on("error", reject);
+      })
+      .on("error", reject);
+  });
+}
+
+// ===============================
+// SHOW REPORTS PAGE
+// ===============================
 exports.showReportsPage = async (req, res) => {
   try {
     res.render("finance/reports", {
       title: "Finance Reports",
       user: req.user,
-      today: new Date().toISOString().split("T")[0], // For date input max attribute
+      today: new Date().toISOString().split("T")[0],
     });
   } catch (err) {
     console.error("Show reports error:", err);
@@ -1898,458 +1227,1515 @@ exports.showReportsPage = async (req, res) => {
     res.redirect("/dashboard/finance");
   }
 };
+// ================================
+// PDF GENERATOR UTILITY - IMPROVED VERSION
+// ================================
 
-// // Generate payment report
-// exports.generatePaymentReport = async (req, res) => {
-//   try {
-//     const { startDate, endDate, outputFormat = "html" } = req.query;
+const fs = require("fs");
+const path = require("path");
+const https = require("https");
+const http = require("http");
 
-//     // Default to current month if no dates provided
-//     const defaultStartDate = new Date();
-//     defaultStartDate.setDate(1); // First day of current month
+// Helper function to download image
+function downloadImage(url) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith("https") ? https : http;
+    client
+      .get(url, (response) => {
+        if (response.statusCode !== 200) {
+          reject(new Error(`Failed to download image: ${response.statusCode}`));
+          return;
+        }
+        const chunks = [];
+        response.on("data", (chunk) => chunks.push(chunk));
+        response.on("end", () => resolve(Buffer.concat(chunks)));
+        response.on("error", reject);
+      })
+      .on("error", reject);
+  });
+}
 
-//     const defaultEndDate = new Date();
+// Format numbers with thousands separator - IMPROVED
+function formatNumber(num) {
+  if (num === undefined || num === null) return "0.00";
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
-//     const start = startDate ? new Date(startDate) : defaultStartDate;
-//     const end = endDate ? new Date(endDate) : defaultEndDate;
+// Helper function to generate PDF report - IMPROVED with all requirements
 
-//     // Set end date to end of day
-//     end.setHours(23, 59, 59, 999);
+// ================================
+// MAIN REPORT FUNCTION - FIXED PAGINATION
+// ================================
 
-//     // Build query for date range
-//     const query = {
-//       createdAt: {
-//         $gte: start,
-//         $lte: end,
-//       },
-//     };
+// ================================
+// QUICK STATS REPORT
+// ================================
+exports.quickStatsReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
 
-//     // Fetch payments with population
-//     const payments = await Payment.find(query)
-//       .populate("student", "firstName surname email studentId")
-//       .populate("verifiedBy", "firstName surname")
-//       .sort({ createdAt: -1 })
-//       .lean();
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(new Date().getFullYear(), 0, 1);
+    const end = endDate ? new Date(endDate) : new Date();
+    end.setHours(23, 59, 59, 999);
+    start.setHours(0, 0, 0, 0);
 
-//     // Calculate summary statistics
-//     const summary = payments.reduce(
-//       (acc, payment) => {
-//         const category = payment.category || "Uncategorized";
+    // Get ALL payments for summary
+    const allPayments = await Payment.find({
+      createdAt: { $gte: start, $lte: end },
+    }).lean();
 
-//         if (!acc.categories[category]) {
-//           acc.categories[category] = {
-//             count: 0,
-//             totalAmount: 0,
-//             payments: [],
-//           };
-//         }
+    // Calculate summary from ALL payments
+    const summary = allPayments.reduce(
+      (acc, payment) => {
+        acc.totalPayments++;
+        acc.totalAmount += payment.amount || 0;
+        acc.totalDue += payment.totalDue || 0;
+        acc.totalBalance += payment.balanceAfterPayment || 0;
+        acc.maxAmount = Math.max(acc.maxAmount, payment.amount || 0);
+        acc.minAmount =
+          acc.minAmount === 0
+            ? payment.amount || 0
+            : Math.min(acc.minAmount, payment.amount || 0);
+        return acc;
+      },
+      {
+        totalPayments: 0,
+        totalAmount: 0,
+        totalDue: 0,
+        totalBalance: 0,
+        averageAmount: 0,
+        maxAmount: 0,
+        minAmount: 0,
+      },
+    );
 
-//         acc.categories[category].count++;
-//         acc.categories[category].totalAmount += payment.amount;
-//         acc.categories[category].payments.push(payment);
+    summary.averageAmount =
+      summary.totalPayments > 0
+        ? summary.totalAmount / summary.totalPayments
+        : 0;
+    summary.totalPaid = summary.totalDue - summary.totalBalance;
+    summary.completionPercentage =
+      summary.totalDue > 0
+        ? Math.round((summary.totalPaid / summary.totalDue) * 100)
+        : 0;
 
-//         acc.totalAmount += payment.amount;
-//         acc.totalPayments++;
+    // Category breakdown
+    const categoryStats = await Payment.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+          total: { $sum: "$amount" },
+          totalDue: { $sum: "$totalDue" },
+          totalBalance: { $sum: "$balanceAfterPayment" },
+          average: { $avg: "$amount" },
+        },
+      },
+      { $sort: { total: -1 } },
+    ]);
 
-//         // Count by status
-//         acc.statusCount[payment.status] =
-//           (acc.statusCount[payment.status] || 0) + 1;
+    // Status breakdown
+    const statusStats = await Payment.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
 
-//         return acc;
-//       },
-//       {
-//         totalAmount: 0,
-//         totalPayments: 0,
-//         categories: {},
-//         statusCount: {},
-//       },
-//     );
+    res.json({
+      success: true,
+      report: {
+        dateRange: {
+          start: start.toISOString().split("T")[0],
+          end: end.toISOString().split("T")[0],
+          formattedStart: start.toLocaleDateString(),
+          formattedEnd: end.toLocaleDateString(),
+        },
+        summary,
+        categoryStats,
+        statusStats,
+        generatedAt: new Date().toLocaleString(),
+      },
+    });
+  } catch (err) {
+    console.error("Quick stats error:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate quick stats",
+    });
+  }
+};
 
-//     // Calculate category percentages
-//     for (const category in summary.categories) {
-//       summary.categories[category].percentage = (
-//         (summary.categories[category].totalAmount / summary.totalAmount) *
-//         100
-//       ).toFixed(1);
-//     }
+////////////////////////////////////////////////
 
-//     // Format dates for display
-//     const formattedStart = start.toLocaleDateString("en-GB", {
-//       day: "2-digit",
-//       month: "short",
-//       year: "numeric",
-//     });
+// ================================
+// PDF GENERATOR - FIXED FOR FULL PAYMENTS DISPLAY
+// ================================
 
-//     const formattedEnd = end.toLocaleDateString("en-GB", {
-//       day: "2-digit",
-//       month: "short",
-//       year: "numeric",
-//     });
+// ================================
+// PDF GENERATOR - SINGLE COLUMN SUMMARY, NO EMPTY PAGES
+// ================================
 
-//     // Prepare data for response
-//     const reportData = {
-//       payments,
-//       summary,
-//       dateRange: {
-//         start: start.toISOString().split("T")[0],
-//         end: end.toISOString().split("T")[0],
-//         formattedStart,
-//         formattedEnd,
-//       },
-//       generatedAt: new Date().toLocaleString(),
-//     };
+// ================================
+// PDF GENERATOR - PERFECT LAYOUT, NO OVERLAPPING
+// ================================
 
-//     // If PDF output requested
-//     if (outputFormat === "pdf") {
-//       // Generate PDF report
-//       const pdfPath = await generatePaymentReportPDF(reportData);
-
-//       // Generate signed URL for download
-//       const gcsPath = `reports/payment_report_${Date.now()}.pdf`;
-//       await uploadFile(pdfPath, gcsPath);
-//       const signedUrl = await generateSignedUrl(gcsPath);
-
-//       // Clean up temp file
-//       const fs = require("fs");
-//       if (fs.existsSync(pdfPath)) {
-//         fs.unlinkSync(pdfPath);
-//       }
-
-//       return res.json({
-//         success: true,
-//         message: "PDF report generated successfully",
-//         downloadUrl: signedUrl,
-//         reportData: {
-//           dateRange: `${formattedStart} to ${formattedEnd}`,
-//           totalPayments: summary.totalPayments,
-//           totalAmount: summary.totalAmount.toFixed(2),
-//         },
-//       });
-//     }
-
-//     // HTML output (render page)
-//     res.render("finance/reportResults", {
-//       title: "Payment Report",
-//       user: req.user,
-//       reportData,
-//       outputFormat: "html",
-//     });
-//   } catch (err) {
-//     console.error("Generate report error:", err);
-
-//     if (req.query.outputFormat === "pdf") {
-//       return res.status(500).json({
-//         success: false,
-//         error: "Failed to generate PDF report",
-//       });
-//     }
-
-//     req.flash("error_msg", "Failed to generate report.");
-//     res.redirect("/finance/reports");
-//   }
-// };
-
-// // Helper function to generate PDF report
 // async function generatePaymentReportPDF(reportData) {
 //   const PDFDocument = require("pdfkit");
-//   const fs = require("fs");
-//   const path = require("path");
-
-//   // Create temp file path
 //   const tempDir = path.join(__dirname, "../temp");
+
 //   if (!fs.existsSync(tempDir)) {
 //     fs.mkdirSync(tempDir, { recursive: true });
 //   }
 
 //   const pdfPath = path.join(tempDir, `payment_report_${Date.now()}.pdf`);
 
-//   return new Promise((resolve, reject) => {
+//   return new Promise(async (resolve, reject) => {
 //     try {
-//       const doc = new PDFDocument({ margin: 50, size: "A4" });
+//       const doc = new PDFDocument({
+//         margin: 50,
+//         size: "A4",
+//         bufferPages: true,
+//       });
+
 //       const stream = fs.createWriteStream(pdfPath);
 //       doc.pipe(stream);
 
-//       // Add header
-//       doc.fontSize(20).text("Payment Report", { align: "center" });
-//       doc.moveDown(0.5);
-//       doc
-//         .fontSize(12)
-//         .text(
-//           `Date Range: ${reportData.dateRange.formattedStart} to ${reportData.dateRange.formattedEnd}`,
-//           { align: "center" },
-//         );
-//       doc
-//         .fontSize(10)
-//         .text(`Generated: ${reportData.generatedAt}`, { align: "center" });
-//       doc.moveDown();
-
-//       // Summary section
-//       doc.fontSize(14).text("SUMMARY", { underline: true });
-//       doc.moveDown(0.5);
-
-//       doc
-//         .fontSize(11)
-//         .text(`Total Payments: ${reportData.summary.totalPayments}`);
-//       doc.text(
-//         `Total Amount: ZMW ${reportData.summary.totalAmount.toFixed(2)}`,
-//       );
-//       doc.moveDown();
-
-//       // Category breakdown
-//       doc.fontSize(14).text("CATEGORY BREAKDOWN", { underline: true });
-//       doc.moveDown(0.5);
-
-//       let yPos = doc.y;
-//       for (const [category, data] of Object.entries(
-//         reportData.summary.categories,
-//       )) {
-//         doc.fontSize(10).text(`${category}:`, { continued: true });
-//         doc.text(
-//           ` ${data.count} payments, ZMW ${data.totalAmount.toFixed(2)} (${data.percentage}%)`,
-//         );
-//         yPos = doc.y;
+//       // Download logo if available
+//       let logoBuffer = null;
+//       try {
+//         if (process.env.LOGO) {
+//           logoBuffer = await downloadImage(process.env.LOGO);
+//         }
+//       } catch (e) {
+//         console.warn("⚠️ Could not load logo:", e.message);
 //       }
 
-//       doc.moveDown();
+//       // ============ COPPERSTONE HEADER ============
+//       function addCopperstoneHeader() {
+//         const startY = 30;
+//         doc.y = startY;
 
-//       // Status breakdown
-//       doc.fontSize(14).text("STATUS BREAKDOWN", { underline: true });
-//       doc.moveDown(0.5);
-
-//       for (const [status, count] of Object.entries(
-//         reportData.summary.statusCount,
-//       )) {
-//         doc.fontSize(10).text(`${status}: ${count}`);
-//       }
-
-//       doc.moveDown();
-
-//       // Detailed payments table
-//       doc.fontSize(14).text("DETAILED PAYMENTS", { underline: true });
-//       doc.moveDown(0.5);
-
-//       // Table headers
-//       const tableTop = doc.y;
-//       const colWidths = [80, 100, 80, 60, 80];
-//       const headers = ["Date", "Student", "Category", "Amount", "Status"];
-
-//       doc.fontSize(9).font("Helvetica-Bold");
-//       headers.forEach((header, i) => {
-//         doc.text(
-//           header,
-//           50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0),
-//           tableTop,
-//           {
-//             width: colWidths[i],
-//             align: "left",
-//           },
-//         );
-//       });
-
-//       doc.moveDown(0.5);
-
-//       // Table rows
-//       doc.font("Helvetica");
-//       let currentY = doc.y;
-
-//       reportData.payments.forEach((payment, index) => {
-//         if (currentY > 700) {
-//           // Page break check
-//           doc.addPage();
-//           currentY = 50;
+//         // Logo
+//         if (logoBuffer) {
+//           try {
+//             doc.image(logoBuffer, 50, startY, { width: 60, height: 60 });
+//           } catch (e) {}
 //         }
 
-//         const row = [
-//           new Date(payment.createdAt).toLocaleDateString(),
-//           payment.student
-//             ? `${payment.student.firstName} ${payment.student.surname}`
-//             : "N/A",
-//           payment.category,
-//           `ZMW ${payment.amount.toFixed(2)}`,
-//           payment.status,
-//         ];
+//         // University Header
+//         doc
+//           .fontSize(18)
+//           .font("Helvetica-Bold")
+//           .fillColor("#003366")
+//           .text("COPPERSTONE UNIVERSITY", 120, startY + 5, {
+//             align: "center",
+//             width: 430,
+//           });
 
-//         row.forEach((cell, i) => {
+//         // Address - Single line each
+//         doc
+//           .fontSize(8)
+//           .font("Helvetica")
+//           .fillColor("#4a5568")
+//           .text(
+//             "Plot 38002, Baluba Campus, P.O. Box 22041,",
+//             120,
+//             startY + 30,
+//             { align: "center", width: 430 },
+//           )
+//           .text(
+//             "Along Ndola – Kitwe Dual carriageway, KITWE, ZAMBIA",
+//             120,
+//             startY + 45,
+//             { align: "center", width: 430 },
+//           )
+//           .text(
+//             "Cell: +260 965571607, +260 0967499292, +260 965 653 101",
+//             120,
+//             startY + 60,
+//             { align: "center", width: 430 },
+//           )
+//           .text(
+//             "www.copperstoneuniversity.edu.zm | customercareucopperstone@gmail.com",
+//             120,
+//             startY + 75,
+//             { align: "center", width: 430 },
+//           );
+
+//         // Report Title
+//         doc
+//           .fontSize(16)
+//           .font("Helvetica-Bold")
+//           .fillColor("#2c3e50")
+//           .text("FINANCIAL PAYMENTS REPORT", 50, startY + 110, {
+//             align: "center",
+//             width: 500,
+//           });
+
+//         // Date Range
+//         doc
+//           .fontSize(11)
+//           .font("Helvetica")
+//           .fillColor("#4a5568")
+//           .text(
+//             `Period: ${reportData.dateRange.formattedStart} - ${reportData.dateRange.formattedEnd}`,
+//             50,
+//             startY + 140,
+//             { align: "center", width: 500 },
+//           );
+
+//         doc.y = startY + 170;
+//       }
+
+//       // ============ FOOTER WITH CONFIDENTIAL ============
+//       function addFooter(pageNum, totalPages) {
+//         const footerY = doc.page.height - 45;
+
+//         // Footer line
+//         doc
+//           .moveTo(50, footerY - 15)
+//           .lineTo(550, footerY - 15)
+//           .lineWidth(0.5)
+//           .strokeColor("#cbd5e0")
+//           .stroke();
+
+//         // Page number - LEFT
+//         doc
+//           .fontSize(9)
+//           .font("Helvetica")
+//           .fillColor("#718096")
+//           .text(`Page ${pageNum} of ${totalPages}`, 50, footerY, {
+//             align: "left",
+//             width: 150,
+//           });
+
+//         // Confidential - CENTER
+//         doc
+//           .fontSize(9)
+//           .font("Helvetica-Bold")
+//           .fillColor("#e53e3e")
+//           .text("CONFIDENTIAL REPORT", 200, footerY, {
+//             align: "center",
+//             width: 200,
+//           });
+
+//         // Finance Department - RIGHT
+//         doc
+//           .fontSize(9)
+//           .font("Helvetica")
+//           .fillColor("#4a5568")
+//           .text("Finance Department", 450, footerY, {
+//             align: "right",
+//             width: 100,
+//           });
+//       }
+
+//       // ============ STATUS BREAKDOWN - ELEGANT BARS ============
+//       function addStatusBreakdown() {
+//         doc
+//           .fontSize(14)
+//           .font("Helvetica-Bold")
+//           .fillColor("#2c3e50")
+//           .text("STATUS BREAKDOWN", 50, doc.y, {
+//             align: "center",
+//             width: 500,
+//           });
+//         doc.moveDown(1);
+
+//         const totalPayments = reportData.summary.totalPayments;
+//         const statusEntries = Object.entries(reportData.summary.statusCount);
+//         const startY = doc.y;
+
+//         statusEntries.forEach(([status, count], index) => {
+//           const percentage =
+//             totalPayments > 0 ? ((count / totalPayments) * 100).toFixed(1) : 0;
+//           const yPos = startY + index * 35;
+
+//           // Status and count - LEFT aligned with proper spacing
 //           doc
-//             .fontSize(9)
-//             .text(
-//               cell,
-//               50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0),
-//               currentY,
-//               {
-//                 width: colWidths[i],
-//                 align: "left",
-//               },
-//             );
+//             .fontSize(10)
+//             .font("Helvetica-Bold")
+//             .fillColor("#2d3748")
+//             .text(`${status}:`, 70, yPos);
+
+//           doc
+//             .fontSize(10)
+//             .font("Helvetica")
+//             .fillColor("#4a5568")
+//             .text(`${count.toLocaleString()} (${percentage}%)`, 170, yPos);
+
+//           // Elegant bar - PROPORTIONAL
+//           const barWidth = 250;
+//           const barX = 250;
+//           const barY = yPos + 4;
+
+//           // Background bar
+//           doc.rect(barX, barY, barWidth, 8).fillColor("#edf2f7").fill();
+
+//           // Colored bar
+//           let barColor = "#718096";
+//           if (status === "Verified" || status === "Fully Paid")
+//             barColor = "#38a169";
+//           else if (status === "Pending") barColor = "#ecc94b";
+//           else if (status === "Rejected") barColor = "#e53e3e";
+//           else if (status === "Partially Paid") barColor = "#4299e1";
+
+//           doc
+//             .rect(barX, barY, barWidth * (percentage / 100), 8)
+//             .fillColor(barColor)
+//             .fill();
 //         });
 
-//         currentY += 20;
-//         doc.y = currentY;
+//         doc.y = startY + statusEntries.length * 35 + 20;
+//       }
+
+//       // ============ CATEGORY TABLE HEADERS - OPTIMIZED SPACING ============
+//       function addCategoryHeaders(yPos) {
+//         // Header background
+//         doc
+//           .rect(50, yPos - 5, 500, 22)
+//           .fillColor("#f7fafc")
+//           .fill();
+
+//         doc.fillColor("#2d3748").fontSize(9).font("Helvetica-Bold");
+
+//         // OPTIMIZED COLUMN POSITIONS - NO OVERLAP, CLEAR SEPARATION
+//         doc.text("Category", 55, yPos); // 55-165 (110px)
+//         doc.text("Count", 180, yPos, { align: "right" }); // 180-215 (35px)
+//         doc.text("Collected", 240, yPos, { align: "right" }); // 240-300 (60px)
+//         doc.text("Due", 330, yPos, { align: "right" }); // 330-380 (50px)
+//         doc.text("Balance", 410, yPos, { align: "right" }); // 410-480 (70px)
+//         doc.text("%", 520, yPos, { align: "right" }); // 520-550 (30px)
+
+//         doc.fillColor("#000000");
+//         doc.font("Helvetica");
+//         return yPos + 25;
+//       }
+
+//       // ============ PAYMENT TABLE HEADERS - OPTIMIZED SPACING ============
+//       function addPaymentHeaders(yPos) {
+//         // Header background
+//         doc
+//           .rect(50, yPos - 4, 500, 20)
+//           .fillColor("#f7fafc")
+//           .fill();
+
+//         doc.fillColor("#2d3748").fontSize(8).font("Helvetica-Bold");
+
+//         // OPTIMIZED COLUMN POSITIONS - PERFECT ALIGNMENT, NO OVERLAP
+//         doc.text("Date", 55, yPos); // 55-100 (45px)
+//         doc.text("Receipt", 105, yPos); // 105-145 (40px)
+//         doc.text("Student Name", 155, yPos); // 155-235 (80px)
+//         doc.text("Amount", 245, yPos, { align: "right" }); // 245-285 (40px)
+//         doc.text("Due", 295, yPos, { align: "right" }); // 295-335 (40px)
+//         doc.text("Balance", 345, yPos, { align: "right" }); // 345-385 (40px)
+//         doc.text("Method", 395, yPos); // 395-435 (40px)
+//         doc.text("Status", 445, yPos); // 445-520 (75px)
+
+//         doc.fillColor("#000000");
+//         doc.font("Helvetica");
+//         return yPos + 22;
+//       }
+
+//       // ============ PAGE ADDED EVENT ============
+//       doc.on("pageAdded", () => {
+//         addCopperstoneHeader();
 //       });
 
-//       // Footer
-//       doc.moveDown(2);
+//       // ============ FIRST PAGE ============
+//       addCopperstoneHeader();
+//       doc.moveDown(1);
+
+//       // ============ FINANCIAL SUMMARY - SINGLE COLUMN, CENTERED ============
 //       doc
-//         .fontSize(8)
+//         .fontSize(14)
+//         .font("Helvetica-Bold")
+//         .fillColor("#2c3e50")
+//         .text("FINANCIAL SUMMARY", 50, doc.y, {
+//           align: "center",
+//           width: 500,
+//         });
+//       doc.moveDown(1);
+
+//       doc.fontSize(10).font("Helvetica").fillColor("#4a5568");
+
+//       const summaryItems = [
+//         `Total Payments: ${reportData.allPaymentsCount.toLocaleString()}`,
+//         `Total Amount Collected: ZMW ${formatNumber(reportData.summary.totalAmount)}`,
+//         `Total Amount Due: ZMW ${formatNumber(reportData.summary.totalDue)}`,
+//         `Total Amount Paid: ZMW ${formatNumber(reportData.summary.totalPaid)}`,
+//         `Outstanding Balance: ZMW ${formatNumber(reportData.summary.totalBalance)}`,
+//         `Completion Rate: ${reportData.summary.completionPercentage}%`,
+//         `Generated: ${reportData.generatedAt}`,
+//       ];
+
+//       summaryItems.forEach((item) => {
+//         doc.text(item, { align: "center" });
+//         doc.moveDown(0.4);
+//       });
+
+//       doc.moveDown(1);
+
+//       // ============ STATUS BREAKDOWN ============
+//       addStatusBreakdown();
+//       doc.moveDown(1);
+
+//       // ============ CATEGORY BREAKDOWN ============
+//       doc
+//         .fontSize(14)
+//         .font("Helvetica-Bold")
+//         .fillColor("#2c3e50")
+//         .text("CATEGORY BREAKDOWN", 50, doc.y, {
+//           align: "center",
+//           width: 500,
+//         });
+//       doc.moveDown(1);
+
+//       let catY = addCategoryHeaders(doc.y);
+
+//       const categories = Object.entries(reportData.summary.categories).sort(
+//         (a, b) => b[1].totalAmount - a[1].totalAmount,
+//       );
+
+//       if (categories.length === 0) {
+//         doc
+//           .fontSize(10)
+//           .font("Helvetica")
+//           .fillColor("#718096")
+//           .text("No category data available for this period.", 50, catY, {
+//             align: "center",
+//             width: 500,
+//           });
+//         catY += 30;
+//       } else {
+//         categories.forEach(([category, data]) => {
+//           // Check if we need a new page
+//           if (catY > 720) {
+//             doc.addPage();
+//             doc
+//               .fontSize(14)
+//               .font("Helvetica-Bold")
+//               .fillColor("#2c3e50")
+//               .text("CATEGORY BREAKDOWN (Continued)", 50, doc.y, {
+//                 align: "center",
+//                 width: 500,
+//               });
+//             doc.moveDown(1);
+//             catY = addCategoryHeaders(doc.y);
+//           }
+
+//           doc.fontSize(9).font("Helvetica");
+
+//           // OPTIMIZED POSITIONS - PERFECT ALIGNMENT
+//           const displayCategory =
+//             category.length > 22 ? category.substring(0, 19) + "..." : category;
+
+//           // Left align category
+//           doc.text(displayCategory, 55, catY);
+
+//           // Right align all numbers
+//           doc.text(data.count.toLocaleString(), 180, catY, { align: "right" });
+//           doc.text(formatNumber(data.totalAmount), 240, catY, {
+//             align: "right",
+//           });
+//           doc.text(formatNumber(data.totalDue), 330, catY, { align: "right" });
+//           doc.text(formatNumber(data.totalBalance), 410, catY, {
+//             align: "right",
+//           });
+//           doc.text(`${data.percentage}%`, 520, catY, { align: "right" });
+
+//           catY += 22;
+//         });
+//       }
+
+//       doc.moveDown(2);
+
+//       // ============ DETAILED PAYMENTS ============
+//       doc
+//         .fontSize(14)
+//         .font("Helvetica-Bold")
+//         .fillColor("#2c3e50")
+//         .text("DETAILED PAYMENTS", 50, doc.y, {
+//           align: "center",
+//           width: 500,
+//         });
+//       doc.moveDown(0.5);
+
+//       const allPaymentsForPDF = reportData.allPayments || reportData.payments;
+
+//       doc
+//         .fontSize(9)
+//         .font("Helvetica")
+//         .fillColor("#718096")
 //         .text(
-//           `Report generated by Finance System on ${reportData.generatedAt}`,
-//           { align: "center" },
+//           `Showing ALL ${allPaymentsForPDF.length.toLocaleString()} payments for the selected period`,
+//           50,
+//           doc.y,
+//           { align: "center", width: 500 },
 //         );
+//       doc.moveDown(1);
+
+//       let payY = addPaymentHeaders(doc.y);
+
+//       if (allPaymentsForPDF.length === 0) {
+//         doc
+//           .fontSize(10)
+//           .font("Helvetica")
+//           .fillColor("#718096")
+//           .text("No payment records found for this period.", 50, payY, {
+//             align: "center",
+//             width: 500,
+//           });
+//         payY += 30;
+//       } else {
+//         allPaymentsForPDF.forEach((payment) => {
+//           // Check if we need a new page
+//           if (payY > 740) {
+//             doc.addPage();
+//             doc
+//               .fontSize(14)
+//               .font("Helvetica-Bold")
+//               .fillColor("#2c3e50")
+//               .text("DETAILED PAYMENTS (Continued)", 50, doc.y, {
+//                 align: "center",
+//                 width: 500,
+//               });
+//             doc.moveDown(0.5);
+//             payY = addPaymentHeaders(doc.y);
+//           }
+
+//           // FULL STUDENT NAME - NO ABBREVIATION
+//           const studentName = payment.student
+//             ? `${payment.student.firstName || ""} ${payment.student.surname || ""}`.trim()
+//             : "N/A";
+
+//           // Truncate only if absolutely necessary for the column width
+//           const displayName =
+//             studentName.length > 22
+//               ? studentName.substring(0, 19) + "..."
+//               : studentName;
+
+//           doc.fontSize(8).font("Helvetica");
+
+//           // OPTIMIZED POSITIONS - PERFECT ALIGNMENT, NO OVERLAP
+//           // Date column
+//           doc.text(
+//             payment.createdAt
+//               ? new Date(payment.createdAt).toLocaleDateString("en-GB")
+//               : "N/A",
+//             55,
+//             payY,
+//           );
+
+//           // Receipt column
+//           doc.text(
+//             payment.reference ? payment.reference.substring(0, 10) : "N/A",
+//             105,
+//             payY,
+//           );
+
+//           // Student name column
+//           doc.text(displayName, 155, payY);
+
+//           // Amount - right aligned
+//           doc.text(formatNumber(payment.amount), 245, payY, { align: "right" });
+
+//           // Due - right aligned
+//           doc.text(formatNumber(payment.totalDue || 0), 295, payY, {
+//             align: "right",
+//           });
+
+//           // Balance - right aligned
+//           doc.text(formatNumber(payment.balanceAfterPayment || 0), 345, payY, {
+//             align: "right",
+//           });
+
+//           // Method
+//           doc.text(payment.method || "N/A", 395, payY);
+
+//           // Status with color - optimized width
+//           let statusColor = "#718096";
+//           let statusText = payment.status || "N/A";
+
+//           if (
+//             payment.status === "Verified" ||
+//             payment.status === "Fully Paid"
+//           ) {
+//             statusColor = "#38a169";
+//             statusText =
+//               payment.status === "Fully Paid" ? "Fully Paid" : "Verified";
+//           } else if (payment.status === "Pending") {
+//             statusColor = "#ecc94b";
+//           } else if (payment.status === "Rejected") {
+//             statusColor = "#e53e3e";
+//           } else if (payment.status === "Partially Paid") {
+//             statusColor = "#4299e1";
+//             statusText = "Partially Pd";
+//           }
+
+//           doc.fillColor(statusColor).text(statusText, 445, payY);
+//           doc.fillColor("#000000");
+
+//           payY += 20;
+//         });
+//       }
+
+//       // ============ END OF REPORT ============
+//       if (allPaymentsForPDF.length > 0) {
+//         // Check available space on current page
+//         if (payY < doc.page.height - 80) {
+//           doc.y = payY + 15;
+//         } else {
+//           doc.addPage();
+//           addCopperstoneHeader();
+//           doc.y = doc.y + 50;
+//         }
+
+//         // End of report marker
+//         doc
+//           .fontSize(10)
+//           .font("Helvetica-Oblique")
+//           .fillColor("#718096")
+//           .text("✦ ✦ ✦ END OF REPORT ✦ ✦ ✦", 50, doc.y, {
+//             align: "center",
+//             width: 500,
+//           });
+
+//         doc
+//           .fontSize(8)
+//           .font("Helvetica")
+//           .fillColor("#4a5568")
+//           .text(
+//             "This is a computer-generated document. No signature is required.",
+//             50,
+//             doc.y + 20,
+//             { align: "center", width: 500 },
+//           );
+//       }
+
+//       // ============ FINALIZE PAGES ============
+//       const totalPages = doc.bufferedPageRange().count;
+
+//       // Add footers to all pages
+//       for (let i = 0; i < totalPages; i++) {
+//         doc.switchToPage(i);
+//         addFooter(i + 1, totalPages);
+//       }
 
 //       doc.end();
 
 //       stream.on("finish", () => resolve(pdfPath));
 //       stream.on("error", reject);
 //     } catch (error) {
+//       console.error("PDF Generation Error:", error);
 //       reject(error);
 //     }
 //   });
 // }
 
-// // ===============================
-// // SIMPLE REPORT (Alternative - Quick Stats)
-// // ===============================
-// exports.quickStatsReport = async (req, res) => {
-//   try {
-//     const { startDate, endDate } = req.query;
+// ================================
+// PDF GENERATOR - PROFESSIONAL LANDSCAPE LAYOUT WITH CATEGORY COLUMN
+// ================================
 
-//     const start = startDate
-//       ? new Date(startDate)
-//       : new Date(new Date().getFullYear(), 0, 1); // Start of year
-//     const end = endDate ? new Date(endDate) : new Date();
-//     end.setHours(23, 59, 59, 999);
+async function generatePaymentReportPDF(reportData) {
+  const PDFDocument = require("pdfkit");
+  const tempDir = path.join(__dirname, "../temp");
 
-//     // Aggregate statistics
-//     const stats = await Payment.aggregate([
-//       {
-//         $match: {
-//           createdAt: { $gte: start, $lte: end },
-//         },
-//       },
-//       {
-//         $group: {
-//           _id: null,
-//           totalPayments: { $sum: 1 },
-//           totalAmount: { $sum: "$amount" },
-//           averageAmount: { $avg: "$amount" },
-//           maxAmount: { $max: "$amount" },
-//           minAmount: { $min: "$amount" },
-//         },
-//       },
-//     ]);
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
 
-//     // Category breakdown
-//     const categoryStats = await Payment.aggregate([
-//       {
-//         $match: {
-//           createdAt: { $gte: start, $lte: end },
-//         },
-//       },
-//       {
-//         $group: {
-//           _id: "$category",
-//           count: { $sum: 1 },
-//           total: { $sum: "$amount" },
-//           average: { $avg: "$amount" },
-//         },
-//       },
-//       { $sort: { total: -1 } },
-//     ]);
+  const pdfPath = path.join(tempDir, `payment_report_${Date.now()}.pdf`);
 
-//     // Status breakdown
-//     const statusStats = await Payment.aggregate([
-//       {
-//         $match: {
-//           createdAt: { $gte: start, $lte: end },
-//         },
-//       },
-//       {
-//         $group: {
-//           _id: "$status",
-//           count: { $sum: 1 },
-//           total: { $sum: "$amount" },
-//         },
-//       },
-//     ]);
+  return new Promise(async (resolve, reject) => {
+    try {
+      const doc = new PDFDocument({
+        margin: 50,
+        size: "A4",
+        layout: "landscape",
+        bufferPages: true,
+      });
 
-//     // Recent payments
-//     const recentPayments = await Payment.find({
-//       createdAt: { $gte: start, $lte: end },
-//     })
-//       .populate("student", "firstName surname")
-//       .sort({ createdAt: -1 })
-//       .limit(10)
-//       .lean();
+      const stream = fs.createWriteStream(pdfPath);
+      doc.pipe(stream);
 
-//     const result = {
-//       dateRange: {
-//         start: start.toISOString().split("T")[0],
-//         end: end.toISOString().split("T")[0],
-//         formattedStart: start.toLocaleDateString(),
-//         formattedEnd: end.toLocaleDateString(),
-//       },
-//       summary: stats[0] || {
-//         totalPayments: 0,
-//         totalAmount: 0,
-//         averageAmount: 0,
-//         maxAmount: 0,
-//         minAmount: 0,
-//       },
-//       categoryStats,
-//       statusStats,
-//       recentPayments,
-//       generatedAt: new Date().toLocaleString(),
-//     };
+      // Constants - LANDSCAPE OPTIMIZED
+      const tableStartX = 50;
+      const tableWidth = 730; // Slightly increased to accommodate category column
+      const footerSpace = 80;
+      const bottomLimit = doc.page.height - footerSpace;
+      const rowHeight = 18;
+      const pageWidth = doc.page.width;
 
-//     res.json({
-//       success: true,
-//       report: result,
-//     });
-//   } catch (err) {
-//     console.error("Quick stats error:", err);
-//     res.status(500).json({
-//       success: false,
-//       error: "Failed to generate quick stats",
-//     });
-//   }
-// };
+      // Colors
+      const colors = {
+        primary: "#003366",
+        secondary: "#2c3e50",
+        textDark: "#2d3748",
+        textMedium: "#4a5568",
+        textLight: "#718096",
+        headerBg: "#f7fafc",
+        border: "#cbd5e0",
+        success: "#38a169",
+        warning: "#ecc94b",
+        danger: "#e53e3e",
+        info: "#4299e1",
+        neutral: "#718096",
+        highlight: "#fff5f5",
+        highlightBorder: "#fc8181",
+      };
 
-///////////////////////////////////////////
+      // ============ COLUMN DEFINITIONS - WITH CATEGORY ADDED ============
+      const paymentColumns = [
+        { label: "Date", width: 65, align: "left" },
+        { label: "Receipt", width: 75, align: "left" },
+        { label: "Student Name", width: 140, align: "left" },
+        { label: "Category", width: 100, align: "left" }, // NEW CATEGORY COLUMN
+        { label: "Amount", width: 75, align: "right" },
+        { label: "Due", width: 75, align: "right" },
+        { label: "Balance", width: 75, align: "right" },
+      ];
 
-// Generate payment report - UPDATED WITH BALANCE
+      const categoryColumns = [
+        { label: "Category", width: 140, align: "left" },
+        { label: "Count", width: 70, align: "right" },
+        { label: "Collected", width: 100, align: "right" },
+        { label: "Due", width: 100, align: "right" },
+        { label: "Balance", width: 100, align: "right" },
+        { label: "%", width: 70, align: "right" },
+      ];
+
+      // Download logo if available
+      let logoBuffer = null;
+      try {
+        if (process.env.LOGO) {
+          logoBuffer = await downloadImage(process.env.LOGO);
+        }
+      } catch (e) {
+        console.warn("⚠️ Could not load logo:", e.message);
+      }
+
+      // ============ HEADER - LANDSCAPE OPTIMIZED ============
+      function addCopperstoneHeader() {
+        const startY = 30;
+        doc.y = startY;
+
+        if (logoBuffer) {
+          try {
+            doc.image(logoBuffer, 50, startY, { width: 60, height: 60 });
+          } catch (e) {}
+        }
+
+        doc
+          .fontSize(18)
+          .font("Helvetica-Bold")
+          .fillColor(colors.primary)
+          .text("COPPERSTONE UNIVERSITY", 120, startY + 5, {
+            align: "center",
+            width: pageWidth - 170,
+          });
+
+        doc
+          .fontSize(8)
+          .font("Helvetica")
+          .fillColor(colors.textMedium)
+          .text(
+            "Plot 38002, Baluba Campus, P.O. Box 22041,",
+            120,
+            startY + 30,
+            { align: "center", width: pageWidth - 170 },
+          )
+          .text(
+            "Along Ndola – Kitwe Dual carriageway, KITWE, ZAMBIA",
+            120,
+            startY + 45,
+            { align: "center", width: pageWidth - 170 },
+          )
+          .text(
+            "Cell: +260 965571607, +260 0967499292, +260 965 653 101",
+            120,
+            startY + 60,
+            { align: "center", width: pageWidth - 170 },
+          )
+          .text(
+            "www.copperstoneuniversity.edu.zm | customercareucopperstone@gmail.com",
+            120,
+            startY + 75,
+            { align: "center", width: pageWidth - 170 },
+          );
+
+        doc
+          .fontSize(16)
+          .font("Helvetica-Bold")
+          .fillColor(colors.secondary)
+          .text("FINANCIAL PAYMENTS REPORT", 50, startY + 110, {
+            align: "center",
+            width: pageWidth - 100,
+          });
+
+        doc
+          .fontSize(11)
+          .font("Helvetica")
+          .fillColor(colors.textMedium)
+          .text(
+            `Period: ${reportData.dateRange.formattedStart} - ${reportData.dateRange.formattedEnd}`,
+            50,
+            startY + 140,
+            { align: "center", width: pageWidth - 100 },
+          );
+
+        doc.y = startY + 170;
+      }
+
+      // ============ FOOTER - DYNAMIC FOR ANY PAGE SIZE ============
+      function addFooter(pageNum, totalPages) {
+        const footerY = doc.page.height - 45;
+        const pageWidth = doc.page.width;
+
+        doc
+          .moveTo(50, footerY - 15)
+          .lineTo(pageWidth - 50, footerY - 15)
+          .lineWidth(0.5)
+          .strokeColor(colors.border)
+          .stroke();
+
+        doc
+          .fontSize(9)
+          .font("Helvetica")
+          .fillColor(colors.textLight)
+          .text(`Page ${pageNum} of ${totalPages}`, 50, footerY, {
+            align: "left",
+            width: 200,
+          });
+
+        doc
+          .fontSize(9)
+          .font("Helvetica-Bold")
+          .fillColor(colors.danger)
+          .text("CONFIDENTIAL REPORT", 0, footerY, {
+            align: "center",
+          });
+
+        doc
+          .fontSize(9)
+          .font("Helvetica")
+          .fillColor(colors.textMedium)
+          .text("Finance Department", pageWidth - 200, footerY, {
+            align: "right",
+            width: 150,
+          });
+      }
+
+      // ============ PAYMENT TABLE HEADERS - WITH CATEGORY ============
+      function addPaymentHeaders(y) {
+        let x = tableStartX;
+
+        doc
+          .rect(tableStartX, y - 4, tableWidth, 20)
+          .fillColor(colors.headerBg)
+          .fill();
+
+        doc.fillColor(colors.textDark).fontSize(8).font("Helvetica-Bold");
+
+        paymentColumns.forEach((col) => {
+          doc.text(col.label, x, y, {
+            width: col.width,
+            align: col.align || "left",
+          });
+          x += col.width;
+        });
+
+        doc.fillColor("#000000").font("Helvetica");
+        return y + 22;
+      }
+
+      // ============ CATEGORY TABLE HEADERS ============
+      function addCategoryHeaders(y) {
+        let x = tableStartX;
+
+        doc
+          .rect(tableStartX, y - 5, tableWidth, 22)
+          .fillColor(colors.headerBg)
+          .fill();
+
+        doc.fillColor(colors.textDark).fontSize(9).font("Helvetica-Bold");
+
+        categoryColumns.forEach((col) => {
+          doc.text(col.label, x, y, {
+            width: col.width,
+            align: col.align || "left",
+          });
+          x += col.width;
+        });
+
+        doc.fillColor("#000000").font("Helvetica");
+        return y + 25;
+      }
+
+      // ============ STATUS BREAKDOWN ============
+      function addStatusBreakdown() {
+        doc
+          .fontSize(14)
+          .font("Helvetica-Bold")
+          .fillColor(colors.secondary)
+          .text("STATUS BREAKDOWN", 50, doc.y, {
+            align: "center",
+            width: pageWidth - 100,
+          });
+        doc.moveDown(1);
+
+        const totalPayments = reportData.summary.totalPayments;
+        const statusEntries = Object.entries(reportData.summary.statusCount);
+        const startY = doc.y;
+
+        statusEntries.forEach(([status, count], index) => {
+          const percentage =
+            totalPayments > 0 ? ((count / totalPayments) * 100).toFixed(1) : 0;
+          const yPos = startY + index * 35;
+
+          doc
+            .fontSize(10)
+            .font("Helvetica-Bold")
+            .fillColor(colors.textDark)
+            .text(`${status}:`, 70, yPos);
+
+          doc
+            .fontSize(10)
+            .font("Helvetica")
+            .fillColor(colors.textMedium)
+            .text(`${count.toLocaleString()} (${percentage}%)`, 170, yPos);
+
+          const barWidth = 350;
+          const barX = 250;
+          const barY = yPos + 4;
+
+          doc.rect(barX, barY, barWidth, 8).fillColor("#edf2f7").fill();
+
+          let barColor = colors.neutral;
+          if (status === "Verified" || status === "Fully Paid")
+            barColor = colors.success;
+          else if (status === "Pending") barColor = colors.warning;
+          else if (status === "Rejected") barColor = colors.danger;
+          else if (status === "Partially Paid") barColor = colors.info;
+
+          doc
+            .rect(barX, barY, barWidth * (percentage / 100), 8)
+            .fillColor(barColor)
+            .fill();
+        });
+
+        doc.y = startY + statusEntries.length * 35 + 20;
+      }
+
+      // ============ PAGE INIT ============
+      doc.on("pageAdded", () => {
+        addCopperstoneHeader();
+      });
+
+      // ============ FIRST PAGE ============
+      addCopperstoneHeader();
+      doc.moveDown(1);
+
+      // ============ FINANCIAL SUMMARY ============
+      doc
+        .fontSize(14)
+        .font("Helvetica-Bold")
+        .fillColor(colors.secondary)
+        .text("FINANCIAL SUMMARY", 50, doc.y, {
+          align: "center",
+          width: pageWidth - 100,
+        });
+      doc.moveDown(1);
+
+      doc.fontSize(10).font("Helvetica").fillColor(colors.textMedium);
+
+      const summaryItems = [
+        `Total Payments: ${reportData.allPaymentsCount.toLocaleString()}`,
+        `Total Amount Collected: ZMW ${formatNumber(reportData.summary.totalAmount)}`,
+        `Total Amount Due: ZMW ${formatNumber(reportData.summary.totalDue)}`,
+        `Total Amount Paid: ZMW ${formatNumber(reportData.summary.totalPaid)}`,
+        {
+          text: `Outstanding Balance: ZMW ${formatNumber(reportData.summary.totalBalance)}`,
+          color:
+            reportData.summary.totalBalance > 0
+              ? colors.danger
+              : colors.textMedium,
+          highlight: reportData.summary.totalBalance > 0,
+        },
+        `Completion Rate: ${reportData.summary.completionPercentage}%`,
+        `Generated: ${reportData.generatedAt}`,
+      ];
+
+      summaryItems.forEach((item) => {
+        if (typeof item === "string") {
+          doc.text(item, { align: "center" });
+        } else {
+          doc.fillColor(item.color || colors.textMedium);
+          doc.text(item.text, { align: "center" });
+          doc.fillColor(colors.textMedium);
+        }
+        doc.moveDown(0.4);
+      });
+
+      doc.moveDown(1);
+
+      // ============ STATUS BREAKDOWN ============
+      if (doc.y + 150 > bottomLimit) {
+        doc.addPage();
+      }
+      addStatusBreakdown();
+      doc.moveDown(1);
+
+      // ============ CATEGORY BREAKDOWN ============
+      if (doc.y + 100 > bottomLimit) {
+        doc.addPage();
+      }
+
+      doc
+        .fontSize(14)
+        .font("Helvetica-Bold")
+        .fillColor(colors.secondary)
+        .text("CATEGORY BREAKDOWN", 50, doc.y, {
+          align: "center",
+          width: pageWidth - 100,
+        });
+      doc.moveDown(1);
+
+      let catY = addCategoryHeaders(doc.y);
+
+      const categories = Object.entries(reportData.summary.categories).sort(
+        (a, b) => b[1].totalAmount - a[1].totalAmount,
+      );
+
+      if (categories.length === 0) {
+        doc
+          .fontSize(10)
+          .font("Helvetica")
+          .fillColor(colors.textLight)
+          .text("No category data available for this period.", 50, catY, {
+            align: "center",
+            width: pageWidth - 100,
+          });
+        doc.y = catY + 30;
+      } else {
+        categories.forEach(([category, data]) => {
+          if (catY + rowHeight > bottomLimit) {
+            doc.addPage();
+            doc
+              .fontSize(14)
+              .font("Helvetica-Bold")
+              .fillColor(colors.secondary)
+              .text("CATEGORY BREAKDOWN (Continued)", 50, doc.y, {
+                align: "center",
+                width: pageWidth - 100,
+              });
+            doc.moveDown(1);
+            catY = addCategoryHeaders(doc.y);
+          }
+
+          let x = tableStartX;
+          doc.fontSize(9).font("Helvetica");
+
+          const hasBalance = data.totalBalance > 0;
+
+          if (hasBalance) {
+            doc
+              .rect(tableStartX, catY - 2, tableWidth, rowHeight - 1)
+              .fillColor(colors.highlight)
+              .fill();
+
+            doc
+              .rect(tableStartX - 2, catY - 2, 3, rowHeight - 1)
+              .fillColor(colors.danger)
+              .fill();
+          }
+
+          doc.fillColor(hasBalance ? colors.danger : "#000000");
+
+          const displayCategory =
+            category.length > 20 ? category.substring(0, 17) + "..." : category;
+          doc.text(displayCategory, x, catY, {
+            width: categoryColumns[0].width,
+            align: categoryColumns[0].align,
+          });
+          x += categoryColumns[0].width;
+
+          doc.text(data.count.toLocaleString(), x, catY, {
+            width: categoryColumns[1].width,
+            align: categoryColumns[1].align,
+          });
+          x += categoryColumns[1].width;
+
+          doc.text(formatNumber(data.totalAmount), x, catY, {
+            width: categoryColumns[2].width,
+            align: categoryColumns[2].align,
+          });
+          x += categoryColumns[2].width;
+
+          doc.text(formatNumber(data.totalDue), x, catY, {
+            width: categoryColumns[3].width,
+            align: categoryColumns[3].align,
+          });
+          x += categoryColumns[3].width;
+
+          if (data.totalBalance > 0) {
+            doc.fillColor(colors.danger).font("Helvetica-Bold");
+          } else {
+            doc.fillColor("#000000").font("Helvetica");
+          }
+
+          doc.text(formatNumber(data.totalBalance), x, catY, {
+            width: categoryColumns[4].width,
+            align: categoryColumns[4].align,
+          });
+          x += categoryColumns[4].width;
+
+          doc.fillColor("#000000").font("Helvetica");
+          doc.text(`${data.percentage}%`, x, catY, {
+            width: categoryColumns[5].width,
+            align: categoryColumns[5].align,
+          });
+
+          catY += rowHeight;
+          doc.y = catY;
+          doc.fillColor("#000000");
+        });
+      }
+
+      doc.moveDown(1);
+
+      // ============ DETAILED PAYMENTS - WITH CATEGORY COLUMN ============
+      const allPaymentsForPDF = reportData.allPayments || reportData.payments;
+
+      if (allPaymentsForPDF.length > 0) {
+        if (doc.y + 80 > bottomLimit && allPaymentsForPDF.length > 0) {
+          doc.addPage();
+        }
+
+        doc
+          .fontSize(14)
+          .font("Helvetica-Bold")
+          .fillColor(colors.secondary)
+          .text("DETAILED PAYMENTS", 50, doc.y, {
+            align: "center",
+            width: pageWidth - 100,
+          });
+        doc.moveDown(0.5);
+
+        doc
+          .fontSize(9)
+          .font("Helvetica")
+          .fillColor(colors.textLight)
+          .text(
+            `Showing ${allPaymentsForPDF.length.toLocaleString()} payment(s) for the selected period`,
+            50,
+            doc.y,
+            { align: "center", width: pageWidth - 100 },
+          );
+        doc.moveDown(1);
+
+        let payY = addPaymentHeaders(doc.y);
+
+        allPaymentsForPDF.forEach((payment) => {
+          if (payY + rowHeight > bottomLimit) {
+            doc.addPage();
+            payY = addPaymentHeaders(doc.y + 20);
+          }
+
+          let x = tableStartX;
+
+          const hasBalance = payment.balanceAfterPayment > 0;
+
+          // HIGHLIGHT ENTIRE ROW IN RED if balance > 0
+          if (hasBalance) {
+            doc
+              .rect(tableStartX, payY - 2, tableWidth, rowHeight - 1)
+              .fillColor(colors.highlight)
+              .fill();
+
+            doc
+              .rect(tableStartX - 2, payY - 2, 3, rowHeight - 1)
+              .fillColor(colors.danger)
+              .fill();
+
+            doc
+              .fontSize(8)
+              .fillColor(colors.danger)
+              .text("⚠", tableStartX - 12, payY);
+          }
+
+          doc.fontSize(8).font("Helvetica");
+
+          // Date
+          doc.fillColor("#000000");
+          doc.text(
+            payment.createdAt
+              ? new Date(payment.createdAt).toLocaleDateString("en-GB")
+              : "N/A",
+            x,
+            payY,
+            {
+              width: paymentColumns[0].width,
+              align: paymentColumns[0].align,
+            },
+          );
+          x += paymentColumns[0].width;
+
+          // Receipt
+          doc.text(
+            payment.reference ? payment.reference.substring(0, 10) : "N/A",
+            x,
+            payY,
+            {
+              width: paymentColumns[1].width,
+              align: paymentColumns[1].align,
+            },
+          );
+          x += paymentColumns[1].width;
+
+          // Student Name
+          const studentName = payment.student
+            ? `${payment.student.firstName || ""} ${payment.student.surname || ""}`.trim()
+            : "N/A";
+          const displayName =
+            studentName.length > 20
+              ? studentName.substring(0, 17) + "..."
+              : studentName;
+
+          doc.text(displayName, x, payY, {
+            width: paymentColumns[2].width,
+            align: paymentColumns[2].align,
+          });
+          x += paymentColumns[2].width;
+
+          // ============ CATEGORY COLUMN - NEW ============
+          const category = payment.category || "Uncategorized";
+          const displayCategory =
+            category.length > 15 ? category.substring(0, 12) + "..." : category;
+
+          doc.text(displayCategory, x, payY, {
+            width: paymentColumns[3].width,
+            align: paymentColumns[3].align,
+          });
+          x += paymentColumns[3].width;
+
+          // Amount
+          doc.text(formatNumber(payment.amount), x, payY, {
+            width: paymentColumns[4].width,
+            align: paymentColumns[4].align,
+          });
+          x += paymentColumns[4].width;
+
+          // Due
+          doc.text(formatNumber(payment.totalDue || 0), x, payY, {
+            width: paymentColumns[5].width,
+            align: paymentColumns[5].align,
+          });
+          x += paymentColumns[5].width;
+
+          // BALANCE - RED and BOLD if > 0
+          if (hasBalance) {
+            doc.fillColor(colors.danger).font("Helvetica-Bold");
+          } else {
+            doc.fillColor("#000000").font("Helvetica");
+          }
+
+          doc.text(formatNumber(payment.balanceAfterPayment || 0), x, payY, {
+            width: paymentColumns[6].width,
+            align: paymentColumns[6].align,
+          });
+
+          payY += rowHeight;
+          doc.y = payY;
+          doc.fillColor("#000000").font("Helvetica");
+        });
+
+        // ============ SUMMARY OF OUTSTANDING BALANCES ============
+        const outstandingPayments = allPaymentsForPDF.filter(
+          (p) => p.balanceAfterPayment > 0,
+        );
+
+        if (outstandingPayments.length > 0 && doc.y + 80 <= bottomLimit) {
+          doc.moveDown(1);
+
+          doc
+            .moveTo(50, doc.y)
+            .lineTo(pageWidth - 50, doc.y)
+            .lineWidth(1)
+            .strokeColor(colors.danger)
+            .stroke();
+
+          doc.moveDown(0.5);
+
+          const totalOutstanding = outstandingPayments.reduce(
+            (sum, p) => sum + (p.balanceAfterPayment || 0),
+            0,
+          );
+
+          doc
+            .fontSize(11)
+            .font("Helvetica-Bold")
+            .fillColor(colors.danger)
+            .text(
+              `⚠ OUTSTANDING BALANCES: ${outstandingPayments.length} payment(s) totaling ZMW ${formatNumber(totalOutstanding)}`,
+              50,
+              doc.y,
+              {
+                align: "center",
+                width: pageWidth - 100,
+              },
+            );
+
+          doc.moveDown(1);
+
+          doc.fontSize(9).font("Helvetica").fillColor(colors.textDark);
+
+          outstandingPayments.slice(0, 5).forEach((payment, idx) => {
+            const studentName = payment.student
+              ? `${payment.student.firstName || ""} ${payment.student.surname || ""}`.trim()
+              : "Unknown";
+            const category = payment.category || "Uncategorized";
+
+            doc.text(
+              `${idx + 1}. ${studentName} - ${category} - ZMW ${formatNumber(payment.balanceAfterPayment)} (Receipt: ${payment.reference || "N/A"})`,
+              70,
+              doc.y,
+              { width: pageWidth - 140 },
+            );
+            doc.moveDown(0.5);
+          });
+
+          if (outstandingPayments.length > 5) {
+            doc
+              .fontSize(9)
+              .font("Helvetica-Oblique")
+              .fillColor(colors.textLight)
+              .text(
+                `... and ${outstandingPayments.length - 5} more`,
+                70,
+                doc.y,
+              );
+          }
+        }
+
+        // ============ END OF REPORT ============
+        if (doc.y + 40 <= bottomLimit) {
+          doc.moveDown(1);
+
+          doc
+            .fontSize(10)
+            .font("Helvetica-Oblique")
+            .fillColor(colors.textLight)
+            .text("✦ ✦ ✦ END OF REPORT ✦ ✦ ✦", 50, doc.y, {
+              align: "center",
+              width: pageWidth - 100,
+            });
+
+          doc
+            .fontSize(8)
+            .font("Helvetica")
+            .fillColor(colors.textMedium)
+            .text(
+              "This is a computer-generated document. No signature is required.",
+              50,
+              doc.y + 20,
+              { align: "center", width: pageWidth - 100 },
+            );
+        }
+      }
+
+      // ============ FINALIZE PAGES ============
+      const totalPages = doc.bufferedPageRange().count;
+
+      for (let i = 0; i < totalPages; i++) {
+        doc.switchToPage(i);
+        addFooter(i + 1, totalPages);
+      }
+
+      doc.end();
+
+      stream.on("finish", () => resolve(pdfPath));
+      stream.on("error", reject);
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      reject(error);
+    }
+  });
+}
+
+// ================================
+// MAIN REPORT FUNCTION - FIXED FOR PDF
+// ================================
+
 exports.generatePaymentReport = async (req, res) => {
   try {
-    const { startDate, endDate, outputFormat = "html" } = req.query;
+    const {
+      startDate,
+      endDate,
+      outputFormat = "html",
+      page = 1,
+      limit = 20,
+      search = "",
+    } = req.query;
 
-    // Default to current month if no dates provided
+    // Default dates
     const defaultStartDate = new Date();
-    defaultStartDate.setDate(1); // First day of current month
+    defaultStartDate.setDate(1);
+    defaultStartDate.setHours(0, 0, 0, 0);
 
     const defaultEndDate = new Date();
+    defaultEndDate.setHours(23, 59, 59, 999);
 
     const start = startDate ? new Date(startDate) : defaultStartDate;
     const end = endDate ? new Date(endDate) : defaultEndDate;
 
-    // Set end date to end of day
+    start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
 
-    // Build query for date range
-    const query = {
-      createdAt: {
-        $gte: start,
-        $lte: end,
-      },
+    // ============ BUILD QUERY WITH SEARCH ============
+    let query = {
+      createdAt: { $gte: start, $lte: end },
     };
 
-    // Fetch payments with population
-    const payments = await Payment.find(query)
+    // Add search functionality for HTML view
+    if (search && search.trim() !== "" && outputFormat === "html") {
+      const searchRegex = new RegExp(search.trim(), "i");
+      query = {
+        ...query,
+        $or: [
+          { reference: searchRegex },
+          { category: searchRegex },
+          { status: searchRegex },
+          { method: searchRegex },
+        ],
+      };
+    }
+
+    // ============ FETCH ALL PAYMENTS FOR SUMMARY (ALWAYS) ============
+    const allPayments = await Payment.find(query)
       .populate("student", "firstName surname email studentId")
       .populate("verifiedBy", "firstName surname")
       .sort({ createdAt: -1 })
       .lean();
 
-    // Calculate summary statistics INCLUDING BALANCE
-    const summary = payments.reduce(
+    // ============ FETCH PAGINATED PAYMENTS FOR HTML VIEW ============
+    let payments = allPayments;
+
+    if (outputFormat === "html") {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      payments = allPayments.slice(skip, skip + parseInt(limit));
+    }
+
+    // ============ CALCULATE SUMMARY USING ALL PAYMENTS ============
+    const summary = allPayments.reduce(
       (acc, payment) => {
         const category = payment.category || "Uncategorized";
 
@@ -2359,28 +2745,20 @@ exports.generatePaymentReport = async (req, res) => {
             totalAmount: 0,
             totalDue: 0,
             totalBalance: 0,
-            payments: [],
           };
         }
 
         acc.categories[category].count++;
-        acc.categories[category].totalAmount += payment.amount;
+        acc.categories[category].totalAmount += payment.amount || 0;
         acc.categories[category].totalDue += payment.totalDue || 0;
         acc.categories[category].totalBalance +=
           payment.balanceAfterPayment || 0;
-        acc.categories[category].payments.push(payment);
 
-        acc.totalAmount += payment.amount;
+        acc.totalAmount += payment.amount || 0;
         acc.totalPayments++;
-
-        // Balance calculations
         acc.totalDue += payment.totalDue || 0;
         acc.totalBalance += payment.balanceAfterPayment || 0;
 
-        // Calculate average balance
-        acc.totalPaid = acc.totalDue - acc.totalBalance;
-
-        // Count by status
         acc.statusCount[payment.status] =
           (acc.statusCount[payment.status] || 0) + 1;
 
@@ -2397,37 +2775,25 @@ exports.generatePaymentReport = async (req, res) => {
       },
     );
 
-    // Calculate category percentages with balance
-    for (const category in summary.categories) {
-      summary.categories[category].percentage = (
-        (summary.categories[category].totalAmount / summary.totalAmount) *
-        100
-      ).toFixed(1);
-
-      // Balance percentage
-      summary.categories[category].balancePercentage =
-        summary.totalDue > 0
-          ? (
-              (summary.categories[category].totalBalance /
-                summary.totalBalance) *
-              100
-            ).toFixed(1)
-          : 0;
-    }
-
-    // Calculate payment completion percentage
+    // Calculate derived values
+    summary.totalPaid = summary.totalDue - summary.totalBalance;
     summary.completionPercentage =
       summary.totalDue > 0
         ? Math.round((summary.totalPaid / summary.totalDue) * 100)
         : 0;
 
-    // Calculate average balance per payment
-    summary.averageBalance =
-      summary.totalPayments > 0
-        ? (summary.totalBalance / summary.totalPayments).toFixed(2)
-        : 0;
+    // Calculate category percentages
+    for (const category in summary.categories) {
+      summary.categories[category].percentage =
+        summary.totalAmount > 0
+          ? (
+              (summary.categories[category].totalAmount / summary.totalAmount) *
+              100
+            ).toFixed(1)
+          : "0.0";
+    }
 
-    // Format dates for display
+    // Format dates
     const formattedStart = start.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -2440,9 +2806,15 @@ exports.generatePaymentReport = async (req, res) => {
       year: "numeric",
     });
 
-    // Prepare data for response
+    // Pagination info
+    const totalPayments = allPayments.length;
+    const totalPages = Math.ceil(totalPayments / parseInt(limit));
+    const currentPage = parseInt(page);
+
     const reportData = {
-      payments,
+      payments, // Paginated for HTML, full for PDF
+      allPayments: allPayments, // Full dataset for PDF
+      allPaymentsCount: totalPayments,
       summary,
       dateRange: {
         start: start.toISOString().split("T")[0],
@@ -2451,11 +2823,19 @@ exports.generatePaymentReport = async (req, res) => {
         formattedEnd,
       },
       generatedAt: new Date().toLocaleString(),
+      pagination: {
+        currentPage,
+        totalPages,
+        totalPayments,
+        limit: parseInt(limit),
+        hasNextPage: currentPage < totalPages,
+        hasPrevPage: currentPage > 1,
+      },
+      searchQuery: outputFormat === "html" ? search : "",
     };
 
-    // If PDF output requested
+    // ============ PDF OUTPUT ============
     if (outputFormat === "pdf") {
-      // Generate PDF report WITH BALANCE
       const pdfPath = await generatePaymentReportPDF(reportData);
 
       // Generate signed URL for download
@@ -2464,7 +2844,6 @@ exports.generatePaymentReport = async (req, res) => {
       const signedUrl = await generateSignedUrl(gcsPath);
 
       // Clean up temp file
-      const fs = require("fs");
       if (fs.existsSync(pdfPath)) {
         fs.unlinkSync(pdfPath);
       }
@@ -2476,19 +2855,24 @@ exports.generatePaymentReport = async (req, res) => {
         reportData: {
           dateRange: `${formattedStart} to ${formattedEnd}`,
           totalPayments: summary.totalPayments,
-          totalAmount: summary.totalAmount.toFixed(2),
-          totalDue: summary.totalDue.toFixed(2),
-          totalBalance: summary.totalBalance.toFixed(2),
+          totalAmount: formatNumber(summary.totalAmount),
+          totalDue: formatNumber(summary.totalDue),
+          totalBalance: formatNumber(summary.totalBalance),
         },
       });
     }
 
-    // HTML output (render page)
+    // ============ HTML OUTPUT ============
     res.render("finance/reportResults", {
       title: "Payment Report",
       user: req.user,
       reportData,
       outputFormat: "html",
+      formatNumber,
+      startDate: reportData.dateRange.start,
+      endDate: reportData.dateRange.end,
+      currentLimit: parseInt(limit),
+      searchQuery: search || "",
     });
   } catch (err) {
     console.error("Generate report error:", err);
@@ -2502,376 +2886,5 @@ exports.generatePaymentReport = async (req, res) => {
 
     req.flash("error_msg", "Failed to generate report.");
     res.redirect("/finance/reports");
-  }
-};
-
-// Helper function to generate PDF report WITH BALANCE
-async function generatePaymentReportPDF(reportData) {
-  const PDFDocument = require("pdfkit");
-  const fs = require("fs");
-  const path = require("path");
-
-  // Create temp file path
-  const tempDir = path.join(__dirname, "../temp");
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-  }
-
-  const pdfPath = path.join(tempDir, `payment_report_${Date.now()}.pdf`);
-
-  return new Promise((resolve, reject) => {
-    try {
-      const doc = new PDFDocument({ margin: 50, size: "A4" });
-      const stream = fs.createWriteStream(pdfPath);
-      doc.pipe(stream);
-
-      // Add header
-      doc.fontSize(20).text("Payment Report", { align: "center" });
-      doc.moveDown(0.5);
-      doc
-        .fontSize(12)
-        .text(
-          `Date Range: ${reportData.dateRange.formattedStart} to ${reportData.dateRange.formattedEnd}`,
-          { align: "center" },
-        );
-      doc
-        .fontSize(10)
-        .text(`Generated: ${reportData.generatedAt}`, { align: "center" });
-      doc.moveDown();
-
-      // Summary section WITH BALANCE
-      doc.fontSize(14).text("FINANCIAL SUMMARY", { underline: true });
-      doc.moveDown(0.5);
-
-      // Summary in columns
-      const col1 = 50;
-      const col2 = 250;
-
-      doc.fontSize(11);
-      doc.text(
-        `Total Payments: ${reportData.summary.totalPayments}`,
-        col1,
-        doc.y,
-      );
-      doc.text(
-        `Total Amount Paid: ZMW ${reportData.summary.totalAmount.toFixed(2)}`,
-        col2,
-        doc.y,
-      );
-      doc.moveDown();
-
-      doc.text(
-        `Total Due: ZMW ${reportData.summary.totalDue.toFixed(2)}`,
-        col1,
-        doc.y,
-      );
-      doc.text(
-        `Total Balance: ZMW ${reportData.summary.totalBalance.toFixed(2)}`,
-        col2,
-        doc.y,
-      );
-      doc.moveDown();
-
-      doc.text(
-        `Total Paid: ZMW ${reportData.summary.totalPaid.toFixed(2)}`,
-        col1,
-        doc.y,
-      );
-      doc.text(
-        `Completion: ${reportData.summary.completionPercentage}%`,
-        col2,
-        doc.y,
-      );
-      doc.moveDown();
-
-      // Category breakdown WITH BALANCE
-      doc.fontSize(14).text("CATEGORY BREAKDOWN", { underline: true });
-      doc.moveDown(0.5);
-
-      // Category table headers
-      const catTableTop = doc.y;
-      const catColWidths = [100, 60, 70, 70, 70, 70];
-
-      doc.fontSize(9).font("Helvetica-Bold");
-      ["Category", "Count", "Amount", "Due", "Balance", "%"].forEach(
-        (header, i) => {
-          doc.text(
-            header,
-            50 + catColWidths.slice(0, i).reduce((a, b) => a + b, 0),
-            catTableTop,
-            {
-              width: catColWidths[i],
-              align: "left",
-            },
-          );
-        },
-      );
-
-      doc.moveDown(0.5);
-      doc.font("Helvetica");
-
-      // Category rows
-      let currentY = doc.y;
-      for (const [category, data] of Object.entries(
-        reportData.summary.categories,
-      )) {
-        if (currentY > 700) {
-          doc.addPage();
-          currentY = 50;
-        }
-
-        const row = [
-          category,
-          data.count.toString(),
-          `ZMW ${data.totalAmount.toFixed(2)}`,
-          `ZMW ${data.totalDue.toFixed(2)}`,
-          `ZMW ${data.totalBalance.toFixed(2)}`,
-          `${data.percentage}%`,
-        ];
-
-        row.forEach((cell, i) => {
-          doc
-            .fontSize(8)
-            .text(
-              cell,
-              50 + catColWidths.slice(0, i).reduce((a, b) => a + b, 0),
-              currentY,
-              {
-                width: catColWidths[i],
-                align: "left",
-              },
-            );
-        });
-
-        currentY += 20;
-      }
-
-      doc.moveDown();
-
-      // Detailed payments table WITH BALANCE
-      doc.fontSize(14).text("DETAILED PAYMENTS", { underline: true });
-      doc.moveDown(0.5);
-
-      // Table headers
-      const tableTop = doc.y;
-      const colWidths = [70, 80, 60, 60, 60, 60, 60];
-      const headers = [
-        "Date",
-        "Student",
-        "Amount",
-        "Due",
-        "Balance",
-        "Status",
-        "Method",
-      ];
-
-      doc.fontSize(9).font("Helvetica-Bold");
-      headers.forEach((header, i) => {
-        doc.text(
-          header,
-          50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0),
-          tableTop,
-          {
-            width: colWidths[i],
-            align: "left",
-          },
-        );
-      });
-
-      doc.moveDown(0.5);
-
-      // Table rows
-      doc.font("Helvetica");
-      currentY = doc.y;
-
-      reportData.payments.forEach((payment, index) => {
-        if (currentY > 700) {
-          doc.addPage();
-          currentY = 50;
-        }
-
-        const row = [
-          new Date(payment.createdAt).toLocaleDateString(),
-          payment.student
-            ? `${payment.student.firstName.substring(0, 8)} ${payment.student.surname.substring(0, 1)}.`
-            : "N/A",
-          `ZMW ${payment.amount.toFixed(2)}`,
-          `ZMW ${(payment.totalDue || 0).toFixed(2)}`,
-          `ZMW ${(payment.balanceAfterPayment || 0).toFixed(2)}`,
-          payment.status,
-          payment.method,
-        ];
-
-        row.forEach((cell, i) => {
-          doc
-            .fontSize(8)
-            .text(
-              cell,
-              50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0),
-              currentY,
-              {
-                width: colWidths[i],
-                align: "left",
-              },
-            );
-        });
-
-        currentY += 20;
-        doc.y = currentY;
-      });
-
-      // Balance summary at the end
-      doc.moveDown(2);
-      doc.fontSize(10).font("Helvetica-Bold");
-      doc.text("BALANCE SUMMARY", { align: "center" });
-      doc.moveDown(0.5);
-      doc.font("Helvetica");
-
-      const balanceY = doc.y;
-      doc.text(
-        `Total Collected: ZMW ${reportData.summary.totalAmount.toFixed(2)}`,
-        100,
-        balanceY,
-      );
-      doc.text(
-        `Outstanding Balance: ZMW ${reportData.summary.totalBalance.toFixed(2)}`,
-        300,
-        balanceY,
-      );
-      doc.moveDown();
-
-      // Footer
-      doc.moveDown(2);
-      doc
-        .fontSize(8)
-        .text(
-          `Report generated by Finance System on ${reportData.generatedAt}`,
-          { align: "center" },
-        );
-
-      doc.end();
-
-      stream.on("finish", () => resolve(pdfPath));
-      stream.on("error", reject);
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-
-// Quick stats report - UPDATED WITH BALANCE
-exports.quickStatsReport = async (req, res) => {
-  try {
-    const { startDate, endDate } = req.query;
-
-    const start = startDate
-      ? new Date(startDate)
-      : new Date(new Date().getFullYear(), 0, 1); // Start of year
-    const end = endDate ? new Date(endDate) : new Date();
-    end.setHours(23, 59, 59, 999);
-
-    // Aggregate statistics WITH BALANCE
-    const stats = await Payment.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: start, $lte: end },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          totalPayments: { $sum: 1 },
-          totalAmount: { $sum: "$amount" },
-          totalDue: { $sum: "$totalDue" },
-          totalBalance: { $sum: "$balanceAfterPayment" },
-          averageAmount: { $avg: "$amount" },
-          maxAmount: { $max: "$amount" },
-          minAmount: { $min: "$amount" },
-        },
-      },
-    ]);
-
-    // Calculate derived stats
-    const baseStats = stats[0] || {
-      totalPayments: 0,
-      totalAmount: 0,
-      totalDue: 0,
-      totalBalance: 0,
-      averageAmount: 0,
-      maxAmount: 0,
-      minAmount: 0,
-    };
-
-    // Calculate completion percentage
-    const totalPaid = baseStats.totalDue - baseStats.totalBalance;
-    const completionPercentage =
-      baseStats.totalDue > 0
-        ? Math.round((totalPaid / baseStats.totalDue) * 100)
-        : 0;
-
-    // Category breakdown WITH BALANCE
-    const categoryStats = await Payment.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: start, $lte: end },
-        },
-      },
-      {
-        $group: {
-          _id: "$category",
-          count: { $sum: 1 },
-          total: { $sum: "$amount" },
-          totalDue: { $sum: "$totalDue" },
-          totalBalance: { $sum: "$balanceAfterPayment" },
-          average: { $avg: "$amount" },
-        },
-      },
-      { $sort: { total: -1 } },
-    ]);
-
-    // Status breakdown
-    const statusStats = await Payment.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: start, $lte: end },
-        },
-      },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-          total: { $sum: "$amount" },
-          totalBalance: { $sum: "$balanceAfterPayment" },
-        },
-      },
-    ]);
-
-    const result = {
-      dateRange: {
-        start: start.toISOString().split("T")[0],
-        end: end.toISOString().split("T")[0],
-        formattedStart: start.toLocaleDateString(),
-        formattedEnd: end.toLocaleDateString(),
-      },
-      summary: {
-        ...baseStats,
-        totalPaid,
-        completionPercentage,
-      },
-      categoryStats,
-      statusStats,
-      generatedAt: new Date().toLocaleString(),
-    };
-
-    res.json({
-      success: true,
-      report: result,
-    });
-  } catch (err) {
-    console.error("Quick stats error:", err);
-    res.status(500).json({
-      success: false,
-      error: "Failed to generate quick stats",
-    });
   }
 };

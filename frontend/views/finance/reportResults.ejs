@@ -7,7 +7,7 @@
                     class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><i class="fas fa-file-alt me-2"></i> Payment Report</h4>
                     <div>
-                        <a href="/finance/reports/generate?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=pdf"
+                        <a href="/finance/reports/generate?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=pdf&search=<%= reportData.searchQuery || '' %>"
                             class="btn btn-light btn-sm" target="_blank">
                             <i class="fas fa-download me-1"></i> PDF
                         </a>
@@ -18,40 +18,28 @@
                 </div>
 
                 <div class="card-body">
-                    <!-- Report Header -->
-                    <div class="row mb-4">
-                        <div class="col-md-8">
-                            <h5 class="text-primary">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                <%= reportData.dateRange.formattedStart %> to <%= reportData.dateRange.formattedEnd %>
-                            </h5>
-                            <p class="text-muted mb-0">
-                                <i class="fas fa-clock me-1"></i>Generated: <%= reportData.generatedAt %>
-                            </p>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card border-success">
-                                <div class="card-body text-center py-3">
-                                    <h3 class="mb-1 balance-positive">ZMW <%= reportData.summary.totalAmount.toFixed(2)
-                                            %>
-                                    </h3>
-                                    <p class="mb-0 small text-muted">
-                                        Total Collected (<%= reportData.summary.totalPayments %> payments)
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Report Header - CENTERED -->
+                    <div class="text-center mb-4">
+                        <h4 class="text-primary mb-2">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            <%= reportData.dateRange.formattedStart %> to <%= reportData.dateRange.formattedEnd %>
+                        </h4>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-clock me-1"></i>Generated: <%= reportData.generatedAt %>
+                                | <i class="fas fa-database me-1"></i>Total Payments: <%=
+                                    reportData.allPaymentsCount.toLocaleString() %>
+                        </p>
                     </div>
 
-                    <!-- Balance Summary -->
+                    <!-- Balance Summary - With Thousand Separators -->
                     <div class="row mb-4">
                         <div class="col-md-3">
                             <div class="card stat-card border-primary">
                                 <div class="card-body text-center py-3">
-                                    <h2 class="mb-2 text-primary">
-                                        <%= reportData.summary.totalPayments %>
+                                    <h6 class="text-muted mb-2">TOTAL PAYMENTS</h6>
+                                    <h2 class="mb-0 text-primary">
+                                        <%= reportData.summary.totalPayments.toLocaleString() %>
                                     </h2>
-                                    <p class="mb-0 small text-muted">Total Payments</p>
                                 </div>
                             </div>
                         </div>
@@ -59,10 +47,10 @@
                         <div class="col-md-3">
                             <div class="card stat-card border-success">
                                 <div class="card-body text-center py-3">
-                                    <h2 class="mb-2 balance-positive">
-                                        ZMW <%= reportData.summary.totalPaid.toFixed(2) %>
+                                    <h6 class="text-muted mb-2">TOTAL COLLECTED</h6>
+                                    <h2 class="mb-0 balance-positive">
+                                        ZMW <%= formatNumber(reportData.summary.totalAmount) %>
                                     </h2>
-                                    <p class="mb-0 small text-muted">Total Paid</p>
                                 </div>
                             </div>
                         </div>
@@ -70,10 +58,10 @@
                         <div class="col-md-3">
                             <div class="card stat-card border-warning">
                                 <div class="card-body text-center py-3">
-                                    <h2 class="mb-2">
-                                        ZMW <%= reportData.summary.totalDue.toFixed(2) %>
+                                    <h6 class="text-muted mb-2">TOTAL DUE</h6>
+                                    <h2 class="mb-0">
+                                        ZMW <%= formatNumber(reportData.summary.totalDue) %>
                                     </h2>
-                                    <p class="mb-0 small text-muted">Total Due</p>
                                 </div>
                             </div>
                         </div>
@@ -81,10 +69,10 @@
                         <div class="col-md-3">
                             <div class="card stat-card border-danger">
                                 <div class="card-body text-center py-3">
-                                    <h2 class="mb-2 balance-negative">
-                                        ZMW <%= reportData.summary.totalBalance.toFixed(2) %>
+                                    <h6 class="text-muted mb-2">OUTSTANDING</h6>
+                                    <h2 class="mb-0 balance-negative">
+                                        ZMW <%= formatNumber(reportData.summary.totalBalance) %>
                                     </h2>
-                                    <p class="mb-0 small text-muted">Outstanding Balance</p>
                                 </div>
                             </div>
                         </div>
@@ -92,13 +80,14 @@
 
                     <!-- Completion Progress -->
                     <div class="card mb-4 border-info">
-                        <div class="card-header bg-light">
+                        <div class="card-header bg-light text-center">
                             <h5 class="mb-0 text-primary">
-                                <i class="fas fa-chart-line me-2"></i> Payment Completion
+                                <i class="fas fa-chart-line me-2"></i> PAYMENT COMPLETION
                             </h5>
                         </div>
-                        <div class="card-body">
-                            <div class="progress progress-bar-balance mb-2" style="height: 20px;">
+                        <div class="card-body text-center">
+                            <div class="progress progress-bar-balance mb-2 mx-auto"
+                                style="height: 20px; max-width: 600px;">
                                 <div class="progress-bar bg-success"
                                     style="width: <%= reportData.summary.completionPercentage %>%" role="progressbar">
                                     <span class="fw-bold">
@@ -106,30 +95,82 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="row text-center small">
-                                <div class="col">
-                                    <span class="balance-positive">ZMW <%= reportData.summary.totalPaid.toFixed(2) %>
+                            <div class="row justify-content-center small mt-3">
+                                <div class="col-auto">
+                                    <span class="balance-positive">ZMW <%= formatNumber(reportData.summary.totalPaid) %>
                                             </span>
-                                    <p class="mb-0 text-muted">Paid</p>
+                                    <span class="text-muted ms-1">Paid</span>
                                 </div>
-                                <div class="col">
-                                    <span class="balance-negative">ZMW <%= reportData.summary.totalBalance.toFixed(2) %>
-                                            </span>
-                                    <p class="mb-0 text-muted">Outstanding</p>
+                                <div class="col-auto">
+                                    <span class="balance-negative">ZMW <%= formatNumber(reportData.summary.totalBalance)
+                                            %></span>
+                                    <span class="text-muted ms-1">Outstanding</span>
                                 </div>
-                                <div class="col">
-                                    <span>ZMW <%= reportData.summary.totalDue.toFixed(2) %></span>
-                                    <p class="mb-0 text-muted">Total Due</p>
+                                <div class="col-auto">
+                                    <span>ZMW <%= formatNumber(reportData.summary.totalDue) %></span>
+                                    <span class="text-muted ms-1">Total Due</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Category Breakdown WITH BALANCE -->
-                    <div class="card mb-4 border-success">
-                        <div class="card-header bg-light">
+                    <!-- STATUS BREAKDOWN - ELEGANT BARS (NOT BUTTONS) -->
+                    <div class="card mb-4 border-warning">
+                        <div class="card-header bg-light text-center">
                             <h5 class="mb-0 text-primary">
-                                <i class="fas fa-chart-pie me-2"></i> Category Breakdown
+                                <i class="fas fa-chart-bar me-2"></i> STATUS BREAKDOWN
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% const totalPayments=reportData.summary.totalPayments; for (const [status, count] of
+                                Object.entries(reportData.summary.statusCount)) { const percentage=totalPayments> 0 ?
+                                ((count / totalPayments) * 100).toFixed(1) : 0;
+                                let barColor = '#6c757d';
+                                let barClass = '';
+                                if (status === 'Verified' || status === 'Fully Paid') {
+                                barColor = '#1cc88a';
+                                barClass = 'bg-success';
+                                } else if (status === 'Pending') {
+                                barColor = '#f6c23e';
+                                barClass = 'bg-warning';
+                                } else if (status === 'Rejected') {
+                                barColor = '#e74a3b';
+                                barClass = 'bg-danger';
+                                } else if (status === 'Partially Paid') {
+                                barColor = '#36b9cc';
+                                barClass = 'bg-info';
+                                }
+                                %>
+                                <div class="row align-items-center mb-3">
+                                    <div class="col-md-2 text-end">
+                                        <span class="fw-bold">
+                                            <%= status %>:
+                                        </span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span>
+                                            <%= count.toLocaleString() %> (<%= percentage %>%)
+                                        </span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <!-- ELEGANT BAR - SMALL, PROPORTIONAL -->
+                                        <div class="progress" style="height: 8px; border-radius: 4px;">
+                                            <div class="progress-bar <%= barClass %>"
+                                                style="width: <%= percentage %>%; background-color: <%= barColor %>; border-radius: 4px;"
+                                                role="progressbar">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Category Breakdown - With Thousand Separators -->
+                    <div class="card mb-4 border-success">
+                        <div class="card-header bg-light text-center">
+                            <h5 class="mb-0 text-primary">
+                                <i class="fas fa-chart-pie me-2"></i> CATEGORY BREAKDOWN
                             </h5>
                         </div>
                         <div class="card-body">
@@ -137,11 +178,11 @@
                                 <table class="table table-hover">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th>Category</th>
+                                            <th class="text-start">Category</th>
                                             <th class="text-end">Count</th>
-                                            <th class="text-end">Collected</th>
-                                            <th class="text-end">Due</th>
-                                            <th class="text-end">Balance</th>
+                                            <th class="text-end">Collected (ZMW)</th>
+                                            <th class="text-end">Due (ZMW)</th>
+                                            <th class="text-end">Balance (ZMW)</th>
                                             <th class="text-end">%</th>
                                         </tr>
                                     </thead>
@@ -151,23 +192,23 @@
                                             for (const [category, data] of categories) {
                                             %>
                                             <tr>
-                                                <td>
+                                                <td class="text-start">
                                                     <span class="badge category-badge">
                                                         <%= category %>
                                                     </span>
                                                 </td>
                                                 <td class="text-end">
-                                                    <%= data.count %>
+                                                    <%= data.count.toLocaleString() %>
                                                 </td>
                                                 <td class="text-end balance-positive">
-                                                    ZMW <%= data.totalAmount.toFixed(2) %>
+                                                    ZMW <%= formatNumber(data.totalAmount) %>
                                                 </td>
                                                 <td class="text-end">
-                                                    ZMW <%= data.totalDue.toFixed(2) %>
+                                                    ZMW <%= formatNumber(data.totalDue) %>
                                                 </td>
                                                 <td
                                                     class="text-end <%= data.totalBalance > 0 ? 'balance-negative' : 'balance-positive' %>">
-                                                    ZMW <%= data.totalBalance.toFixed(2) %>
+                                                    ZMW <%= formatNumber(data.totalBalance) %>
                                                 </td>
                                                 <td class="text-end">
                                                     <%= data.percentage %>%
@@ -177,18 +218,18 @@
                                     </tbody>
                                     <tfoot class="table-light fw-bold">
                                         <tr>
-                                            <td>TOTAL</td>
+                                            <td class="text-start">TOTAL</td>
                                             <td class="text-end">
-                                                <%= reportData.summary.totalPayments %>
+                                                <%= reportData.summary.totalPayments.toLocaleString() %>
                                             </td>
                                             <td class="text-end balance-positive">
-                                                ZMW <%= reportData.summary.totalAmount.toFixed(2) %>
+                                                ZMW <%= formatNumber(reportData.summary.totalAmount) %>
                                             </td>
                                             <td class="text-end">
-                                                ZMW <%= reportData.summary.totalDue.toFixed(2) %>
+                                                ZMW <%= formatNumber(reportData.summary.totalDue) %>
                                             </td>
                                             <td class="text-end balance-negative">
-                                                ZMW <%= reportData.summary.totalBalance.toFixed(2) %>
+                                                ZMW <%= formatNumber(reportData.summary.totalBalance) %>
                                             </td>
                                             <td class="text-end">100%</td>
                                         </tr>
@@ -198,162 +239,242 @@
                         </div>
                     </div>
 
-                    <!-- Status Breakdown -->
-                    <div class="card mb-4 border-warning">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0 text-primary">
-                                <i class="fas fa-chart-bar me-2"></i> Status Breakdown
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <% for (const [status, count] of Object.entries(reportData.summary.statusCount)) { const
-                                    percentage=Math.round((count / reportData.summary.totalPayments) * 100); let
-                                    bgClass='bg-secondary' ; if (status==='Verified' || status==='Fully Paid' )
-                                    bgClass='bg-success' ; else if (status==='Pending' ) bgClass='bg-warning' ; else if
-                                    (status==='Rejected' ) bgClass='bg-danger' ; else if (status==='Partially Paid' )
-                                    bgClass='bg-info' ; %>
-                                    <div class="col-md-3 mb-3">
-                                        <div class="card <%= bgClass %> text-white stat-card">
-                                            <div class="card-body text-center py-3">
-                                                <h3 class="mb-1">
-                                                    <%= count %>
-                                                </h3>
-                                                <p class="mb-1">
-                                                    <%= status %>
-                                                </p>
-                                                <p class="mb-0 small">
-                                                    <%= percentage %>% of total
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <% } %>
+                    <!-- SEARCH AND PAGINATION CONTROLS -->
+                    <div class="card border-primary mb-3">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0 text-primary">
+                                    <i class="fas fa-list me-2"></i> DETAILED PAYMENTS
+                                </h5>
+                                <small class="text-muted">
+                                    Showing <%= reportData.payments.length %> of <%=
+                                            reportData.allPaymentsCount.toLocaleString() %> total payments
+                                            <% if (reportData.searchQuery) { %>
+                                                | Search: "<%= reportData.searchQuery %>"
+                                                    <% } %>
+                                </small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <!-- SEARCH FORM -->
+                                <form method="GET" action="/finance/reports/generate" class="d-flex">
+                                    <input type="hidden" name="startDate" value="<%= reportData.dateRange.start %>">
+                                    <input type="hidden" name="endDate" value="<%= reportData.dateRange.end %>">
+                                    <input type="hidden" name="outputFormat" value="html">
+                                    <input type="hidden" name="limit" value="<%= reportData.pagination.limit %>">
+                                    <input type="text" name="search" class="form-control form-control-sm me-2"
+                                        placeholder="Search receipt, student, category..."
+                                        value="<%= reportData.searchQuery || '' %>" style="width: 220px;">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </form>
+
+                                <!-- RESET BUTTON - Returns to default view -->
+                                <a href="/finance/reports" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-undo me-1"></i> Reset
+                                </a>
+
+                                <!-- ITEMS PER PAGE DROPDOWN -->
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                        <%= reportData.pagination.limit %> per page
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item"
+                                                href="?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=html&page=1&limit=20&search=<%= reportData.searchQuery || '' %>">20
+                                                per page</a></li>
+                                        <li><a class="dropdown-item"
+                                                href="?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=html&page=1&limit=50&search=<%= reportData.searchQuery || '' %>">50
+                                                per page</a></li>
+                                        <li><a class="dropdown-item"
+                                                href="?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=html&page=1&limit=100&search=<%= reportData.searchQuery || '' %>">100
+                                                per page</a></li>
+                                    </ul>
+                                </div>
+
+                                <button class="btn btn-sm btn-outline-primary" onclick="togglePaymentDetails()">
+                                    <i class="fas fa-eye me-1"></i> Toggle
+                                </button>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Detailed Payments WITH BALANCE -->
-                    <div class="card border-primary">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 text-primary">
-                                <i class="fas fa-list me-2"></i> Detailed Payments (<%= reportData.payments.length %>)
-                            </h5>
-                            <button class="btn btn-sm btn-outline-primary" onclick="togglePaymentDetails()">
-                                <i class="fas fa-eye me-1"></i> Toggle Details
-                            </button>
-                        </div>
+                        <!-- Detailed Payments Table -->
                         <div class="card-body">
                             <div class="table-responsive" id="paymentDetails">
                                 <table class="table table-sm table-hover">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th>Date</th>
-                                            <th>Receipt #</th>
-                                            <th>Student</th>
-                                            <th>Category</th>
-                                            <th class="text-end">Amount</th>
-                                            <th class="text-end">Due</th>
-                                            <th class="text-end">Balance</th>
-                                            <th>Method</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
+                                            <th class="text-start">Date</th>
+                                            <th class="text-start">Receipt #</th>
+                                            <th class="text-start">Student</th>
+                                            <th class="text-start">Category</th>
+                                            <th class="text-end">Amount (ZMW)</th>
+                                            <th class="text-end">Due (ZMW)</th>
+                                            <th class="text-end">Balance (ZMW)</th>
+                                            <th class="text-start">Method</th>
+                                            <th class="text-start">Status</th>
+                                            <th class="text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <% reportData.payments.forEach(payment=> {
-                                            const date = new Date(payment.createdAt);
-                                            let statusClass = 'secondary';
-                                            if (payment.status === 'Verified' || payment.status === 'Fully Paid')
-                                            statusClass = 'success';
-                                            else if (payment.status === 'Pending') statusClass = 'warning';
-                                            else if (payment.status === 'Rejected') statusClass = 'danger';
-                                            else if (payment.status === 'Partially Paid') statusClass = 'info';
-                                            %>
+                                        <% if (reportData.payments.length===0) { %>
                                             <tr>
-                                                <td>
-                                                    <%= date.toLocaleDateString() %>
-                                                </td>
-                                                <td><code><%= payment.reference %></code></td>
-                                                <td>
-                                                    <%= payment.student.firstName %>
-                                                        <%= payment.student.surname %>
-                                                            <br>
-                                                            <small class="text-muted">
-                                                                <%= payment.student.studentId || 'N/A' %>
-                                                            </small>
-                                                </td>
-                                                <td>
-                                                    <span class="badge category-badge">
-                                                        <%= payment.category %>
-                                                    </span>
-                                                </td>
-                                                <td class="text-end fw-bold balance-positive">
-                                                    ZMW <%= payment.amount.toFixed(2) %>
-                                                </td>
-                                                <td class="text-end">
-                                                    ZMW <%= (payment.totalDue || 0).toFixed(2) %>
-                                                </td>
-                                                <td
-                                                    class="text-end fw-bold <%= (payment.balanceAfterPayment || 0) > 0 ? 'balance-negative' : 'balance-positive' %>">
-                                                    ZMW <%= (payment.balanceAfterPayment || 0).toFixed(2) %>
-                                                </td>
-                                                <td>
-                                                    <%= payment.method %>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-<%= statusClass %>">
-                                                        <%= payment.status %>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <a href="/finance/payments/<%= payment._id %>/receipt"
-                                                        class="btn btn-sm btn-outline-primary" title="View Receipt">
-                                                        <i class="fas fa-receipt"></i>
-                                                    </a>
+                                                <td colspan="10" class="text-center py-4">
+                                                    <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                                                    <p class="text-muted">No payments found</p>
                                                 </td>
                                             </tr>
-                                            <% }) %>
+                                            <% } else { reportData.payments.forEach(payment=> {
+                                                const date = new Date(payment.createdAt);
+                                                let statusClass = 'secondary';
+                                                if (payment.status === 'Verified' || payment.status === 'Fully Paid')
+                                                statusClass = 'success';
+                                                else if (payment.status === 'Pending') statusClass = 'warning';
+                                                else if (payment.status === 'Rejected') statusClass = 'danger';
+                                                else if (payment.status === 'Partially Paid') statusClass = 'info';
+                                                %>
+                                                <tr>
+                                                    <td class="text-start">
+                                                        <%= date.toLocaleDateString() %>
+                                                    </td>
+                                                    <td class="text-start"><code><%= payment.reference %></code></td>
+                                                    <td class="text-start">
+                                                        <%= payment.student.firstName %>
+                                                            <%= payment.student.surname %>
+                                                                <br>
+                                                                <small class="text-muted">
+                                                                    <%= payment.student.studentId || 'N/A' %>
+                                                                </small>
+                                                    </td>
+                                                    <td class="text-start">
+                                                        <span class="badge category-badge">
+                                                            <%= payment.category %>
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end fw-bold balance-positive">
+                                                        ZMW <%= formatNumber(payment.amount) %>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        ZMW <%= formatNumber(payment.totalDue || 0) %>
+                                                    </td>
+                                                    <td
+                                                        class="text-end fw-bold <%= (payment.balanceAfterPayment || 0) > 0 ? 'balance-negative' : 'balance-positive' %>">
+                                                        ZMW <%= formatNumber(payment.balanceAfterPayment || 0) %>
+                                                    </td>
+                                                    <td class="text-start">
+                                                        <%= payment.method %>
+                                                    </td>
+                                                    <td class="text-start">
+                                                        <span class="badge bg-<%= statusClass %>">
+                                                            <%= payment.status %>
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a href="/finance/payments/<%= payment._id %>/receipt"
+                                                            class="btn btn-sm btn-outline-primary" title="View Receipt">
+                                                            <i class="fas fa-receipt"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                <% }); } %>
                                     </tbody>
                                     <tfoot class="table-light fw-bold">
                                         <tr>
                                             <td colspan="4" class="text-end">TOTAL:</td>
                                             <td class="text-end balance-positive">
-                                                ZMW <%= reportData.summary.totalAmount.toFixed(2) %>
+                                                ZMW <%= formatNumber(reportData.summary.totalAmount) %>
                                             </td>
                                             <td class="text-end">
-                                                ZMW <%= reportData.summary.totalDue.toFixed(2) %>
+                                                ZMW <%= formatNumber(reportData.summary.totalDue) %>
                                             </td>
                                             <td class="text-end balance-negative">
-                                                ZMW <%= reportData.summary.totalBalance.toFixed(2) %>
+                                                ZMW <%= formatNumber(reportData.summary.totalBalance) %>
                                             </td>
                                             <td colspan="3"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
+
+                            <!-- PAGINATION CONTROLS -->
+                            <% if (reportData.pagination.totalPages> 1) { %>
+                                <nav aria-label="Page navigation" class="mt-4">
+                                    <ul class="pagination justify-content-center">
+                                        <!-- Previous -->
+                                        <% if (reportData.pagination.hasPrevPage) { %>
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                    href="?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=html&page=<%= reportData.pagination.currentPage - 1 %>&limit=<%= reportData.pagination.limit %>&search=<%= reportData.searchQuery || '' %>">
+                                                    <i class="fas fa-chevron-left"></i> Previous
+                                                </a>
+                                            </li>
+                                            <% } else { %>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link"><i class="fas fa-chevron-left"></i>
+                                                        Previous</span>
+                                                </li>
+                                                <% } %>
+
+                                                    <!-- Page Numbers -->
+                                                    <% let startPage=Math.max(1, reportData.pagination.currentPage - 2);
+                                                        let endPage=Math.min(reportData.pagination.totalPages, startPage
+                                                        + 4); if (endPage - startPage < 4) { startPage=Math.max(1,
+                                                        endPage - 4); } for (let i=startPage; i <=endPage; i++) { %>
+                                                        <li
+                                                            class="page-item <%= i === reportData.pagination.currentPage ? 'active' : '' %>">
+                                                            <a class="page-link"
+                                                                href="?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=html&page=<%= i %>&limit=<%= reportData.pagination.limit %>&search=<%= reportData.searchQuery || '' %>">
+                                                                <%= i %>
+                                                            </a>
+                                                        </li>
+                                                        <% } %>
+
+                                                            <!-- Next -->
+                                                            <% if (reportData.pagination.hasNextPage) { %>
+                                                                <li class="page-item">
+                                                                    <a class="page-link"
+                                                                        href="?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=html&page=<%= reportData.pagination.currentPage + 1 %>&limit=<%= reportData.pagination.limit %>&search=<%= reportData.searchQuery || '' %>">
+                                                                        Next <i class="fas fa-chevron-right"></i>
+                                                                    </a>
+                                                                </li>
+                                                                <% } else { %>
+                                                                    <li class="page-item disabled">
+                                                                        <span class="page-link">Next <i
+                                                                                class="fas fa-chevron-right"></i></span>
+                                                                    </li>
+                                                                    <% } %>
+                                    </ul>
+                                    <div class="text-center mt-2 small text-muted">
+                                        Page <%= reportData.pagination.currentPage %> of <%=
+                                                reportData.pagination.totalPages %>
+                                                | <%= reportData.pagination.totalPayments.toLocaleString() %> total
+                                                    payments
+                                    </div>
+                                </nav>
+                                <% } %>
                         </div>
                     </div>
 
                     <!-- Report Footer -->
                     <div class="mt-4 text-center">
                         <div class="alert alert-light border">
-                            <p class="mb-1"><strong>Report Summary:</strong></p>
+                            <p class="mb-1"><strong>REPORT SUMMARY</strong></p>
                             <p class="mb-0 small">
                                 <i class="fas fa-clock me-1"></i>Generated: <%= reportData.generatedAt %> |
                                     <i class="fas fa-receipt me-1"></i>
-                                    <%= reportData.payments.length %> payments |
+                                    <%= reportData.allPaymentsCount.toLocaleString() %> total payments |
                                         <i class="fas fa-money-bill-wave me-1"></i>Collected: ZMW <%=
-                                            reportData.summary.totalAmount.toFixed(2) %> |
+                                            formatNumber(reportData.summary.totalAmount) %> |
                                             <i class="fas fa-scale-balanced me-1"></i>Balance: ZMW <%=
-                                                reportData.summary.totalBalance.toFixed(2) %>
+                                                formatNumber(reportData.summary.totalBalance) %>
                             </p>
                         </div>
                         <div class="d-flex justify-content-center gap-2">
                             <a href="/finance/reports" class="btn btn-outline-primary">
                                 <i class="fas fa-redo me-1"></i> New Report
                             </a>
-                            <a href="/finance/reports/generate?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=pdf"
+                            <a href="/finance/reports/generate?startDate=<%= reportData.dateRange.start %>&endDate=<%= reportData.dateRange.end %>&outputFormat=pdf&search=<%= reportData.searchQuery || '' %>"
                                 class="btn btn-primary btn-gradient" target="_blank">
                                 <i class="fas fa-file-pdf me-1"></i> Download PDF
                             </a>
@@ -367,7 +488,19 @@
         </div>
 
         <style>
-            /* Inline styles matching the reports page */
+            /* Inline styles - KEEP EXISTING STYLES, ADD PROGRESS BAR STYLES */
+            .progress {
+                border-radius: 4px;
+                background-color: #e9ecef;
+                height: 8px !important;
+            }
+
+            .progress-bar {
+                border-radius: 4px;
+                transition: width 0.6s ease;
+            }
+
+            /* All existing styles remain exactly the same */
             .btn-gradient {
                 background: linear-gradient(45deg, #4e73df, #224abe);
                 border: none;
@@ -430,12 +563,30 @@
                 background: linear-gradient(90deg, rgba(78, 115, 223, 0.05), rgba(28, 200, 138, 0.05));
             }
 
+            .page-item.active .page-link {
+                background: linear-gradient(45deg, #4e73df, #224abe);
+                border-color: #4e73df;
+            }
+
+            .page-link {
+                color: #4e73df;
+            }
+
+            .page-link:hover {
+                color: #224abe;
+                background-color: #f8f9fa;
+            }
+
             @media print {
 
                 .btn,
                 .card-header .d-flex,
                 .alert,
-                .text-end .alert {
+                .text-end .alert,
+                .dropdown,
+                .pagination,
+                .badge,
+                form {
                     display: none !important;
                 }
 
@@ -463,6 +614,10 @@
                 .balance-negative {
                     color: #000 !important;
                 }
+
+                .progress {
+                    display: none !important;
+                }
             }
         </style>
 
@@ -475,34 +630,6 @@
                     details.classList.add('d-none');
                 }
             }
-
-            // Add print styles
-            const style = document.createElement('style');
-            style.textContent = `
-        @media print {
-            .btn, .card-header .d-flex, .alert, .text-end .alert {
-                display: none !important;
-            }
-            .card {
-                border: 1px solid #ddd !important;
-                box-shadow: none !important;
-            }
-            .card-body {
-                padding: 0 !important;
-            }
-            table {
-                font-size: 11px !important;
-            }
-            h4, h5, h6 {
-                margin-top: 5px !important;
-                margin-bottom: 5px !important;
-            }
-            .balance-positive, .balance-negative {
-                color: #000 !important;
-            }
-        }
-    `;
-            document.head.appendChild(style);
         </script>
 
         <%- include('../partials/footer') %>

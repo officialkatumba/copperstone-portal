@@ -189,6 +189,19 @@
             .table-hover tbody tr:hover {
                 background: linear-gradient(90deg, rgba(78, 115, 223, 0.05), rgba(28, 200, 138, 0.05));
             }
+
+            /* Quick Stats specific styles */
+            .quick-stat-value {
+                font-size: 1.75rem;
+                font-weight: 700;
+            }
+
+            .quick-stat-label {
+                font-size: 0.8rem;
+                color: #6c757d;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
         </style>
 
         <script>
@@ -199,6 +212,20 @@
                 const quickStatsContent = document.getElementById('quickStatsContent');
                 const startDateInput = document.getElementById('startDate');
                 const endDateInput = document.getElementById('endDate');
+
+                // ============ THOUSAND SEPARATOR FORMATTER ============
+                function formatNumber(num) {
+                    if (num === undefined || num === null) return "0.00";
+                    return num.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                }
+
+                function formatInteger(num) {
+                    if (num === undefined || num === null) return "0";
+                    return num.toLocaleString('en-US');
+                }
 
                 // Set default dates (last 30 days)
                 if (!startDateInput.value) {
@@ -287,7 +314,7 @@
                                         <div class="col-md-4">
                                             <div class="card stat-card">
                                                 <div class="card-body text-center">
-                                                    <h3 class="mb-2">${data.reportData.totalPayments}</h3>
+                                                    <h3 class="mb-2">${formatInteger(data.reportData.totalPayments)}</h3>
                                                     <p class="mb-0 small text-muted">Total Payments</p>
                                                 </div>
                                             </div>
@@ -340,7 +367,7 @@
                     }
                 });
 
-                // Function to display quick stats WITH BALANCE
+                // ============ FUNCTION TO DISPLAY QUICK STATS WITH THOUSAND SEPARATORS ============
                 function displayQuickStats(stats) {
                     const completionColor = stats.summary.completionPercentage >= 75 ? 'balance-positive' :
                         stats.summary.completionPercentage >= 50 ? 'balance-neutral' : 'balance-negative';
@@ -351,37 +378,37 @@
                     ${stats.dateRange.formattedStart} to ${stats.dateRange.formattedEnd}
                 </h6>
                 
-                <!-- Balance Summary Cards -->
+                <!-- Balance Summary Cards with Thousand Separators -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="card stat-card border-primary">
                             <div class="card-body text-center py-3">
-                                <h3 class="mb-2 text-primary">${stats.summary.totalPayments}</h3>
-                                <p class="mb-0 small text-muted">Total Payments</p>
+                                <h3 class="mb-2 text-primary quick-stat-value">${formatInteger(stats.summary.totalPayments)}</h3>
+                                <p class="mb-0 quick-stat-label">Total Payments</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="card stat-card border-success">
                             <div class="card-body text-center py-3">
-                                <h3 class="mb-2 balance-positive">ZMW ${stats.summary.totalAmount.toFixed(2)}</h3>
-                                <p class="mb-0 small text-muted">Total Collected</p>
+                                <h3 class="mb-2 balance-positive quick-stat-value">ZMW ${formatNumber(stats.summary.totalAmount)}</h3>
+                                <p class="mb-0 quick-stat-label">Total Collected</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="card stat-card border-warning">
                             <div class="card-body text-center py-3">
-                                <h3 class="mb-2">ZMW ${stats.summary.totalDue.toFixed(2)}</h3>
-                                <p class="mb-0 small text-muted">Total Due</p>
+                                <h3 class="mb-2 quick-stat-value">ZMW ${formatNumber(stats.summary.totalDue)}</h3>
+                                <p class="mb-0 quick-stat-label">Total Due</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="card stat-card border-danger">
                             <div class="card-body text-center py-3">
-                                <h3 class="mb-2 balance-negative">ZMW ${stats.summary.totalBalance.toFixed(2)}</h3>
-                                <p class="mb-0 small text-muted">Outstanding Balance</p>
+                                <h3 class="mb-2 balance-negative quick-stat-value">ZMW ${formatNumber(stats.summary.totalBalance)}</h3>
+                                <p class="mb-0 quick-stat-label">Outstanding Balance</p>
                             </div>
                         </div>
                     </div>
@@ -390,7 +417,7 @@
                 <!-- Completion Progress -->
                 <div class="mb-4">
                     <h6 class="text-primary">Payment Completion</h6>
-                    <div class="progress progress-bar-balance mb-2">
+                    <div class="progress progress-bar-balance mb-2" style="height: 10px;">
                         <div class="progress-bar bg-success" 
                              style="width: ${stats.summary.completionPercentage}%"
                              role="progressbar">
@@ -402,7 +429,7 @@
                     </div>
                 </div>
                 
-                <!-- Category Breakdown -->
+                <!-- Category Breakdown with Thousand Separators -->
                 <h6 class="text-primary">Category Summary</h6>
                 <div class="table-responsive">
                     <table class="table table-sm table-hover">
@@ -410,8 +437,8 @@
                             <tr>
                                 <th>Category</th>
                                 <th class="text-end">Count</th>
-                                <th class="text-end">Collected</th>
-                                <th class="text-end">Balance</th>
+                                <th class="text-end">Collected (ZMW)</th>
+                                <th class="text-end">Balance (ZMW)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -421,14 +448,15 @@
                         const balanceClass = cat.totalBalance > 0 ? 'balance-negative' : 'balance-positive';
                         html += `
                     <tr>
-                        <td><span class="badge category-badge">${cat._id}</span></td>
-                        <td class="text-end">${cat.count}</td>
-                        <td class="text-end balance-positive">ZMW ${cat.total.toFixed(2)}</td>
-                        <td class="text-end ${balanceClass}">ZMW ${cat.totalBalance.toFixed(2)}</td>
+                        <td><span class="badge category-badge">${cat._id || 'Uncategorized'}</span></td>
+                        <td class="text-end fw-bold">${formatInteger(cat.count)}</td>
+                        <td class="text-end balance-positive">ZMW ${formatNumber(cat.total)}</td>
+                        <td class="text-end ${balanceClass}">ZMW ${formatNumber(cat.totalBalance || 0)}</td>
                     </tr>
                 `;
                     });
 
+                    // Add status summary
                     html += `
                         </tbody>
                     </table>
@@ -440,6 +468,9 @@
                     </button>
                     <small class="d-block text-muted mt-2">
                         <i class="fas fa-clock me-1"></i> Generated: ${stats.generatedAt}
+                    </small>
+                    <small class="d-block text-muted mt-1">
+                        <i class="fas fa-building me-1"></i> Finance Department - Copperstone University
                     </small>
                 </div>
             `;
