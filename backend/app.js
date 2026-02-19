@@ -999,4 +999,7 @@ app.use((req, res) => {
   });
 });
 
+const studentRoutes = require("./routes/studentRoutes");
+app.use("/student", studentRoutes);
+
 module.exports = app;

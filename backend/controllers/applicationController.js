@@ -36,766 +36,6 @@ exports.showApplicationForm = async (req, res) => {
  * Handle application submission
  */
 
-// exports.submitApplication = async (req, res) => {
-//   try {
-//     const {
-//       firstChoice,
-//       secondChoice,
-//       paymentMethod,
-//       paymentAmount,
-//       paymentDescription,
-//     } = req.body;
-
-//     // Default paymentAmount → 0
-//     const amountToSave = paymentAmount ? parseFloat(paymentAmount) : 0;
-//     const applicationYear = new Date().getFullYear();
-
-//     const programme = await Programme.findById(firstChoice);
-//     if (!programme) {
-//       req.flash("error_msg", "Invalid programme selected");
-//       return res.redirect("back");
-//     }
-
-//     const programmeCode = programme.code;
-
-//     // ✅ Upload supporting documents
-//     const gcsDocs = [];
-//     for (const file of req.files) {
-//       const uploaded = await uploadToGCS(
-//         file,
-//         req.user,
-//         programmeCode,
-//         applicationYear
-//       );
-
-//       gcsDocs.push({
-//         name: file.originalname,
-//         gcsUrl: uploaded.publicUrl,
-//         gcsPath: uploaded.path,
-//       });
-//     }
-
-//     // ✅ 1. FIRST create the application WITHOUT payment
-//     const application = await Application.create({
-//       applicant: req.user._id,
-//       firstChoice,
-//       secondChoice: secondChoice || null,
-//       documents: gcsDocs,
-//       // NO payment field here - it will be added after creating Payment record
-//     });
-
-//     // ✅ 2. CREATE PAYMENT RECORD if amount > 0
-//     if (amountToSave > 0) {
-//       const payment = await Payment.create({
-//         student: req.user._id,
-//         application: application._id, // Link to application
-//         programme: firstChoice,
-//         category: "Application Fee",
-//         description: paymentDescription || "Application Fee",
-//         amount: amountToSave,
-//         totalDue: amountToSave, // For application fee, total = amount
-//         balanceAfterPayment: 0, // Application fee is paid in full
-//         method: paymentMethod,
-//         currency: "ZMW",
-//         reference: `APP-${Date.now().toString().slice(-8)}`,
-//         status: "Pending", // Student payments need verification
-//         remarks: "Submitted with application - pending verification",
-//         // Use first document as proof if exists
-//         proofOfPayment:
-//           gcsDocs.length > 0
-//             ? {
-//                 gcsUrl: gcsDocs[0].gcsUrl,
-//                 gcsPath: gcsDocs[0].gcsPath,
-//                 uploadedAt: new Date(),
-//                 name: gcsDocs[0].name,
-//               }
-//             : undefined,
-//       });
-
-//       // ✅ 3. LINK PAYMENT TO APPLICATION
-//       application.payment = payment._id;
-//       await application.save();
-//     }
-
-//     // ✅ Send confirmation email
-//     if (req.user.email) {
-//       await sendEmail({
-//         to: req.user.email,
-//         subject: "📄 Application Submitted Successfully",
-//         html: `
-//           <p>Dear ${req.user.firstName},</p>
-//           <p>Your application has been <strong>submitted successfully</strong>.</p>
-//           <p><strong>Application ID:</strong> ${application._id}</p>
-//           <p><strong>Programme:</strong> ${programme.name}</p>
-//           ${
-//             amountToSave > 0
-//               ? `<p><strong>Application Fee:</strong> ZMW ${amountToSave.toFixed(
-//                   2
-//                 )} (Pending Verification)</p>`
-//               : ""
-//           }
-//           <p><strong>Status:</strong> Under Review</p>
-//           <p>Regards,<br/>Admissions Office</p>
-//         `,
-//       });
-//     }
-
-//     req.flash("success_msg", "Application submitted successfully!");
-//     res.redirect("/dashboard/student");
-//   } catch (err) {
-//     console.error("Application Error:", err);
-//     req.flash("error_msg", "Failed to submit application.");
-//     res.redirect("/applications/apply");
-//   }
-// };
-
-// exports.submitApplication = async (req, res) => {
-//   try {
-//     const {
-//       firstChoice,
-//       secondChoice,
-//       paymentMethod,
-//       paymentAmount,
-//       paymentDescription,
-//       modeOfStudy, // ✅ ADD THIS LINE
-//     } = req.body;
-
-//     // Default paymentAmount → 0
-//     const amountToSave = paymentAmount ? parseFloat(paymentAmount) : 0;
-//     const applicationYear = new Date().getFullYear();
-
-//     const programme = await Programme.findById(firstChoice);
-//     if (!programme) {
-//       req.flash("error_msg", "Invalid programme selected");
-//       return res.redirect("back");
-//     }
-
-//     const programmeCode = programme.code;
-
-//     // ✅ Upload supporting documents
-//     const gcsDocs = [];
-//     for (const file of req.files) {
-//       const uploaded = await uploadToGCS(
-//         file,
-//         req.user,
-//         programmeCode,
-//         applicationYear
-//       );
-
-//       gcsDocs.push({
-//         name: file.originalname,
-//         gcsUrl: uploaded.publicUrl,
-//         gcsPath: uploaded.path,
-//       });
-//     }
-
-//     // ✅ 1. FIRST create the application WITHOUT payment
-//     const application = await Application.create({
-//       applicant: req.user._id,
-//       firstChoice,
-//       secondChoice: secondChoice || null,
-//       modeOfStudy: modeOfStudy || "Full Time", // ✅ ADD THIS LINE (with default)
-//       documents: gcsDocs,
-//       // NO payment field here - it will be added after creating Payment record
-//     });
-
-//     // ✅ 2. CREATE PAYMENT RECORD if amount > 0
-//     if (amountToSave > 0) {
-//       const payment = await Payment.create({
-//         student: req.user._id,
-//         application: application._id, // Link to application
-//         programme: firstChoice,
-//         category: "Application Fee",
-//         description: paymentDescription || "Application Fee",
-//         amount: amountToSave,
-//         totalDue: amountToSave, // For application fee, total = amount
-//         balanceAfterPayment: 0, // Application fee is paid in full
-//         method: paymentMethod,
-//         currency: "ZMW",
-//         reference: `APP-${Date.now().toString().slice(-8)}`,
-//         status: "Pending", // Student payments need verification
-//         remarks: "Submitted with application - pending verification",
-//         // Use first document as proof if exists
-//         proofOfPayment:
-//           gcsDocs.length > 0
-//             ? {
-//                 gcsUrl: gcsDocs[0].gcsUrl,
-//                 gcsPath: gcsDocs[0].gcsPath,
-//                 uploadedAt: new Date(),
-//                 name: gcsDocs[0].name,
-//               }
-//             : undefined,
-//       });
-
-//       // ✅ 3. LINK PAYMENT TO APPLICATION
-//       application.payment = payment._id;
-//       await application.save();
-//     }
-
-//     // ✅ Send confirmation email (updated with modeOfStudy)
-//     if (req.user.email) {
-//       await sendEmail({
-//         to: req.user.email,
-//         subject: "📄 Application Submitted Successfully",
-//         html: `
-//           <p>Dear ${req.user.firstName},</p>
-//           <p>Your application has been <strong>submitted successfully</strong>.</p>
-//           <p><strong>Application ID:</strong> ${application._id}</p>
-//           <p><strong>Programme:</strong> ${programme.name}</p>
-//           <p><strong>Mode of Study:</strong> ${
-//             modeOfStudy || "Full Time"
-//           }</p> <!-- ✅ ADD THIS LINE -->
-//           ${
-//             amountToSave > 0
-//               ? `<p><strong>Application Fee:</strong> ZMW ${amountToSave.toFixed(
-//                   2
-//                 )} (Pending Verification)</p>`
-//               : ""
-//           }
-//           <p><strong>Status:</strong> Under Review</p>
-//           <p>Regards,<br/>Admissions Office</p>
-//         `,
-//       });
-//     }
-
-//     req.flash("success_msg", "Application submitted successfully!");
-//     res.redirect("/dashboard/student");
-//   } catch (err) {
-//     console.error("Application Error:", err);
-//     req.flash("error_msg", "Failed to submit application.");
-//     res.redirect("/applications/apply");
-//   }
-// };
-
-// exports.submitApplication = async (req, res) => {
-//   try {
-//     const {
-//       firstChoice,
-//       secondChoice,
-//       paymentMethod,
-//       paymentAmount,
-//       paymentDescription,
-//       modeOfStudy,
-//     } = req.body;
-
-//     // ===============================
-//     // 1️⃣ CHECK IF STUDENT HAS ALREADY APPLIED
-//     // ===============================
-//     // Check user's admissionStatus
-//     if (req.user.studentProfile?.admissionStatus !== "Not Applied") {
-//       req.flash(
-//         "error_msg",
-//         "You have already submitted an application. You cannot submit another one.",
-//       );
-//       return res.redirect("back");
-//     }
-
-//     // Also check if there's an active application in the database
-//     const existingApplication = await Application.findOne({
-//       applicant: req.user._id,
-//       status: { $nin: ["Rejected", "Withdrawn", "Cancelled"] },
-//     });
-
-//     if (existingApplication) {
-//       req.flash(
-//         "error_msg",
-//         "You have an existing application. You cannot submit another one.",
-//       );
-//       return res.redirect("back");
-//     }
-
-//     // ===============================
-//     // 2️⃣ VALIDATE PROGRAMME
-//     // ===============================
-//     const programme = await Programme.findById(firstChoice);
-//     if (!programme) {
-//       req.flash("error_msg", "Invalid programme selected");
-//       return res.redirect("back");
-//     }
-
-//     const programmeCode = programme.code;
-//     const amountToSave = paymentAmount ? parseFloat(paymentAmount) : 0;
-//     const applicationYear = new Date().getFullYear();
-
-//     // ===============================
-//     // 3️⃣ UPLOAD SUPPORTING DOCUMENTS
-//     // ===============================
-//     const gcsDocs = [];
-//     for (const file of req.files) {
-//       const uploaded = await uploadToGCS(
-//         file,
-//         req.user,
-//         programmeCode,
-//         applicationYear,
-//       );
-
-//       gcsDocs.push({
-//         name: file.originalname,
-//         gcsUrl: uploaded.publicUrl,
-//         gcsPath: uploaded.path,
-//       });
-//     }
-
-//     // ===============================
-//     // 4️⃣ CREATE APPLICATION
-//     // ===============================
-//     const application = await Application.create({
-//       applicant: req.user._id,
-//       firstChoice,
-//       secondChoice: secondChoice || null,
-//       modeOfStudy: modeOfStudy || "Full Time",
-//       documents: gcsDocs,
-//       status: "Submitted",
-//     });
-
-//     // ===============================
-//     // 5️⃣ CREATE PAYMENT RECORD IF AMOUNT > 0
-//     // ===============================
-//     let payment = null;
-//     if (amountToSave > 0) {
-//       payment = await Payment.create({
-//         student: req.user._id,
-//         application: application._id,
-//         programme: firstChoice,
-//         category: "Application Fee",
-//         description: paymentDescription || "Application Fee",
-//         amount: amountToSave,
-//         totalDue: amountToSave,
-//         balanceAfterPayment: 0,
-//         method: paymentMethod,
-//         currency: "ZMW",
-//         reference: `APP-${Date.now().toString().slice(-8)}`,
-//         status: "Pending", // Needs verification by finance
-//         remarks: "Submitted with application - pending verification",
-//         proofOfPayment:
-//           gcsDocs.length > 0
-//             ? {
-//                 gcsUrl: gcsDocs[0].gcsUrl,
-//                 gcsPath: gcsDocs[0].gcsPath,
-//                 uploadedAt: new Date(),
-//                 name: gcsDocs[0].name,
-//               }
-//             : undefined,
-//       });
-
-//       // Link payment to application
-//       application.payment = payment._id;
-//       await application.save();
-//     }
-
-//     // ===============================
-//     // 6️⃣ UPDATE USER ADMISSION STATUS
-//     // ===============================
-//     await User.findByIdAndUpdate(req.user._id, {
-//       "studentProfile.admissionStatus": "Applied",
-//       $push: {
-//         appliedCourses: {
-//           firstChoice: firstChoice,
-//           secondChoice: secondChoice || null,
-//           appliedAt: new Date(),
-//         },
-//       },
-//     });
-
-//     // ===============================
-//     // 7️⃣ SEND CONFIRMATION EMAIL
-//     // ===============================
-//     if (req.user.email) {
-//       await sendEmail({
-//         to: req.user.email,
-//         subject: "📄 Application Submitted Successfully",
-//         html: `
-//           <p>Dear ${req.user.firstName},</p>
-//           <p>Your application has been <strong>submitted successfully</strong>.</p>
-//           <p><strong>Application ID:</strong> ${application._id}</p>
-//           <p><strong>Programme:</strong> ${programme.name}</p>
-//           <p><strong>Mode of Study:</strong> ${modeOfStudy || "Full Time"}</p>
-//           <p><strong>Admission Status:</strong> Applied</p>
-//           ${
-//             amountToSave > 0
-//               ? `<p><strong>Application Fee:</strong> ZMW ${amountToSave.toFixed(
-//                   2,
-//                 )} (Pending Verification)</p>
-//                  <p><strong>Payment Reference:</strong> ${payment?.reference || "N/A"}</p>`
-//               : "<p><strong>No payment required at this time.</strong></p>"
-//           }
-//           <p><strong>Status:</strong> Under Review</p>
-//           <p>You will be notified once your application is reviewed.</p>
-//           <p>Regards,<br/>Admissions Office</p>
-//         `,
-//       });
-//     }
-
-//     // ===============================
-//     // 8️⃣ SEND NOTIFICATION TO ADMISSIONS OFFICE
-//     // ===============================
-//     try {
-//       await sendEmail({
-//         to: process.env.ADMISSIONS_EMAIL || "admissions@university.edu",
-//         subject: "📋 New Application Submitted",
-//         html: `
-//           <p>A new application has been submitted:</p>
-//           <p><strong>Student:</strong> ${req.user.firstName} ${req.user.surname}</p>
-//           <p><strong>Email:</strong> ${req.user.email}</p>
-//           <p><strong>Programme:</strong> ${programme.name}</p>
-//           <p><strong>Application ID:</strong> ${application._id}</p>
-//           <p><strong>Admission Status:</strong> Applied</p>
-//           ${
-//             payment
-//               ? `<p><strong>Payment Amount:</strong> ZMW ${amountToSave.toFixed(2)}</p>
-//                  <p><strong>Payment Status:</strong> ${payment.status}</p>`
-//               : "<p><strong>No payment attached</strong></p>"
-//           }
-//           <p>Please review the application in the admissions portal.</p>
-//         `,
-//       });
-//     } catch (emailErr) {
-//       console.log(
-//         "Failed to send notification to admissions office:",
-//         emailErr.message,
-//       );
-//     }
-
-//     req.flash(
-//       "success_msg",
-//       `Application submitted successfully! ${
-//         amountToSave > 0
-//           ? `Your payment of ZMW ${amountToSave.toFixed(2)} is pending verification.`
-//           : "No payment required."
-//       }`,
-//     );
-//     res.redirect("/dashboard/student");
-//   } catch (err) {
-//     console.error("Application Error:", err);
-//     req.flash("error_msg", "Failed to submit application.");
-//     res.redirect("/applications/apply");
-//   }
-// };
-// exports.submitApplication = async (req, res) => {
-//   try {
-//     const {
-//       firstChoice,
-//       secondChoice,
-//       paymentMethod,
-//       paymentAmount,
-//       paymentDescription,
-//       modeOfStudy,
-//       paymentReceivedOn, // NEW: Add deposit date field
-//     } = req.body;
-
-//     // ===============================
-//     // 1️⃣ CHECK IF STUDENT CAN APPLY
-//     // ===============================
-//     const student = await User.findById(req.user._id);
-
-//     // Check if already registered
-//     // if (student.studentProfile?.registrationStatus === "Registered") {
-//     //   req.flash(
-//     //     "error_msg",
-//     //     "You are already a registered student. You cannot submit a new application.",
-//     //   );
-//     //   return res.redirect("/dashboard/student");
-//     // }
-
-//     // // Check admission status
-//     // if (student.studentProfile?.admissionStatus !== "Not Applied") {
-//     //   req.flash(
-//     //     "error_msg",
-//     //     `Your admission status is "${student.studentProfile.admissionStatus}". You cannot submit a new application.`,
-//     //   );
-//     //   return res.redirect("/dashboard/student");
-//     // }
-
-//     // // Check for existing application
-//     // const existingApplication = await Application.findOne({
-//     //   applicant: req.user._id,
-//     //   status: { $nin: ["Rejected", "Withdrawn", "Cancelled"] },
-//     // });
-
-//     // if (existingApplication) {
-//     //   req.flash(
-//     //     "error_msg",
-//     //     `You have an existing application (ID: ${existingApplication._id}) with status: "${existingApplication.status}".`,
-//     //   );
-//     //   return res.redirect("/dashboard/student");
-//     // }
-
-//     // ===============================
-//     // 2️⃣ VALIDATE PROGRAMME
-//     // ===============================
-//     const programme = await Programme.findById(firstChoice);
-//     if (!programme) {
-//       req.flash("error_msg", "Invalid programme selected");
-//       return res.redirect("back");
-//     }
-
-//     const programmeCode = programme.code;
-//     const amountToSave = paymentAmount ? parseFloat(paymentAmount) : 0;
-//     const applicationYear = new Date().getFullYear();
-
-//     // ===============================
-//     // 3️⃣ VALIDATE PAYMENT RECEIVED DATE
-//     // ===============================
-//     let parsedReceivedDate = new Date(); // Default to now
-//     if (paymentReceivedOn) {
-//       parsedReceivedDate = new Date(paymentReceivedOn);
-//       if (parsedReceivedDate > new Date()) {
-//         req.flash(
-//           "error_msg",
-//           "Payment received date cannot be in the future.",
-//         );
-//         return res.redirect("back");
-//       }
-//     }
-
-//     // ===============================
-//     // 4️⃣ UPLOAD SUPPORTING DOCUMENTS
-//     // ===============================
-//     const gcsDocs = [];
-//     for (const file of req.files) {
-//       const uploaded = await uploadToGCS(
-//         file,
-//         req.user,
-//         programmeCode,
-//         applicationYear,
-//       );
-
-//       gcsDocs.push({
-//         name: file.originalname,
-//         gcsUrl: uploaded.publicUrl,
-//         gcsPath: uploaded.path,
-//       });
-//     }
-
-//     // ===============================
-//     // 5️⃣ CREATE APPLICATION
-//     // ===============================
-//     const application = await Application.create({
-//       applicant: req.user._id,
-//       firstChoice,
-//       secondChoice: secondChoice || null,
-//       modeOfStudy: modeOfStudy || "Full Time",
-//       documents: gcsDocs,
-//       status: "Submitted",
-//     });
-
-//     // ===============================
-//     // 6️⃣ CREATE AND VERIFY PAYMENT AUTOMATICALLY (IF AMOUNT > 0)
-//     // ===============================
-//     let payment = null;
-//     let receiptGenerated = false;
-
-//     if (amountToSave > 0) {
-//       // Create payment with VERIFIED status
-//       payment = await Payment.create({
-//         student: req.user._id,
-//         application: application._id,
-//         programme: firstChoice,
-//         category: "Application Fee",
-//         description: paymentDescription || "Application Fee",
-//         amount: amountToSave,
-//         totalDue: amountToSave,
-//         balanceAfterPayment: 0,
-//         method: paymentMethod,
-//         currency: "ZMW",
-//         reference: `APP-${Date.now().toString().slice(-8)}`,
-//         status: "Verified", // AUTOMATICALLY VERIFIED
-//         verifiedAt: new Date(),
-//         paymentReceivedOn: parsedReceivedDate, // Include deposit date
-//         remarks: "Application payment - automatically verified",
-//         proofOfPayment:
-//           gcsDocs.length > 0
-//             ? {
-//                 gcsUrl: gcsDocs[0].gcsUrl,
-//                 gcsPath: gcsDocs[0].gcsPath,
-//                 uploadedAt: new Date(),
-//                 name: gcsDocs[0].name,
-//               }
-//             : undefined,
-//       });
-
-//       // Link payment to application
-//       application.payment = payment._id;
-//       await application.save();
-
-//       // ===============================
-//       // 7️⃣ GENERATE RECEIPT AUTOMATICALLY
-//       // ===============================
-//       try {
-//         // Get the populated payment (like finance controller does)
-//         const populatedPayment = await Payment.findById(payment._id)
-//           .populate("student", "firstName surname email")
-//           .populate("programme", "name code");
-
-//         // Get application data for receipt
-//         const applicationData = await Application.findById(application._id)
-//           .populate("firstChoice", "name code")
-//           .populate("secondChoice", "name code")
-//           .lean();
-
-//         // Generate receipt PDF - Use the SAME structure as finance controller
-//         const pdfPath = await generateReceiptPDF({
-//           payment: {
-//             _id: populatedPayment._id,
-//             reference: populatedPayment.reference,
-//             amount: populatedPayment.amount,
-//             method: populatedPayment.method,
-//             status: populatedPayment.status,
-//             verifiedAt: populatedPayment.verifiedAt,
-//             paymentReceivedOn: populatedPayment.paymentReceivedOn,
-//             category: populatedPayment.category,
-//             description: populatedPayment.description,
-//             totalDue: populatedPayment.totalDue,
-//             balanceAfterPayment: populatedPayment.balanceAfterPayment,
-//             student: populatedPayment.student,
-//             // Add verifiedBy for receipt signature (use system/auto)
-//             verifiedBy: {
-//               firstName: "System",
-//               surname: "Auto-Verified",
-//             },
-//           },
-//           application: applicationData,
-//         });
-
-//         // Upload receipt to GCS
-//         const gcsPath = `receipts/Application_${application._id}_${Date.now()}.pdf`;
-//         await uploadFile(pdfPath, gcsPath);
-
-//         const signedUrl = await generateSignedUrl(gcsPath);
-
-//         // Update payment with receipt info
-//         payment.receipt = {
-//           name: "Official Application Fee Receipt",
-//           gcsPath,
-//           gcsUrl: signedUrl,
-//           issuedAt: new Date(),
-//         };
-
-//         await payment.save();
-//         receiptGenerated = true;
-
-//         // Clean up temp file
-//         const fs = require("fs");
-//         if (fs.existsSync(pdfPath)) {
-//           fs.unlinkSync(pdfPath);
-//         }
-
-//         // ===============================
-//         // 8️⃣ SEND EMAIL WITH RECEIPT ATTACHMENT
-//         // ===============================
-//         if (req.user.email) {
-//           const receiptDate = new Date().toLocaleDateString();
-//           const depositDate = payment.paymentReceivedOn
-//             ? new Date(payment.paymentReceivedOn).toLocaleDateString()
-//             : receiptDate;
-
-//           // Read the PDF file for attachment
-//           const pdfBuffer = fs.readFileSync(pdfPath);
-
-//           await sendEmail({
-//             to: req.user.email,
-//             subject: "✅ Application Submitted with Payment Verified",
-//             html: `
-//               <p>Dear ${req.user.firstName},</p>
-//               <p>Your application has been <strong>submitted successfully</strong>.</p>
-//               <p><strong>Application ID:</strong> ${application._id}</p>
-//               <p><strong>Programme:</strong> ${programme.name}</p>
-//               <p><strong>Mode of Study:</strong> ${modeOfStudy || "Full Time"}</p>
-//               <p><strong>Admission Status:</strong> Applied</p>
-//               <p><strong>Application Fee:</strong> ZMW ${amountToSave.toFixed(2)} (Verified)</p>
-//               <p><strong>Payment Reference:</strong> ${payment.reference}</p>
-//               <p><strong>Date Deposited:</strong> ${depositDate}</p>
-//               <p><strong>Date Verified:</strong> ${receiptDate}</p>
-//               <p><strong>Status:</strong> Under Review</p>
-//               <p>Your <strong>official receipt</strong> is attached to this email.</p>
-//               <p>You can also download it from the portal: <a href="${signedUrl}">Download Receipt</a></p>
-//               <p>You will be notified once your application is reviewed by the admissions committee.</p>
-//               <p>Regards,<br/>Admissions Office</p>
-//             `,
-//             attachments: [
-//               {
-//                 filename: `Application_Receipt_${payment.reference}.pdf`,
-//                 content: pdfBuffer,
-//                 contentType: "application/pdf",
-//               },
-//             ],
-//           });
-//         }
-//       } catch (receiptError) {
-//         console.error("Failed to generate receipt:", receiptError);
-//         console.error("Receipt error details:", receiptError.message);
-//         // Continue even if receipt generation fails
-//       }
-//     }
-
-//     // ===============================
-//     // 9️⃣ UPDATE USER ADMISSION STATUS
-//     // ===============================
-//     await User.findByIdAndUpdate(req.user._id, {
-//       "studentProfile.admissionStatus": "Applied",
-//       $push: {
-//         appliedCourses: {
-//           firstChoice: firstChoice,
-//           secondChoice: secondChoice || null,
-//           appliedAt: new Date(),
-//         },
-//       },
-//     });
-
-//     // ===============================
-//     // 🔟 SEND NOTIFICATION TO ADMISSIONS OFFICE
-//     // ===============================
-//     try {
-//       const depositDate = parsedReceivedDate.toLocaleDateString();
-
-//       await sendEmail({
-//         to: process.env.ADMISSIONS_EMAIL || "admissions@university.edu",
-//         subject: "📋 New Application Submitted",
-//         html: `
-//           <p>A new application has been submitted:</p>
-//           <p><strong>Student:</strong> ${req.user.firstName} ${req.user.surname}</p>
-//           <p><strong>Email:</strong> ${req.user.email}</p>
-//           <p><strong>Programme:</strong> ${programme.name}</p>
-//           <p><strong>Application ID:</strong> ${application._id}</p>
-//           <p><strong>Admission Status:</strong> Applied</p>
-//           ${
-//             payment
-//               ? `<p><strong>Payment Amount:</strong> ZMW ${amountToSave.toFixed(2)}</p>
-//                  <p><strong>Payment Status:</strong> ${payment.status}</p>
-//                  <p><strong>Payment Date:</strong> ${depositDate}</p>
-//                  <p><strong>Payment Reference:</strong> ${payment.reference}</p>`
-//               : "<p><strong>No payment attached</strong></p>"
-//           }
-//           <p>Please review the application in the admissions portal.</p>
-//         `,
-//       });
-//     } catch (emailErr) {
-//       console.log(
-//         "Failed to send notification to admissions office:",
-//         emailErr.message,
-//       );
-//     }
-
-//     req.flash(
-//       "success_msg",
-//       `Application submitted successfully! ${
-//         amountToSave > 0
-//           ? `Your payment of ZMW ${amountToSave.toFixed(2)} has been verified. ${
-//               receiptGenerated
-//                 ? "Receipt has been generated and sent to your email."
-//                 : ""
-//             }`
-//           : "No payment required."
-//       }`,
-//     );
-//     res.redirect("/dashboard/student");
-//   } catch (err) {
-//     console.error("Application Error:", err);
-//     req.flash("error_msg", "Failed to submit application.");
-//     res.redirect("/applications/apply");
-//   }
-// };
-
 exports.submitApplication = async (req, res) => {
   try {
     const {
@@ -1175,38 +415,6 @@ exports.submitApplication = async (req, res) => {
 };
 // // view my applications
 
-// exports.getMyApplications = async (req, res) => {
-//   try {
-//     let applications = await Application.find({ applicant: req.user._id })
-//       .populate("firstChoice")
-//       .populate("secondChoice")
-//       .sort({ createdAt: -1 })
-//       .lean();
-
-//     for (const app of applications) {
-//       for (const doc of app.documents) {
-//         if (doc.gcsPath) {
-//           // ✅ New secure way
-//           doc.signedUrl = await generateSignedUrl(doc.gcsPath);
-//         } else if (doc.gcsUrl) {
-//           // fallback for old records
-//           doc.signedUrl = doc.gcsUrl;
-//         }
-//       }
-//     }
-
-//     res.render("applications/myApplications", {
-//       title: "My Applications",
-//       applications,
-//       user: req.user,
-//     });
-//   } catch (err) {
-//     console.error("Error loading applications:", err);
-//     req.flash("error_msg", "Failed to load your applications.");
-//     res.redirect("/dashboard/student");
-//   }
-// };
-
 // view my applications
 exports.getMyApplications = async (req, res) => {
   try {
@@ -1562,3 +770,374 @@ async function generateResultsPDF(student, semesterData) {
   // This is a placeholder - implement based on your PDF generation setup
   return Buffer.from("PDF generation would go here");
 }
+
+////////////////////////////////////////////////////////////////////
+
+// controllers/applicationController.js (add this method)
+
+// exports.getMyPayments = async (req, res) => {
+//   try {
+//     console.log("getMyPayments route was hit successfully");
+
+//     // Redirect to the real payments page
+//     res.redirect("/students/payments");
+//   } catch (err) {
+//     console.error("Error in getMyPayments:", err);
+//     req.flash("error_msg", "An error occurred.");
+//     res.redirect("/dashboard/student");
+//   }
+// };
+
+// exports.getMyPayments = async (req, res) => {
+//   try {
+//     console.log("✅ getMyPayments route was hit successfully");
+
+//     // DEMO DATA for testing the view
+//     const demoPayments = [
+//       {
+//         _id: "123456789",
+//         reference: "PAY-001",
+//         createdAt: new Date(),
+//         category: "Tuition",
+//         description: "Semester 1 Fees",
+//         amount: 5000,
+//         balanceAfterPayment: 0,
+//         status: "Verified",
+//         method: "Bank Transfer",
+//         programme: { name: "Computer Science", code: "CS101" },
+//       },
+//       {
+//         _id: "987654321",
+//         reference: "PAY-002",
+//         createdAt: new Date(),
+//         category: "Application Fee",
+//         description: "Application processing",
+//         amount: 350,
+//         balanceAfterPayment: 0,
+//         status: "Verified",
+//         method: "Mobile Money",
+//         programme: { name: "Computer Science", code: "CS101" },
+//       },
+//     ];
+
+//     const demoSummary = {
+//       totalPaid: 5350,
+//       totalDue: 5350,
+//       totalBalance: 0,
+//       paymentCount: 2,
+//       verifiedCount: 2,
+//       pendingCount: 0,
+//       totalPaidFormatted: "5350.00",
+//       totalDueFormatted: "5350.00",
+//       totalBalanceFormatted: "0.00",
+//       completionPercentage: 100,
+//     };
+
+//     const demoCategories = ["Tuition", "Application Fee", "Library Fee"];
+//     const demoStatuses = [
+//       "Pending",
+//       "Verified",
+//       "Partially Paid",
+//       "Fully Paid",
+//       "Rejected",
+//       "Cancelled",
+//     ];
+
+//     // RENDER the payments.ejs view with demo data
+//     res.render("students/payments", {
+//       title: "My Payments - TEST MODE",
+//       user: req.user,
+//       payments: demoPayments,
+//       summary: demoSummary,
+//       categories: demoCategories,
+//       statuses: demoStatuses,
+//       currentCategory: "",
+//       currentStatus: "",
+//       pagination: {
+//         currentPage: 1,
+//         totalPages: 1,
+//         totalCount: 2,
+//         limit: 20,
+//         hasNextPage: false,
+//         hasPrevPage: false,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error in demo payments:", err);
+//     req.flash("error_msg", "An error occurred.");
+//     res.redirect("/dashboard/student");
+//   }
+// };
+
+/**
+ * Get all payments for the logged-in student
+ */
+exports.getMyPayments = async (req, res) => {
+  try {
+    console.log(
+      "✅ getMyPayments route was hit successfully - Loading real data",
+    );
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const category = (req.query.category || "").trim();
+    const status = (req.query.status || "").trim();
+
+    const skip = (page - 1) * limit;
+
+    // ===============================
+    // 1️⃣ BUILD QUERY FOR THIS STUDENT ONLY
+    // ===============================
+    const query = {
+      student: req.user._id, // Only show payments for logged-in student
+    };
+
+    // Apply category filter if provided
+    if (category) {
+      query.category = category;
+    }
+
+    // Apply status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    // ===============================
+    // 2️⃣ FETCH PAYMENTS WITH POPULATION
+    // ===============================
+    const payments = await Payment.find(query)
+      .populate({
+        path: "programme",
+        select: "name code",
+      })
+      .populate({
+        path: "verifiedBy",
+        select: "firstName surname",
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalCount = await Payment.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // ===============================
+    // 3️⃣ CALCULATE STUDENT'S PAYMENT SUMMARY
+    // ===============================
+    const summary = await Payment.aggregate([
+      { $match: { student: req.user._id } },
+      {
+        $group: {
+          _id: null,
+          totalPaid: { $sum: "$amount" },
+          totalDue: { $sum: "$totalDue" },
+          totalBalance: { $sum: "$balanceAfterPayment" },
+          paymentCount: { $sum: 1 },
+          verifiedCount: {
+            $sum: {
+              $cond: [{ $in: ["$status", ["Verified", "Fully Paid"]] }, 1, 0],
+            },
+          },
+          pendingCount: {
+            $sum: { $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] },
+          },
+        },
+      },
+    ]);
+
+    const paymentSummary =
+      summary.length > 0
+        ? summary[0]
+        : {
+            totalPaid: 0,
+            totalDue: 0,
+            totalBalance: 0,
+            paymentCount: 0,
+            verifiedCount: 0,
+            pendingCount: 0,
+          };
+
+    // Calculate total paid (amount already paid) vs total due
+    paymentSummary.totalPaidFormatted = paymentSummary.totalPaid.toFixed(2);
+    paymentSummary.totalDueFormatted = paymentSummary.totalDue.toFixed(2);
+    paymentSummary.totalBalanceFormatted =
+      paymentSummary.totalBalance.toFixed(2);
+    paymentSummary.completionPercentage =
+      paymentSummary.totalDue > 0
+        ? Math.round((paymentSummary.totalPaid / paymentSummary.totalDue) * 100)
+        : 0;
+
+    // ===============================
+    // 4️⃣ GENERATE SIGNED URLS FOR RECEIPTS
+    // ===============================
+    for (const payment of payments) {
+      if (payment.receipt && payment.receipt.gcsPath) {
+        try {
+          payment.receipt.signedUrl = await generateSignedUrl(
+            payment.receipt.gcsPath,
+          );
+        } catch (error) {
+          console.error("Error generating receipt signed URL:", error);
+          payment.receipt.signedUrl = payment.receipt.gcsUrl || null;
+        }
+      }
+
+      if (payment.proofOfPayment && payment.proofOfPayment.gcsPath) {
+        try {
+          payment.proofOfPayment.signedUrl = await generateSignedUrl(
+            payment.proofOfPayment.gcsPath,
+          );
+        } catch (error) {
+          console.error("Error generating proof signed URL:", error);
+          payment.proofOfPayment.signedUrl =
+            payment.proofOfPayment.gcsUrl || null;
+        }
+      }
+
+      // Format dates for display
+      if (payment.createdAt) {
+        payment.formattedDate = new Date(payment.createdAt).toLocaleDateString(
+          "en-GB",
+        );
+        payment.formattedTime = new Date(payment.createdAt).toLocaleTimeString(
+          [],
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          },
+        );
+      }
+
+      if (payment.verifiedAt) {
+        payment.formattedVerifiedDate = new Date(
+          payment.verifiedAt,
+        ).toLocaleDateString("en-GB", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      }
+
+      if (payment.paymentReceivedOn) {
+        payment.formattedReceivedDate = new Date(
+          payment.paymentReceivedOn,
+        ).toLocaleDateString("en-GB", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      }
+    }
+
+    // ===============================
+    // 5️⃣ GET UNIQUE CATEGORIES FOR FILTER DROPDOWN
+    // ===============================
+    const categories = await Payment.distinct("category", {
+      student: req.user._id,
+    });
+
+    const statuses = [
+      "Pending",
+      "Verified",
+      "Partially Paid",
+      "Fully Paid",
+      "Rejected",
+      "Cancelled",
+    ];
+
+    // Log success for debugging
+    console.log(
+      `✅ Found ${payments.length} payments for student ${req.user._id}`,
+    );
+
+    // ===============================
+    // 6️⃣ RENDER THE PAYMENTS VIEW WITH REAL DATA
+    // ===============================
+    res.render("students/payments", {
+      title: "My Payments",
+      user: req.user,
+      payments,
+      summary: paymentSummary,
+      categories,
+      statuses,
+      currentCategory: category,
+      currentStatus: status,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Error loading student payments:", err);
+    req.flash("error_msg", "Failed to load your payment records.");
+    res.redirect("/dashboard/student");
+  }
+};
+
+/**
+ * View/download a specific payment receipt (student version)
+ */
+exports.viewMyReceipt = async (req, res) => {
+  try {
+    const paymentId = req.params.id;
+
+    // Find payment and verify it belongs to this student
+    const payment = await Payment.findOne({
+      _id: paymentId,
+      student: req.user._id,
+    });
+
+    if (!payment || !payment.receipt || !payment.receipt.gcsPath) {
+      req.flash(
+        "error_msg",
+        "Receipt not found or you don't have permission to access it.",
+      );
+      return res.redirect("/student/payments");
+    }
+
+    // Generate signed URL and redirect
+    const signedUrl = await generateSignedUrl(payment.receipt.gcsPath);
+    return res.redirect(signedUrl);
+  } catch (err) {
+    console.error("Error viewing receipt:", err);
+    req.flash("error_msg", "Failed to load receipt.");
+    res.redirect("/student/payments");
+  }
+};
+
+/**
+ * View proof of payment (student version)
+ */
+exports.viewMyProofOfPayment = async (req, res) => {
+  try {
+    const paymentId = req.params.id;
+
+    const payment = await Payment.findOne({
+      _id: paymentId,
+      student: req.user._id,
+    });
+
+    if (
+      !payment ||
+      !payment.proofOfPayment ||
+      !payment.proofOfPayment.gcsPath
+    ) {
+      req.flash("error_msg", "Proof of payment not found.");
+      return res.redirect("/student/payments");
+    }
+
+    const signedUrl = await generateSignedUrl(payment.proofOfPayment.gcsPath);
+    return res.redirect(signedUrl);
+  } catch (err) {
+    console.error("Error viewing proof:", err);
+    req.flash("error_msg", "Failed to load proof of payment.");
+    res.redirect("/student/payments");
+  }
+};
