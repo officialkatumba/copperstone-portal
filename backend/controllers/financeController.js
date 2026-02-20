@@ -2888,3 +2888,188 @@ exports.generatePaymentReport = async (req, res) => {
     res.redirect("/finance/reports");
   }
 };
+
+// Add this at the top with other requires
+const { generatePaymentExcel } = require("../utils/excelGenerator");
+
+// Add this new function for Excel export
+exports.exportPaymentReportExcel = async (req, res) => {
+  try {
+    const { startDate, endDate, search = "" } = req.query;
+
+    // Default dates
+    const defaultStartDate = new Date();
+    defaultStartDate.setDate(1);
+    defaultStartDate.setHours(0, 0, 0, 0);
+
+    const defaultEndDate = new Date();
+    defaultEndDate.setHours(23, 59, 59, 999);
+
+    const start = startDate ? new Date(startDate) : defaultStartDate;
+    const end = endDate ? new Date(endDate) : defaultEndDate;
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    // Build query
+    let query = {
+      createdAt: { $gte: start, $lte: end },
+    };
+
+    // Add search if provided
+    if (search && search.trim() !== "") {
+      const searchRegex = new RegExp(search.trim(), "i");
+      const students = await User.find({
+        role: "Student",
+        $or: [
+          { firstName: searchRegex },
+          { surname: searchRegex },
+          { email: searchRegex },
+        ],
+      }).select("_id");
+
+      query = {
+        ...query,
+        $or: [
+          { reference: searchRegex },
+          { category: searchRegex },
+          { student: { $in: students.map((s) => s._id) } },
+        ],
+      };
+    }
+
+    // Fetch all payments for the period
+    const allPayments = await Payment.find(query)
+      .populate("student", "firstName surname email studentId")
+      .populate("verifiedBy", "firstName surname")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Calculate summary
+    const summary = allPayments.reduce(
+      (acc, payment) => {
+        const category = payment.category || "Uncategorized";
+
+        if (!acc.categories[category]) {
+          acc.categories[category] = {
+            count: 0,
+            totalAmount: 0,
+            totalDue: 0,
+            totalBalance: 0,
+          };
+        }
+
+        acc.categories[category].count++;
+        acc.categories[category].totalAmount += payment.amount || 0;
+        acc.categories[category].totalDue += payment.totalDue || 0;
+        acc.categories[category].totalBalance +=
+          payment.balanceAfterPayment || 0;
+
+        acc.totalAmount += payment.amount || 0;
+        acc.totalPayments++;
+        acc.totalDue += payment.totalDue || 0;
+        acc.totalBalance += payment.balanceAfterPayment || 0;
+
+        acc.maxAmount = Math.max(acc.maxAmount, payment.amount || 0);
+        acc.minAmount =
+          acc.minAmount === 0
+            ? payment.amount || 0
+            : Math.min(acc.minAmount, payment.amount || 0);
+
+        acc.statusCount[payment.status] =
+          (acc.statusCount[payment.status] || 0) + 1;
+
+        return acc;
+      },
+      {
+        totalAmount: 0,
+        totalPayments: 0,
+        totalDue: 0,
+        totalBalance: 0,
+        totalPaid: 0,
+        maxAmount: 0,
+        minAmount: 0,
+        categories: {},
+        statusCount: {},
+      },
+    );
+
+    summary.totalPaid = summary.totalDue - summary.totalBalance;
+    summary.completionPercentage =
+      summary.totalDue > 0
+        ? Math.round((summary.totalPaid / summary.totalDue) * 100)
+        : 0;
+    summary.averageAmount =
+      summary.totalPayments > 0
+        ? summary.totalAmount / summary.totalPayments
+        : 0;
+
+    // Calculate category percentages
+    for (const category in summary.categories) {
+      summary.categories[category].percentage =
+        summary.totalAmount > 0
+          ? (
+              (summary.categories[category].totalAmount / summary.totalAmount) *
+              100
+            ).toFixed(1)
+          : "0.0";
+    }
+
+    const formattedStart = start.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    const formattedEnd = end.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    const reportData = {
+      payments: allPayments,
+      allPayments: allPayments,
+      allPaymentsCount: allPayments.length,
+      summary,
+      dateRange: {
+        start: start.toISOString().split("T")[0],
+        end: end.toISOString().split("T")[0],
+        formattedStart,
+        formattedEnd,
+      },
+      generatedAt: new Date().toLocaleString(),
+    };
+
+    // Generate Excel file
+    const excelPath = await generatePaymentExcel(reportData);
+
+    // Upload to GCS or send directly
+    const gcsPath = `reports/excel/payment_report_${Date.now()}.xlsx`;
+    await uploadFile(excelPath, gcsPath);
+    const signedUrl = await generateSignedUrl(gcsPath);
+
+    // Clean up temp file
+    if (fs.existsSync(excelPath)) {
+      fs.unlinkSync(excelPath);
+    }
+
+    res.json({
+      success: true,
+      message: "Excel report generated successfully",
+      downloadUrl: signedUrl,
+      reportData: {
+        dateRange: `${formattedStart} to ${formattedEnd}`,
+        totalPayments: summary.totalPayments,
+        totalAmount: formatNumber(summary.totalAmount),
+        totalBalance: formatNumber(summary.totalBalance),
+      },
+    });
+  } catch (err) {
+    console.error("Excel export error:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate Excel report",
+    });
+  }
+};

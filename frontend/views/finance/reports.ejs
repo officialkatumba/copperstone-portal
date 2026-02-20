@@ -47,6 +47,14 @@
                                                         <i class="fas fa-file-pdf me-1"></i> PDF Download
                                                     </label>
                                                 </div>
+                                                <!-- Add this inside the form, after the PDF radio button -->
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="outputFormat"
+                                                        id="formatExcel" value="excel">
+                                                    <label class="form-check-label" for="formatExcel">
+                                                        <i class="fas fa-file-excel me-1"></i> Excel Export
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -279,93 +287,273 @@
                 });
 
                 // PDF report handling
+                // reportForm.addEventListener('submit', function (e) {
+                //     const outputFormat = document.querySelector('input[name="outputFormat"]:checked').value;
+
+                //     if (outputFormat === 'pdf') {
+                //         e.preventDefault();
+                //         const reportResults = document.getElementById('reportResults');
+
+                //         reportResults.innerHTML = `
+                //     <div class="text-center py-5">
+                //         <div class="spinner-border text-primary" role="status">
+                //             <span class="visually-hidden">Loading...</span>
+                //         </div>
+                //         <p class="mt-3 text-primary">
+                //             <i class="fas fa-file-pdf me-2"></i>Generating PDF report with balance details...
+                //         </p>
+                //     </div>
+                // `;
+
+                //         const formData = new FormData(this);
+                //         const params = new URLSearchParams(formData).toString();
+
+                //         fetch(`/finance/reports/generate?${params}`)
+                //             .then(response => response.json())
+                //             .then(data => {
+                //                 if (data.success) {
+                //                     window.open(data.downloadUrl, '_blank');
+                //                     reportResults.innerHTML = `
+                //                 <div class="alert alert-success border-success">
+                //                     <h5 class="text-success">
+                //                         <i class="fas fa-check-circle me-2"></i>PDF Report Generated!
+                //                     </h5>
+                //                     <div class="row mt-3">
+                //                         <div class="col-md-4">
+                //                             <div class="card stat-card">
+                //                                 <div class="card-body text-center">
+                //                                     <h3 class="mb-2">${formatInteger(data.reportData.totalPayments)}</h3>
+                //                                     <p class="mb-0 small text-muted">Total Payments</p>
+                //                                 </div>
+                //                             </div>
+                //                         </div>
+                //                         <div class="col-md-4">
+                //                             <div class="card stat-card">
+                //                                 <div class="card-body text-center">
+                //                                     <h3 class="mb-2 balance-positive">ZMW ${data.reportData.totalAmount}</h3>
+                //                                     <p class="mb-0 small text-muted">Total Collected</p>
+                //                                 </div>
+                //                             </div>
+                //                         </div>
+                //                         <div class="col-md-4">
+                //                             <div class="card stat-card">
+                //                                 <div class="card-body text-center">
+                //                                     <h3 class="mb-2 balance-negative">ZMW ${data.reportData.totalBalance}</h3>
+                //                                     <p class="mb-0 small text-muted">Outstanding Balance</p>
+                //                                 </div>
+                //                             </div>
+                //                         </div>
+                //                     </div>
+                //                     <div class="mt-4 text-center">
+                //                         <a href="${data.downloadUrl}" class="btn btn-success btn-gradient" target="_blank">
+                //                             <i class="fas fa-download me-1"></i> Download PDF
+                //                         </a>
+                //                         <a href="/finance/reports" class="btn btn-outline-primary ms-2">
+                //                             <i class="fas fa-redo me-1"></i> Generate Another
+                //                         </a>
+                //                     </div>
+                //                 </div>
+                //             `;
+                //                 } else {
+                //                     reportResults.innerHTML = `
+                //                 <div class="alert alert-danger border-danger">
+                //                     <i class="fas fa-exclamation-triangle me-2"></i>
+                //                     Failed to generate PDF: ${data.error}
+                //                 </div>
+                //             `;
+                //                 }
+                //             })
+                //             .catch(error => {
+                //                 reportResults.innerHTML = `
+                //             <div class="alert alert-danger border-danger">
+                //                 <i class="fas fa-exclamation-triangle me-2"></i>
+                //                 Error generating PDF report
+                //             </div>
+                //         `;
+                //                 console.error('Error:', error);
+                //             });
+                //     }
+                // });
+
+                // PDF and Excel report handling
                 reportForm.addEventListener('submit', function (e) {
                     const outputFormat = document.querySelector('input[name="outputFormat"]:checked').value;
 
                     if (outputFormat === 'pdf') {
                         e.preventDefault();
-                        const reportResults = document.getElementById('reportResults');
+                        handlePDFReport(this);
+                    } else if (outputFormat === 'excel') {
+                        e.preventDefault();
+                        handleExcelReport(this);
+                    }
+                    // HTML format will submit normally
+                });
 
-                        reportResults.innerHTML = `
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
+                function handlePDFReport(form) {
+                    const reportResults = document.getElementById('reportResults');
+
+                    reportResults.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-primary">
+                <i class="fas fa-file-pdf me-2"></i>Generating PDF report with balance details...
+            </p>
+        </div>
+    `;
+
+                    const formData = new FormData(form);
+                    const params = new URLSearchParams(formData).toString();
+
+                    fetch(`/finance/reports/generate?${params}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                window.open(data.downloadUrl, '_blank');
+                                reportResults.innerHTML = `
+                    <div class="alert alert-success border-success">
+                        <h5 class="text-success">
+                            <i class="fas fa-check-circle me-2"></i>PDF Report Generated!
+                        </h5>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="card stat-card">
+                                    <div class="card-body text-center">
+                                        <h3 class="mb-2">${formatInteger(data.reportData.totalPayments)}</h3>
+                                        <p class="mb-0 small text-muted">Total Payments</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card stat-card">
+                                    <div class="card-body text-center">
+                                        <h3 class="mb-2 balance-positive">ZMW ${data.reportData.totalAmount}</h3>
+                                        <p class="mb-0 small text-muted">Total Collected</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card stat-card">
+                                    <div class="card-body text-center">
+                                        <h3 class="mb-2 balance-negative">ZMW ${data.reportData.totalBalance}</h3>
+                                        <p class="mb-0 small text-muted">Outstanding Balance</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <p class="mt-3 text-primary">
-                            <i class="fas fa-file-pdf me-2"></i>Generating PDF report with balance details...
-                        </p>
+                        <div class="mt-4 text-center">
+                            <a href="${data.downloadUrl}" class="btn btn-success btn-gradient" target="_blank">
+                                <i class="fas fa-download me-1"></i> Download PDF
+                            </a>
+                            <a href="/finance/reports" class="btn btn-outline-primary ms-2">
+                                <i class="fas fa-redo me-1"></i> Generate Another
+                            </a>
+                        </div>
                     </div>
                 `;
-
-                        const formData = new FormData(this);
-                        const params = new URLSearchParams(formData).toString();
-
-                        fetch(`/finance/reports/generate?${params}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    window.open(data.downloadUrl, '_blank');
-                                    reportResults.innerHTML = `
-                                <div class="alert alert-success border-success">
-                                    <h5 class="text-success">
-                                        <i class="fas fa-check-circle me-2"></i>PDF Report Generated!
-                                    </h5>
-                                    <div class="row mt-3">
-                                        <div class="col-md-4">
-                                            <div class="card stat-card">
-                                                <div class="card-body text-center">
-                                                    <h3 class="mb-2">${formatInteger(data.reportData.totalPayments)}</h3>
-                                                    <p class="mb-0 small text-muted">Total Payments</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="card stat-card">
-                                                <div class="card-body text-center">
-                                                    <h3 class="mb-2 balance-positive">ZMW ${data.reportData.totalAmount}</h3>
-                                                    <p class="mb-0 small text-muted">Total Collected</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="card stat-card">
-                                                <div class="card-body text-center">
-                                                    <h3 class="mb-2 balance-negative">ZMW ${data.reportData.totalBalance}</h3>
-                                                    <p class="mb-0 small text-muted">Outstanding Balance</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4 text-center">
-                                        <a href="${data.downloadUrl}" class="btn btn-success btn-gradient" target="_blank">
-                                            <i class="fas fa-download me-1"></i> Download PDF
-                                        </a>
-                                        <a href="/finance/reports" class="btn btn-outline-primary ms-2">
-                                            <i class="fas fa-redo me-1"></i> Generate Another
-                                        </a>
-                                    </div>
-                                </div>
-                            `;
-                                } else {
-                                    reportResults.innerHTML = `
-                                <div class="alert alert-danger border-danger">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Failed to generate PDF: ${data.error}
-                                </div>
-                            `;
-                                }
-                            })
-                            .catch(error => {
+                            } else {
                                 reportResults.innerHTML = `
-                            <div class="alert alert-danger border-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                Error generating PDF report
+                    <div class="alert alert-danger border-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Failed to generate PDF: ${data.error}
+                    </div>
+                `;
+                            }
+                        })
+                        .catch(error => {
+                            reportResults.innerHTML = `
+                <div class="alert alert-danger border-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error generating PDF report
+                </div>
+            `;
+                            console.error('Error:', error);
+                        });
+                }
+
+                function handleExcelReport(form) {
+                    const reportResults = document.getElementById('reportResults');
+
+                    reportResults.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-success">
+                <i class="fas fa-file-excel me-2"></i>Generating Excel report...
+            </p>
+        </div>
+    `;
+
+                    const formData = new FormData(form);
+                    const params = new URLSearchParams(formData).toString();
+
+                    fetch(`/finance/reports/export-excel?${params}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                window.open(data.downloadUrl, '_blank');
+                                reportResults.innerHTML = `
+                    <div class="alert alert-success border-success">
+                        <h5 class="text-success">
+                            <i class="fas fa-check-circle me-2"></i>Excel Report Generated!
+                        </h5>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="card stat-card">
+                                    <div class="card-body text-center">
+                                        <h3 class="mb-2">${formatInteger(data.reportData.totalPayments)}</h3>
+                                        <p class="mb-0 small text-muted">Total Payments</p>
+                                    </div>
+                                </div>
                             </div>
-                        `;
-                                console.error('Error:', error);
-                            });
-                    }
-                });
+                            <div class="col-md-4">
+                                <div class="card stat-card">
+                                    <div class="card-body text-center">
+                                        <h3 class="mb-2 balance-positive">ZMW ${data.reportData.totalAmount}</h3>
+                                        <p class="mb-0 small text-muted">Total Collected</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card stat-card">
+                                    <div class="card-body text-center">
+                                        <h3 class="mb-2 balance-negative">ZMW ${data.reportData.totalBalance}</h3>
+                                        <p class="mb-0 small text-muted">Outstanding Balance</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <a href="${data.downloadUrl}" class="btn btn-success btn-gradient" target="_blank">
+                                <i class="fas fa-download me-1"></i> Download Excel
+                            </a>
+                            <a href="/finance/reports" class="btn btn-outline-primary ms-2">
+                                <i class="fas fa-redo me-1"></i> Generate Another
+                            </a>
+                        </div>
+                    </div>
+                `;
+                            } else {
+                                reportResults.innerHTML = `
+                    <div class="alert alert-danger border-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Failed to generate Excel: ${data.error}
+                    </div>
+                `;
+                            }
+                        })
+                        .catch(error => {
+                            reportResults.innerHTML = `
+                <div class="alert alert-danger border-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error generating Excel report
+                </div>
+            `;
+                            console.error('Error:', error);
+                        });
+                }
 
                 // ============ FUNCTION TO DISPLAY QUICK STATS WITH THOUSAND SEPARATORS ============
                 function displayQuickStats(stats) {

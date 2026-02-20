@@ -18,6 +18,7 @@ const {
   showReportsPage,
   generatePaymentReport,
   quickStatsReport,
+  exportPaymentReportExcel,
 } = require("../controllers/financeController");
 
 // Import multer middleware from your existing GCS config
@@ -156,6 +157,14 @@ router.get(
   // ensureAuthenticated,
   // ensureFinanceOfficer,
   quickStatsReport,
+);
+
+// Add this with other report routes
+router.get(
+  "/reports/export-excel",
+  // ensureAuthenticated,
+  // ensureFinanceOfficer,
+  exportPaymentReportExcel, // Add this line
 );
 
 module.exports = router;
