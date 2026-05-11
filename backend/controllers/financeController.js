@@ -1375,576 +1375,6 @@ exports.quickStatsReport = async (req, res) => {
 
 ////////////////////////////////////////////////
 
-// ================================
-// PDF GENERATOR - FIXED FOR FULL PAYMENTS DISPLAY
-// ================================
-
-// ================================
-// PDF GENERATOR - SINGLE COLUMN SUMMARY, NO EMPTY PAGES
-// ================================
-
-// ================================
-// PDF GENERATOR - PERFECT LAYOUT, NO OVERLAPPING
-// ================================
-
-// async function generatePaymentReportPDF(reportData) {
-//   const PDFDocument = require("pdfkit");
-//   const tempDir = path.join(__dirname, "../temp");
-
-//   if (!fs.existsSync(tempDir)) {
-//     fs.mkdirSync(tempDir, { recursive: true });
-//   }
-
-//   const pdfPath = path.join(tempDir, `payment_report_${Date.now()}.pdf`);
-
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       const doc = new PDFDocument({
-//         margin: 50,
-//         size: "A4",
-//         bufferPages: true,
-//       });
-
-//       const stream = fs.createWriteStream(pdfPath);
-//       doc.pipe(stream);
-
-//       // Download logo if available
-//       let logoBuffer = null;
-//       try {
-//         if (process.env.LOGO) {
-//           logoBuffer = await downloadImage(process.env.LOGO);
-//         }
-//       } catch (e) {
-//         console.warn("⚠️ Could not load logo:", e.message);
-//       }
-
-//       // ============ COPPERSTONE HEADER ============
-//       function addCopperstoneHeader() {
-//         const startY = 30;
-//         doc.y = startY;
-
-//         // Logo
-//         if (logoBuffer) {
-//           try {
-//             doc.image(logoBuffer, 50, startY, { width: 60, height: 60 });
-//           } catch (e) {}
-//         }
-
-//         // University Header
-//         doc
-//           .fontSize(18)
-//           .font("Helvetica-Bold")
-//           .fillColor("#003366")
-//           .text("COPPERSTONE UNIVERSITY", 120, startY + 5, {
-//             align: "center",
-//             width: 430,
-//           });
-
-//         // Address - Single line each
-//         doc
-//           .fontSize(8)
-//           .font("Helvetica")
-//           .fillColor("#4a5568")
-//           .text(
-//             "Plot 38002, Baluba Campus, P.O. Box 22041,",
-//             120,
-//             startY + 30,
-//             { align: "center", width: 430 },
-//           )
-//           .text(
-//             "Along Ndola – Kitwe Dual carriageway, KITWE, ZAMBIA",
-//             120,
-//             startY + 45,
-//             { align: "center", width: 430 },
-//           )
-//           .text(
-//             "Cell: +260 965571607, +260 0967499292, +260 965 653 101",
-//             120,
-//             startY + 60,
-//             { align: "center", width: 430 },
-//           )
-//           .text(
-//             "www.copperstoneuniversity.edu.zm | customercareucopperstone@gmail.com",
-//             120,
-//             startY + 75,
-//             { align: "center", width: 430 },
-//           );
-
-//         // Report Title
-//         doc
-//           .fontSize(16)
-//           .font("Helvetica-Bold")
-//           .fillColor("#2c3e50")
-//           .text("FINANCIAL PAYMENTS REPORT", 50, startY + 110, {
-//             align: "center",
-//             width: 500,
-//           });
-
-//         // Date Range
-//         doc
-//           .fontSize(11)
-//           .font("Helvetica")
-//           .fillColor("#4a5568")
-//           .text(
-//             `Period: ${reportData.dateRange.formattedStart} - ${reportData.dateRange.formattedEnd}`,
-//             50,
-//             startY + 140,
-//             { align: "center", width: 500 },
-//           );
-
-//         doc.y = startY + 170;
-//       }
-
-//       // ============ FOOTER WITH CONFIDENTIAL ============
-//       function addFooter(pageNum, totalPages) {
-//         const footerY = doc.page.height - 45;
-
-//         // Footer line
-//         doc
-//           .moveTo(50, footerY - 15)
-//           .lineTo(550, footerY - 15)
-//           .lineWidth(0.5)
-//           .strokeColor("#cbd5e0")
-//           .stroke();
-
-//         // Page number - LEFT
-//         doc
-//           .fontSize(9)
-//           .font("Helvetica")
-//           .fillColor("#718096")
-//           .text(`Page ${pageNum} of ${totalPages}`, 50, footerY, {
-//             align: "left",
-//             width: 150,
-//           });
-
-//         // Confidential - CENTER
-//         doc
-//           .fontSize(9)
-//           .font("Helvetica-Bold")
-//           .fillColor("#e53e3e")
-//           .text("CONFIDENTIAL REPORT", 200, footerY, {
-//             align: "center",
-//             width: 200,
-//           });
-
-//         // Finance Department - RIGHT
-//         doc
-//           .fontSize(9)
-//           .font("Helvetica")
-//           .fillColor("#4a5568")
-//           .text("Finance Department", 450, footerY, {
-//             align: "right",
-//             width: 100,
-//           });
-//       }
-
-//       // ============ STATUS BREAKDOWN - ELEGANT BARS ============
-//       function addStatusBreakdown() {
-//         doc
-//           .fontSize(14)
-//           .font("Helvetica-Bold")
-//           .fillColor("#2c3e50")
-//           .text("STATUS BREAKDOWN", 50, doc.y, {
-//             align: "center",
-//             width: 500,
-//           });
-//         doc.moveDown(1);
-
-//         const totalPayments = reportData.summary.totalPayments;
-//         const statusEntries = Object.entries(reportData.summary.statusCount);
-//         const startY = doc.y;
-
-//         statusEntries.forEach(([status, count], index) => {
-//           const percentage =
-//             totalPayments > 0 ? ((count / totalPayments) * 100).toFixed(1) : 0;
-//           const yPos = startY + index * 35;
-
-//           // Status and count - LEFT aligned with proper spacing
-//           doc
-//             .fontSize(10)
-//             .font("Helvetica-Bold")
-//             .fillColor("#2d3748")
-//             .text(`${status}:`, 70, yPos);
-
-//           doc
-//             .fontSize(10)
-//             .font("Helvetica")
-//             .fillColor("#4a5568")
-//             .text(`${count.toLocaleString()} (${percentage}%)`, 170, yPos);
-
-//           // Elegant bar - PROPORTIONAL
-//           const barWidth = 250;
-//           const barX = 250;
-//           const barY = yPos + 4;
-
-//           // Background bar
-//           doc.rect(barX, barY, barWidth, 8).fillColor("#edf2f7").fill();
-
-//           // Colored bar
-//           let barColor = "#718096";
-//           if (status === "Verified" || status === "Fully Paid")
-//             barColor = "#38a169";
-//           else if (status === "Pending") barColor = "#ecc94b";
-//           else if (status === "Rejected") barColor = "#e53e3e";
-//           else if (status === "Partially Paid") barColor = "#4299e1";
-
-//           doc
-//             .rect(barX, barY, barWidth * (percentage / 100), 8)
-//             .fillColor(barColor)
-//             .fill();
-//         });
-
-//         doc.y = startY + statusEntries.length * 35 + 20;
-//       }
-
-//       // ============ CATEGORY TABLE HEADERS - OPTIMIZED SPACING ============
-//       function addCategoryHeaders(yPos) {
-//         // Header background
-//         doc
-//           .rect(50, yPos - 5, 500, 22)
-//           .fillColor("#f7fafc")
-//           .fill();
-
-//         doc.fillColor("#2d3748").fontSize(9).font("Helvetica-Bold");
-
-//         // OPTIMIZED COLUMN POSITIONS - NO OVERLAP, CLEAR SEPARATION
-//         doc.text("Category", 55, yPos); // 55-165 (110px)
-//         doc.text("Count", 180, yPos, { align: "right" }); // 180-215 (35px)
-//         doc.text("Collected", 240, yPos, { align: "right" }); // 240-300 (60px)
-//         doc.text("Due", 330, yPos, { align: "right" }); // 330-380 (50px)
-//         doc.text("Balance", 410, yPos, { align: "right" }); // 410-480 (70px)
-//         doc.text("%", 520, yPos, { align: "right" }); // 520-550 (30px)
-
-//         doc.fillColor("#000000");
-//         doc.font("Helvetica");
-//         return yPos + 25;
-//       }
-
-//       // ============ PAYMENT TABLE HEADERS - OPTIMIZED SPACING ============
-//       function addPaymentHeaders(yPos) {
-//         // Header background
-//         doc
-//           .rect(50, yPos - 4, 500, 20)
-//           .fillColor("#f7fafc")
-//           .fill();
-
-//         doc.fillColor("#2d3748").fontSize(8).font("Helvetica-Bold");
-
-//         // OPTIMIZED COLUMN POSITIONS - PERFECT ALIGNMENT, NO OVERLAP
-//         doc.text("Date", 55, yPos); // 55-100 (45px)
-//         doc.text("Receipt", 105, yPos); // 105-145 (40px)
-//         doc.text("Student Name", 155, yPos); // 155-235 (80px)
-//         doc.text("Amount", 245, yPos, { align: "right" }); // 245-285 (40px)
-//         doc.text("Due", 295, yPos, { align: "right" }); // 295-335 (40px)
-//         doc.text("Balance", 345, yPos, { align: "right" }); // 345-385 (40px)
-//         doc.text("Method", 395, yPos); // 395-435 (40px)
-//         doc.text("Status", 445, yPos); // 445-520 (75px)
-
-//         doc.fillColor("#000000");
-//         doc.font("Helvetica");
-//         return yPos + 22;
-//       }
-
-//       // ============ PAGE ADDED EVENT ============
-//       doc.on("pageAdded", () => {
-//         addCopperstoneHeader();
-//       });
-
-//       // ============ FIRST PAGE ============
-//       addCopperstoneHeader();
-//       doc.moveDown(1);
-
-//       // ============ FINANCIAL SUMMARY - SINGLE COLUMN, CENTERED ============
-//       doc
-//         .fontSize(14)
-//         .font("Helvetica-Bold")
-//         .fillColor("#2c3e50")
-//         .text("FINANCIAL SUMMARY", 50, doc.y, {
-//           align: "center",
-//           width: 500,
-//         });
-//       doc.moveDown(1);
-
-//       doc.fontSize(10).font("Helvetica").fillColor("#4a5568");
-
-//       const summaryItems = [
-//         `Total Payments: ${reportData.allPaymentsCount.toLocaleString()}`,
-//         `Total Amount Collected: ZMW ${formatNumber(reportData.summary.totalAmount)}`,
-//         `Total Amount Due: ZMW ${formatNumber(reportData.summary.totalDue)}`,
-//         `Total Amount Paid: ZMW ${formatNumber(reportData.summary.totalPaid)}`,
-//         `Outstanding Balance: ZMW ${formatNumber(reportData.summary.totalBalance)}`,
-//         `Completion Rate: ${reportData.summary.completionPercentage}%`,
-//         `Generated: ${reportData.generatedAt}`,
-//       ];
-
-//       summaryItems.forEach((item) => {
-//         doc.text(item, { align: "center" });
-//         doc.moveDown(0.4);
-//       });
-
-//       doc.moveDown(1);
-
-//       // ============ STATUS BREAKDOWN ============
-//       addStatusBreakdown();
-//       doc.moveDown(1);
-
-//       // ============ CATEGORY BREAKDOWN ============
-//       doc
-//         .fontSize(14)
-//         .font("Helvetica-Bold")
-//         .fillColor("#2c3e50")
-//         .text("CATEGORY BREAKDOWN", 50, doc.y, {
-//           align: "center",
-//           width: 500,
-//         });
-//       doc.moveDown(1);
-
-//       let catY = addCategoryHeaders(doc.y);
-
-//       const categories = Object.entries(reportData.summary.categories).sort(
-//         (a, b) => b[1].totalAmount - a[1].totalAmount,
-//       );
-
-//       if (categories.length === 0) {
-//         doc
-//           .fontSize(10)
-//           .font("Helvetica")
-//           .fillColor("#718096")
-//           .text("No category data available for this period.", 50, catY, {
-//             align: "center",
-//             width: 500,
-//           });
-//         catY += 30;
-//       } else {
-//         categories.forEach(([category, data]) => {
-//           // Check if we need a new page
-//           if (catY > 720) {
-//             doc.addPage();
-//             doc
-//               .fontSize(14)
-//               .font("Helvetica-Bold")
-//               .fillColor("#2c3e50")
-//               .text("CATEGORY BREAKDOWN (Continued)", 50, doc.y, {
-//                 align: "center",
-//                 width: 500,
-//               });
-//             doc.moveDown(1);
-//             catY = addCategoryHeaders(doc.y);
-//           }
-
-//           doc.fontSize(9).font("Helvetica");
-
-//           // OPTIMIZED POSITIONS - PERFECT ALIGNMENT
-//           const displayCategory =
-//             category.length > 22 ? category.substring(0, 19) + "..." : category;
-
-//           // Left align category
-//           doc.text(displayCategory, 55, catY);
-
-//           // Right align all numbers
-//           doc.text(data.count.toLocaleString(), 180, catY, { align: "right" });
-//           doc.text(formatNumber(data.totalAmount), 240, catY, {
-//             align: "right",
-//           });
-//           doc.text(formatNumber(data.totalDue), 330, catY, { align: "right" });
-//           doc.text(formatNumber(data.totalBalance), 410, catY, {
-//             align: "right",
-//           });
-//           doc.text(`${data.percentage}%`, 520, catY, { align: "right" });
-
-//           catY += 22;
-//         });
-//       }
-
-//       doc.moveDown(2);
-
-//       // ============ DETAILED PAYMENTS ============
-//       doc
-//         .fontSize(14)
-//         .font("Helvetica-Bold")
-//         .fillColor("#2c3e50")
-//         .text("DETAILED PAYMENTS", 50, doc.y, {
-//           align: "center",
-//           width: 500,
-//         });
-//       doc.moveDown(0.5);
-
-//       const allPaymentsForPDF = reportData.allPayments || reportData.payments;
-
-//       doc
-//         .fontSize(9)
-//         .font("Helvetica")
-//         .fillColor("#718096")
-//         .text(
-//           `Showing ALL ${allPaymentsForPDF.length.toLocaleString()} payments for the selected period`,
-//           50,
-//           doc.y,
-//           { align: "center", width: 500 },
-//         );
-//       doc.moveDown(1);
-
-//       let payY = addPaymentHeaders(doc.y);
-
-//       if (allPaymentsForPDF.length === 0) {
-//         doc
-//           .fontSize(10)
-//           .font("Helvetica")
-//           .fillColor("#718096")
-//           .text("No payment records found for this period.", 50, payY, {
-//             align: "center",
-//             width: 500,
-//           });
-//         payY += 30;
-//       } else {
-//         allPaymentsForPDF.forEach((payment) => {
-//           // Check if we need a new page
-//           if (payY > 740) {
-//             doc.addPage();
-//             doc
-//               .fontSize(14)
-//               .font("Helvetica-Bold")
-//               .fillColor("#2c3e50")
-//               .text("DETAILED PAYMENTS (Continued)", 50, doc.y, {
-//                 align: "center",
-//                 width: 500,
-//               });
-//             doc.moveDown(0.5);
-//             payY = addPaymentHeaders(doc.y);
-//           }
-
-//           // FULL STUDENT NAME - NO ABBREVIATION
-//           const studentName = payment.student
-//             ? `${payment.student.firstName || ""} ${payment.student.surname || ""}`.trim()
-//             : "N/A";
-
-//           // Truncate only if absolutely necessary for the column width
-//           const displayName =
-//             studentName.length > 22
-//               ? studentName.substring(0, 19) + "..."
-//               : studentName;
-
-//           doc.fontSize(8).font("Helvetica");
-
-//           // OPTIMIZED POSITIONS - PERFECT ALIGNMENT, NO OVERLAP
-//           // Date column
-//           doc.text(
-//             payment.createdAt
-//               ? new Date(payment.createdAt).toLocaleDateString("en-GB")
-//               : "N/A",
-//             55,
-//             payY,
-//           );
-
-//           // Receipt column
-//           doc.text(
-//             payment.reference ? payment.reference.substring(0, 10) : "N/A",
-//             105,
-//             payY,
-//           );
-
-//           // Student name column
-//           doc.text(displayName, 155, payY);
-
-//           // Amount - right aligned
-//           doc.text(formatNumber(payment.amount), 245, payY, { align: "right" });
-
-//           // Due - right aligned
-//           doc.text(formatNumber(payment.totalDue || 0), 295, payY, {
-//             align: "right",
-//           });
-
-//           // Balance - right aligned
-//           doc.text(formatNumber(payment.balanceAfterPayment || 0), 345, payY, {
-//             align: "right",
-//           });
-
-//           // Method
-//           doc.text(payment.method || "N/A", 395, payY);
-
-//           // Status with color - optimized width
-//           let statusColor = "#718096";
-//           let statusText = payment.status || "N/A";
-
-//           if (
-//             payment.status === "Verified" ||
-//             payment.status === "Fully Paid"
-//           ) {
-//             statusColor = "#38a169";
-//             statusText =
-//               payment.status === "Fully Paid" ? "Fully Paid" : "Verified";
-//           } else if (payment.status === "Pending") {
-//             statusColor = "#ecc94b";
-//           } else if (payment.status === "Rejected") {
-//             statusColor = "#e53e3e";
-//           } else if (payment.status === "Partially Paid") {
-//             statusColor = "#4299e1";
-//             statusText = "Partially Pd";
-//           }
-
-//           doc.fillColor(statusColor).text(statusText, 445, payY);
-//           doc.fillColor("#000000");
-
-//           payY += 20;
-//         });
-//       }
-
-//       // ============ END OF REPORT ============
-//       if (allPaymentsForPDF.length > 0) {
-//         // Check available space on current page
-//         if (payY < doc.page.height - 80) {
-//           doc.y = payY + 15;
-//         } else {
-//           doc.addPage();
-//           addCopperstoneHeader();
-//           doc.y = doc.y + 50;
-//         }
-
-//         // End of report marker
-//         doc
-//           .fontSize(10)
-//           .font("Helvetica-Oblique")
-//           .fillColor("#718096")
-//           .text("✦ ✦ ✦ END OF REPORT ✦ ✦ ✦", 50, doc.y, {
-//             align: "center",
-//             width: 500,
-//           });
-
-//         doc
-//           .fontSize(8)
-//           .font("Helvetica")
-//           .fillColor("#4a5568")
-//           .text(
-//             "This is a computer-generated document. No signature is required.",
-//             50,
-//             doc.y + 20,
-//             { align: "center", width: 500 },
-//           );
-//       }
-
-//       // ============ FINALIZE PAGES ============
-//       const totalPages = doc.bufferedPageRange().count;
-
-//       // Add footers to all pages
-//       for (let i = 0; i < totalPages; i++) {
-//         doc.switchToPage(i);
-//         addFooter(i + 1, totalPages);
-//       }
-
-//       doc.end();
-
-//       stream.on("finish", () => resolve(pdfPath));
-//       stream.on("error", reject);
-//     } catch (error) {
-//       console.error("PDF Generation Error:", error);
-//       reject(error);
-//     }
-//   });
-// }
-
-// ================================
-// PDF GENERATOR - PROFESSIONAL LANDSCAPE LAYOUT WITH CATEGORY COLUMN
-// ================================
-
 async function generatePaymentReportPDF(reportData) {
   const PDFDocument = require("pdfkit");
   const tempDir = path.join(__dirname, "../temp");
@@ -2682,11 +2112,11 @@ exports.generatePaymentReport = async (req, res) => {
       endDate,
       outputFormat = "html",
       page = 1,
-      limit = 20,
+      limit = 50,
       search = "",
     } = req.query;
 
-    // Default dates
+    // Default dates: current month
     const defaultStartDate = new Date();
     defaultStartDate.setDate(1);
     defaultStartDate.setHours(0, 0, 0, 0);
@@ -2700,41 +2130,56 @@ exports.generatePaymentReport = async (req, res) => {
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
 
-    // ============ BUILD QUERY WITH SEARCH ============
+    // Build query
     let query = {
       createdAt: { $gte: start, $lte: end },
     };
 
-    // Add search functionality for HTML view
-    if (search && search.trim() !== "" && outputFormat === "html") {
+    // Add search if provided
+    if (search && search.trim() !== "") {
       const searchRegex = new RegExp(search.trim(), "i");
+
+      const students = await User.find({
+        role: "Student",
+        $or: [
+          { firstName: searchRegex },
+          { surname: searchRegex },
+          { email: searchRegex },
+          { studentId: searchRegex },
+        ],
+      }).select("_id");
+
       query = {
         ...query,
         $or: [
           { reference: searchRegex },
           { category: searchRegex },
-          { status: searchRegex },
           { method: searchRegex },
+          { status: searchRegex },
+          { student: { $in: students.map((s) => s._id) } },
         ],
       };
     }
 
-    // ============ FETCH ALL PAYMENTS FOR SUMMARY (ALWAYS) ============
+    // Fetch ALL payments for summary and PDF
     const allPayments = await Payment.find(query)
       .populate("student", "firstName surname email studentId")
       .populate("verifiedBy", "firstName surname")
       .sort({ createdAt: -1 })
       .lean();
 
-    // ============ FETCH PAGINATED PAYMENTS FOR HTML VIEW ============
-    let payments = allPayments;
+    // Paginated payments for HTML view only
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    if (outputFormat === "html") {
-      const skip = (parseInt(page) - 1) * parseInt(limit);
-      payments = allPayments.slice(skip, skip + parseInt(limit));
-    }
+    const payments = await Payment.find(query)
+      .populate("student", "firstName surname email studentId")
+      .populate("verifiedBy", "firstName surname")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
 
-    // ============ CALCULATE SUMMARY USING ALL PAYMENTS ============
+    // Calculate summary from ALL payments
     const summary = allPayments.reduce(
       (acc, payment) => {
         const category = payment.category || "Uncategorized";
@@ -2812,8 +2257,8 @@ exports.generatePaymentReport = async (req, res) => {
     const currentPage = parseInt(page);
 
     const reportData = {
-      payments, // Paginated for HTML, full for PDF
-      allPayments: allPayments, // Full dataset for PDF
+      payments, // Paginated for HTML
+      allPayments, // Full dataset for PDF
       allPaymentsCount: totalPayments,
       summary,
       dateRange: {
@@ -2834,31 +2279,20 @@ exports.generatePaymentReport = async (req, res) => {
       searchQuery: outputFormat === "html" ? search : "",
     };
 
-    // ============ PDF OUTPUT ============
+    // ============ PDF OUTPUT - DIRECT DOWNLOAD, NO CLOUD ============
     if (outputFormat === "pdf") {
       const pdfPath = await generatePaymentReportPDF(reportData);
+      const fileName = `payment_report_${Date.now()}.pdf`;
 
-      // Generate signed URL for download
-      const gcsPath = `reports/payment_report_${Date.now()}.pdf`;
-      await uploadFile(pdfPath, gcsPath);
-      const signedUrl = await generateSignedUrl(gcsPath);
+      return res.download(pdfPath, fileName, (err) => {
+        // Delete temporary file after download attempt
+        if (fs.existsSync(pdfPath)) {
+          fs.unlinkSync(pdfPath);
+        }
 
-      // Clean up temp file
-      if (fs.existsSync(pdfPath)) {
-        fs.unlinkSync(pdfPath);
-      }
-
-      return res.json({
-        success: true,
-        message: "PDF report generated successfully",
-        downloadUrl: signedUrl,
-        reportData: {
-          dateRange: `${formattedStart} to ${formattedEnd}`,
-          totalPayments: summary.totalPayments,
-          totalAmount: formatNumber(summary.totalAmount),
-          totalDue: formatNumber(summary.totalDue),
-          totalBalance: formatNumber(summary.totalBalance),
-        },
+        if (err) {
+          console.error("PDF download error:", err);
+        }
       });
     }
 
@@ -2878,10 +2312,7 @@ exports.generatePaymentReport = async (req, res) => {
     console.error("Generate report error:", err);
 
     if (req.query.outputFormat === "pdf") {
-      return res.status(500).json({
-        success: false,
-        error: "Failed to generate PDF report",
-      });
+      return res.status(500).send("Failed to generate PDF report");
     }
 
     req.flash("error_msg", "Failed to generate report.");
@@ -2897,7 +2328,7 @@ exports.exportPaymentReportExcel = async (req, res) => {
   try {
     const { startDate, endDate, search = "" } = req.query;
 
-    // Default dates
+    // Default dates: current month
     const defaultStartDate = new Date();
     defaultStartDate.setDate(1);
     defaultStartDate.setHours(0, 0, 0, 0);
@@ -2919,12 +2350,14 @@ exports.exportPaymentReportExcel = async (req, res) => {
     // Add search if provided
     if (search && search.trim() !== "") {
       const searchRegex = new RegExp(search.trim(), "i");
+
       const students = await User.find({
         role: "Student",
         $or: [
           { firstName: searchRegex },
           { surname: searchRegex },
           { email: searchRegex },
+          { studentId: searchRegex },
         ],
       }).select("_id");
 
@@ -2933,6 +2366,8 @@ exports.exportPaymentReportExcel = async (req, res) => {
         $or: [
           { reference: searchRegex },
           { category: searchRegex },
+          { method: searchRegex },
+          { status: searchRegex },
           { student: { $in: students.map((s) => s._id) } },
         ],
       };
@@ -2999,6 +2434,7 @@ exports.exportPaymentReportExcel = async (req, res) => {
       summary.totalDue > 0
         ? Math.round((summary.totalPaid / summary.totalDue) * 100)
         : 0;
+
     summary.averageAmount =
       summary.totalPayments > 0
         ? summary.totalAmount / summary.totalPayments
@@ -3029,7 +2465,7 @@ exports.exportPaymentReportExcel = async (req, res) => {
 
     const reportData = {
       payments: allPayments,
-      allPayments: allPayments,
+      allPayments,
       allPaymentsCount: allPayments.length,
       summary,
       dateRange: {
@@ -3041,35 +2477,23 @@ exports.exportPaymentReportExcel = async (req, res) => {
       generatedAt: new Date().toLocaleString(),
     };
 
-    // Generate Excel file
+    // Generate Excel file locally
     const excelPath = await generatePaymentExcel(reportData);
+    const fileName = `payment_report_${Date.now()}.xlsx`;
 
-    // Upload to GCS or send directly
-    const gcsPath = `reports/excel/payment_report_${Date.now()}.xlsx`;
-    await uploadFile(excelPath, gcsPath);
-    const signedUrl = await generateSignedUrl(gcsPath);
+    // Direct download, no Google Cloud
+    return res.download(excelPath, fileName, (err) => {
+      // Delete temporary file after download attempt
+      if (fs.existsSync(excelPath)) {
+        fs.unlinkSync(excelPath);
+      }
 
-    // Clean up temp file
-    if (fs.existsSync(excelPath)) {
-      fs.unlinkSync(excelPath);
-    }
-
-    res.json({
-      success: true,
-      message: "Excel report generated successfully",
-      downloadUrl: signedUrl,
-      reportData: {
-        dateRange: `${formattedStart} to ${formattedEnd}`,
-        totalPayments: summary.totalPayments,
-        totalAmount: formatNumber(summary.totalAmount),
-        totalBalance: formatNumber(summary.totalBalance),
-      },
+      if (err) {
+        console.error("Excel download error:", err);
+      }
     });
   } catch (err) {
     console.error("Excel export error:", err);
-    res.status(500).json({
-      success: false,
-      error: "Failed to generate Excel report",
-    });
+    res.status(500).send("Failed to generate Excel report");
   }
 };
